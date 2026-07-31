@@ -1,0 +1,6 @@
+/target
+decimal.node
+node_modules/
+*.log
+!fuzz/*.log
+!tests/*.log

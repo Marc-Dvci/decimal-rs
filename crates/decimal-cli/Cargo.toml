@@ -1,0 +1,17 @@
+[package]
+name = "decimal-cli"
+description = "Standalone command-line evaluator for decimal-core — the port is usable with no Node present"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "decimal"
+path = "src/main.rs"
+
+[dependencies]
+decimal-core = { path = "../decimal-core" }
+
+[lints.rust]
+unsafe_code = "forbid"

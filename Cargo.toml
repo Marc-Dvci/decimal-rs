@@ -1,0 +1,18 @@
+[workspace]
+resolver = "2"
+members = ["crates/decimal-core", "crates/decimal-napi", "crates/decimal-cli"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/Marc-Dvci/decimal-rs"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+# Deliberately NOT panic = "abort". A panic inside a Node addon must not take
+# the host process down; the N-API boundary catches unwinds and converts them
+# into thrown JavaScript errors. See DECISIONS.md D-04.
+panic = "unwind"

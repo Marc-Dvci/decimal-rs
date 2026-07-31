@@ -1,0 +1,13 @@
+[package]
+name = "decimal-core"
+description = "Arbitrary-precision Decimal arithmetic — a faithful Rust port of decimal.js"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+# No dependencies. Not "few" — none. See DECISIONS.md D-02.
+[dependencies]
+
+[lints.rust]
+unsafe_code = "forbid"
