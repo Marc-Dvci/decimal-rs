@@ -241,8 +241,20 @@ pub fn to_power(ctx: &mut Ctx, x: &Decimal, y: &Decimal) -> Result<Decimal> {
         let k = yn.abs() as i64;
         let r = int_pow(ctx, &x, k, pr);
         return Ok(if y.s.is_negative() {
+            // `new Ctor(1).div(r)` — and `div` passes its *argument* through
+            // the constructor too, which clamps it. `int_pow` ran with the
+            // clamps suppressed, so `r` can carry an exponent far below `minE`;
+            // the constructor then turns it into zero and the reciprocal is
+            // Infinity.
+            //
+            // Skipping that clamp gives the mathematically better answer and
+            // the wrong one: `(-0.0027)^(-9.3e12)` with `minE` at −207 is
+            // `2.6182e+23888316993321` if `r` survives and `Infinity` if it
+            // does not, and upstream says Infinity. See D-12 — this is the same
+            // rule one level further in, on an argument rather than a receiver.
             let one = Decimal::from_i32(1);
-            divide(ctx, &one, &r, None, rm, false, None)
+            let divisor = crate::ops::clamped_copy(ctx, &r);
+            divide(ctx, &one, &divisor, None, rm, false, None)
         } else {
             let mut r = r;
             finalise(ctx, &mut r, Some(pr), rm, false);
