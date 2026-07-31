@@ -595,3 +595,54 @@ The first two are not exotic. Any program that narrows `maxE` after
 constructing its values would have seen the difference.
 
 ---
+
+### D-13 · The third divergence, and the second crash declined
+
+**Context.** `new Ctor(x)` can turn a finite receiver into ±Infinity — that is
+what D-12 is about — and everything after that line in `toPower` assumes a
+digit array. The port panicked:
+
+```
+thread '<unnamed>' panicked at crates\decimal-core\src\decimal.rs:268:14:
+digits() called on a non-finite value
+```
+
+A Rust panic unwinding across the Node-API boundary, which is the worst failure
+mode available to this crate.
+
+The guard that protects the original is accidental. Infinity carries `e = NaN`
+in JavaScript, so `x.e == 0` is false and the `x.d[0]` beside it is never
+evaluated. This port stores `e = 0` for Infinity, so the same comparison
+succeeds and the digit access happens.
+
+**Upstream does not survive it either.** With `maxE` narrowed after the value
+was built:
+
+```
+> const x = new Decimal('1e10'); Decimal.config({maxE: 5}); x.pow(3)
+TypeError: Cannot read properties of null (reading 'length')
+```
+
+raised from inside `intPow`. `pow(-3)` returns 0; `pow(2)` and `pow(0.5)` throw
+the same TypeError. Reported as BUG-003.
+
+**Decision.** Do not reproduce the crash. Answer with the rule the original's
+*own first line* uses for a base that was already non-finite —
+`Math.pow(+x, yn)` — which is the same question reached by a different road.
+
+This is the third and last deliberate divergence, alongside D-08 (a constraint,
+not a choice) and D-11. The test for setting fidelity aside has been the same
+each time: reproducing the original would give a caller a way to break the
+library rather than a way to compute a number. A `TypeError` from an unguarded
+null dereference is exactly that, and matching it would mean the port throwing
+V8's own message for a mistake V8 was merely the reporter of.
+
+It also agrees with upstream wherever upstream answers at all: `pow(-3)` is 0
+on both sides, because `Infinity^-3` is 0 by the same table.
+
+**Consequence.** No panic; `pow` of a clamped-to-infinite base returns
+±Infinity or 0 as the exponent's sign dictates. The differential harness
+classifies the remaining difference as a *known* divergence, counted and named
+with this entry in its log rather than filtered out of it.
+
+---
