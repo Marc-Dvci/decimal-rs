@@ -43,6 +43,7 @@
 mod napi;
 
 use decimal_core::arith::{self, compare};
+use decimal_core::random::Xoshiro256StarStar;
 use decimal_core::{format, fraction, inverse, ops, parse, roots, Config, Ctx, Decimal, Error, Sign};
 use napi::{define_class, bind_symbols, Env, JsType, Value};
 use napi_sys as sys;
@@ -63,6 +64,14 @@ struct ConstructorState {
     /// A strong reference to the constructor function, so that methods can
     /// build their results as instances of the right class.
     ctor: sys::napi_ref,
+    /// The non-cryptographic generator behind `random`, standing where the
+    /// original has `Math.random()`.
+    ///
+    /// Per constructor rather than per module, and seeded independently, so
+    /// that a clone draws its own stream. Sharing one would make two
+    /// constructors' draws interleave — harmless, but it would mean `clone`
+    /// did not produce quite the independent object it advertises.
+    entropy: Xoshiro256StarStar,
 }
 
 /// Recover the state from a callback's data pointer.
@@ -903,10 +912,15 @@ unsafe extern "C" fn s_config(
         };
         match requested {
             Some(true) => {
-                // No cryptographic source is reachable from a native addon
-                // without pulling in the JavaScript global, and the original
-                // throws exactly this when one is asked for and absent.
-                return fail(env, Error::CryptoUnavailable);
+                // The original's test, transcribed: a `crypto` global that
+                // offers either entropy function. Node has supplied one since
+                // v19, so this normally succeeds; on a host without it, the
+                // configuration is refused rather than silently downgraded to
+                // `Math.random`, which is the point of asking for it.
+                if crypto_source(env).is_none() {
+                    return fail(env, Error::CryptoUnavailable);
+                }
+                proposed.crypto = true;
             }
             Some(false) => proposed.crypto = false,
             None => {
@@ -1040,7 +1054,108 @@ macro_rules! static_not_yet_ported {
     };
 }
 
-static_not_yet_ported!(s_random);
+/// The `crypto` global, if it exists and offers either entropy function.
+///
+/// This is the original's
+/// `typeof crypto != 'undefined' && crypto && (crypto.getRandomValues || crypto.randomBytes)`,
+/// with the same two names checked in the same order.
+fn crypto_source(env: Env) -> Option<Value> {
+    let crypto = env.get_named(env.global(), "crypto");
+    if env.type_of(crypto) != JsType::Object {
+        return None;
+    }
+    let has = |name: &str| env.type_of(env.get_named(crypto, name)) == JsType::Function;
+    (has("getRandomValues") || has("randomBytes")).then_some(crypto)
+}
+
+/// Limbs drawn from `crypto.getRandomValues`.
+///
+/// # The rejection rule
+///
+/// A `u32` is uniform on `[0, 2³²)`, and `2³² mod 10⁷` is not zero, so taking
+/// it modulo `10⁷` would favour the low end of the range. The original fixes
+/// this by discarding any draw of `4.29e9` or more and redrawing: `4 290 000 000`
+/// is exactly `429 × 10⁷`, so what remains is a whole number of complete cycles
+/// and the modulo is uniform. The waste is one draw in 865.
+///
+/// The original fetches all `k` words in one call and redraws singly into the
+/// gaps; this fetches singly throughout. The stream of values consumed and the
+/// rule applied to each are identical, and nothing observable counts the calls.
+struct CryptoEntropy {
+    env: Env,
+    crypto: Value,
+    array: Value,
+}
+
+impl CryptoEntropy {
+    /// A source holding a one-element `Uint32Array` to be filled repeatedly.
+    ///
+    /// `getRandomValues` writes into the array it is given and returns it, so
+    /// one allocation serves every draw.
+    fn new(env: Env, crypto: Value) -> Option<Self> {
+        let constructor = env.get_named(env.global(), "Uint32Array");
+        if env.type_of(constructor) != JsType::Function {
+            return None;
+        }
+        let array = env.construct(constructor, &[env.number(1.0)]);
+        Some(CryptoEntropy { env, crypto, array })
+    }
+
+    /// One uniform `u32`.
+    fn draw(&mut self) -> u32 {
+        let function = self.env.get_named(self.crypto, "getRandomValues");
+        let filled = self.env.call(self.crypto, function, &[self.array]);
+        let value = self.env.get_element(filled, 0);
+        self.env.as_f64(value).unwrap_or(0.0) as u32
+    }
+}
+
+impl decimal_core::random::Entropy for CryptoEntropy {
+    fn next_limb(&mut self) -> u32 {
+        loop {
+            let n = self.draw();
+            if n < 4_290_000_000 {
+                return n % 10_000_000;
+            }
+        }
+    }
+}
+
+/// `Decimal.random([sd])`.
+///
+/// The generator behind the default path is this crate's own — see
+/// `decimal_core::random`. It stands where the original has `Math.random()`,
+/// and shares that function's standing exactly: adequate for anything that is
+/// not a secret, and used only when `crypto` is off.
+unsafe extern "C" fn s_random(
+    env: sys::napi_env,
+    info: sys::napi_callback_info,
+) -> sys::napi_value {
+    let env = Env(env);
+    let (args, _, data) = env.callback_info(info, 1);
+    // SAFETY: `data` is the leaked ConstructorState for this class.
+    let st = unsafe { state(data) };
+
+    let sd = optional_number(env, &args, 0);
+
+    let drawn = if st.ctx.cfg.crypto {
+        // Configured for crypto, so it was reachable when `config` accepted the
+        // setting. If it has since been removed from the global object, the
+        // original would throw a TypeError from the call itself; refusing here
+        // with its own message is the closer answer.
+        match crypto_source(env).and_then(|crypto| CryptoEntropy::new(env, crypto)) {
+            Some(mut source) => decimal_core::random::random(&st.ctx, sd, &mut source),
+            None => return fail(env, Error::CryptoUnavailable),
+        }
+    } else {
+        decimal_core::random::random(&st.ctx, sd, &mut st.entropy)
+    };
+
+    match drawn {
+        Ok(value) => make(env, st, value),
+        Err(e) => fail(env, e),
+    }
+}
 
 /// `Decimal.atan2(y, x)`.
 ///
@@ -1335,6 +1450,7 @@ fn build_class(env: Env, cfg: Config) -> Value {
     let boxed = Box::new(ConstructorState {
         ctx: Ctx::new(cfg),
         ctor: ptr::null_mut(),
+        entropy: Xoshiro256StarStar::from_environment(),
     });
     // Leaked on purpose: see `ConstructorState`.
     let data: *mut c_void = Box::into_raw(boxed).cast();

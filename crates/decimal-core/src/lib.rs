@@ -80,6 +80,7 @@ pub mod ops;
 pub mod parse;
 pub mod radix;
 pub mod power;
+pub mod random;
 pub mod roots;
 pub mod round;
 pub mod trig;

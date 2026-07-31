@@ -288,6 +288,28 @@ impl Env {
 
     // -- properties --------------------------------------------------------
 
+    /// `array[index]`.
+    pub fn get_element(self, array: Value, index: u32) -> Value {
+        let mut out: Value = ptr::null_mut();
+        // SAFETY: `array` is a live handle; `out` is a valid out-pointer. A
+        // non-array or an out-of-range index yields `undefined` rather than
+        // failing.
+        unsafe {
+            sys::napi_get_element(self.0, array, index, &mut out);
+        }
+        out
+    }
+
+    /// `globalThis`.
+    pub fn global(self) -> Value {
+        let mut out: Value = ptr::null_mut();
+        // SAFETY: valid out-pointer.
+        unsafe {
+            sys::napi_get_global(self.0, &mut out);
+        }
+        out
+    }
+
     /// `object[name] = value`.
     pub fn set_named(self, object: Value, name: &str, value: Value) {
         let name = std::ffi::CString::new(name).expect("property names contain no NUL");
