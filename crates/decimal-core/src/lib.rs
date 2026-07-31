@@ -68,12 +68,15 @@
 
 pub mod arith;
 pub mod config;
+pub mod constants;
 pub mod decimal;
+pub mod elementary;
 pub mod error;
 pub(crate) mod exact;
 pub mod format;
 pub mod ops;
 pub mod parse;
+pub mod roots;
 pub mod round;
 
 pub use config::{rounding, Config, Ctx};
