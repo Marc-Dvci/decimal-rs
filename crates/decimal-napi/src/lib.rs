@@ -487,6 +487,9 @@ comparison!(m_gte, |o| matches!(
 stringify!(m_to_fixed, |ctx, x, a, b| ops::to_fixed(ctx, x, a, b));
 stringify!(m_to_exponential, |ctx, x, a, b| ops::to_exponential(ctx, x, a, b));
 stringify!(m_to_precision, |ctx, x, a, b| ops::to_precision(ctx, x, a, b));
+stringify!(m_to_binary, |ctx, x, a, b| decimal_core::radix::to_string_binary(ctx, x, 2, a, b));
+stringify!(m_to_octal, |ctx, x, a, b| decimal_core::radix::to_string_binary(ctx, x, 8, a, b));
+stringify!(m_to_hex, |ctx, x, a, b| decimal_core::radix::to_string_binary(ctx, x, 16, a, b));
 
 rounder!(m_to_dp, |ctx, x, a, b| ops::to_decimal_places(ctx, x, a, b));
 rounder!(m_to_sd, |ctx, x, a, b| ops::to_significant_digits(ctx, x, a, b));
@@ -520,9 +523,6 @@ macro_rules! not_yet_ported {
     };
 }
 
-not_yet_ported!(m_to_binary);
-not_yet_ported!(m_to_hex);
-not_yet_ported!(m_to_octal);
 not_yet_ported!(m_to_fraction);
 
 /// `logarithm`, whose base argument is optional and defaults to 10.

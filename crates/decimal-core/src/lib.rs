@@ -77,6 +77,7 @@ pub mod format;
 pub mod inverse;
 pub mod ops;
 pub mod parse;
+pub mod radix;
 pub mod power;
 pub mod roots;
 pub mod round;
