@@ -244,3 +244,44 @@ do, so a defect at this rate is precisely one that would pass here and fail
 there.
 
 ---
+
+### D-07 · Where JavaScript's numbers are signed, Rust's limbs must be too
+
+**Context.** The limb arrays are unsigned — a base-10⁷ digit is a `u32`. That
+is the obvious representation and it is right almost everywhere.
+
+It is wrong inside the division routine's inner `subtract`, which the original
+writes as:
+
+```js
+for (; aL--;) {
+  a[aL] -= i;                                  // i is the incoming borrow
+  i = a[aL] < b[aL] ? 1 : 0;                   // did that go negative?
+  a[aL] = i * base + a[aL] - b[aL];
+}
+```
+
+The intermediate `a[aL] - i` is *allowed to become −1*, and the comparison on
+the next line is what detects that a borrow must propagate. Translated
+literally into `u32`, `0 - 1` becomes `4294967295`, which compares as larger
+than the subtrahend, suppresses the borrow, and writes a limb four hundred
+times the base into the remainder.
+
+**Decision.** Use a signed accumulator for that loop specifically, and let the
+debug assertion on `Decimal::finite` — "every limb must be below the base" —
+stand guard over the invariant.
+
+**Consequence.** Caught by that assertion during `1 / 12345678901234567890`,
+which is to say: caught by a test of ordinary division, several call frames
+away from the subtraction that caused it. Without the assertion it would have
+been a wrong digit somewhere in the middle of a long quotient, and no
+straightforward way to attribute it.
+
+The general lesson is recorded here because it is the recurring hazard of this
+particular port, not a one-off: JavaScript has one numeric type and it is
+signed, so every place the original relies on an intermediate going negative,
+exceeding 2³², or being fractional is a place where the natural Rust type is
+the wrong one. The exponent saturation in D-04 is the same hazard wearing a
+different hat.
+
+---
