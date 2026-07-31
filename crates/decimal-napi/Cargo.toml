@@ -16,3 +16,8 @@ napi-sys = "2"
 
 [build-dependencies]
 napi-build = "2"
+
+[features]
+# Force run-time symbol resolution even on ELF targets, where the dynamic
+# linker normally does it. Off by default; see napi::bind_symbols.
+dyn-symbols = []

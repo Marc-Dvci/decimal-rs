@@ -134,6 +134,35 @@ pub(crate) fn pow10(k: i64) -> u32 {
     POW10[k as usize]
 }
 
+/// `w / 10^k`, where `k` may be far larger than any power of ten this table
+/// holds.
+///
+/// The original computes these divisors as `Math.pow(10, k)` in a double. When
+/// `k` is enormous — which happens for a value at the extreme of the exponent
+/// range, where the significant-digit target passed to `finalise` is around
+/// −9 × 10¹⁵ — that is `Infinity`, and `w / Infinity` is `0`. Reproducing that
+/// is not a nicety: without it the table lookup is an out-of-bounds index and
+/// the process aborts, which is exactly what `ceil` on a value near `minE`
+/// did.
+#[inline]
+pub(crate) fn div_pow10(w: u64, k: i64) -> u64 {
+    if k >= POW10.len() as i64 {
+        0
+    } else {
+        w / u64::from(pow10(k))
+    }
+}
+
+/// `w % 10^k`, with the same caveat: `w % Infinity` is `w`.
+#[inline]
+pub(crate) fn mod_pow10(w: u32, k: i64) -> u32 {
+    if k >= POW10.len() as i64 {
+        w
+    } else {
+        w % pow10(k)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

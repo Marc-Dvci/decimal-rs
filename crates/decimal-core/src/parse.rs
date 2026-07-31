@@ -264,6 +264,163 @@ pub fn parse_decimal(ctx: &Ctx, s: Sign, text: &str) -> Decimal {
     x
 }
 
+/// Convert a digit string in `base_in` to an array of limbs in `base_out`.
+///
+/// Schoolbook: repeatedly multiply the accumulator by the input base and add
+/// the next digit, normalising carries as they appear. Quadratic in the input
+/// length, which is fine — the inputs are numeric literals, not files.
+pub fn convert_base(digits: &[u8], base_in: u32, base_out: u32) -> Vec<u32> {
+    // Least-significant-first while accumulating; reversed on the way out.
+    let mut arr: Vec<u64> = vec![0];
+
+    for &digit in digits {
+        for limb in arr.iter_mut() {
+            *limb *= u64::from(base_in);
+        }
+        arr[0] += u64::from(digit);
+
+        let mut j = 0;
+        while j < arr.len() {
+            if arr[j] > u64::from(base_out) - 1 {
+                if j + 1 == arr.len() {
+                    arr.push(0);
+                }
+                arr[j + 1] += arr[j] / u64::from(base_out);
+                arr[j] %= u64::from(base_out);
+            }
+            j += 1;
+        }
+    }
+
+    arr.reverse();
+    arr.into_iter().map(|limb| limb as u32).collect()
+}
+
+/// Parse a literal that is not an ordinary decimal: an underscore-separated
+/// decimal, `Infinity`, `NaN`, or a hexadecimal, binary or octal literal with
+/// an optional binary exponent.
+///
+/// The radix forms are converted by reading the mantissa as an integer in its
+/// own base and then *dividing* by `base^fractionDigits` — so hexadecimal
+/// float parsing goes through the arithmetic core, and cannot be finished
+/// before division works. The exponent clamps are suppressed throughout,
+/// because either the mantissa or the divisor may legitimately stray outside
+/// the representable range before the quotient brings it back.
+pub fn parse_other(ctx: &mut Ctx, s: Sign, text: &str) -> crate::Result<Decimal> {
+    // Digit separators: `1_000_000`, but only between digits.
+    if text.contains('_') {
+        let mut stripped = String::with_capacity(text.len());
+        let bytes = text.as_bytes();
+        for (index, &b) in bytes.iter().enumerate() {
+            if b == b'_'
+                && index > 0
+                && bytes[index - 1].is_ascii_digit()
+                && bytes.get(index + 1).is_some_and(u8::is_ascii_digit)
+            {
+                continue;
+            }
+            stripped.push(b as char);
+        }
+        if is_decimal_literal(stripped.as_bytes()) {
+            return Ok(parse_decimal(ctx, s, &stripped));
+        }
+        return Err(crate::Error::InvalidArgument(text.to_string()));
+    }
+
+    if text == "Infinity" {
+        return Ok(Decimal::infinity(s));
+    }
+    if text == "NaN" {
+        return Ok(Decimal::nan());
+    }
+
+    let bytes = text.as_bytes();
+    let base: u32 = if is_hex_literal(bytes) {
+        16
+    } else if is_binary_literal(bytes) {
+        2
+    } else if is_octal_literal(bytes) {
+        8
+    } else {
+        return Err(crate::Error::InvalidArgument(text.to_string()));
+    };
+
+    // Split off a binary exponent, if present.
+    let lowered = text.to_ascii_lowercase();
+    let (mantissa, binary_exponent) = match lowered.find('p') {
+        Some(at) => (
+            &lowered[2..at],
+            parse_exponent(lowered[at + 1..].as_bytes()),
+        ),
+        None => (&lowered[2..], 0),
+    };
+
+    // Separate the fractional part; its length says what power of the base to
+    // divide by afterwards.
+    let (digits_text, fraction_length) = match mantissa.find('.') {
+        Some(at) => (
+            format!("{}{}", &mantissa[..at], &mantissa[at + 1..]),
+            (mantissa.len() - 1 - at) as i64,
+        ),
+        None => (mantissa.to_string(), 0),
+    };
+
+    let digit_values: Vec<u8> = digits_text
+        .chars()
+        .map(|c| c.to_digit(base).expect("validated by the recogniser") as u8)
+        .collect();
+
+    let mut limbs = convert_base(&digit_values, base, crate::BASE);
+    let limb_exponent = limbs.len() as i64 - 1;
+
+    // Trailing zero limbs are not part of the value.
+    while limbs.last() == Some(&0) {
+        limbs.pop();
+    }
+    if limbs.is_empty() {
+        return Ok(Decimal::zero(s));
+    }
+
+    let mut x = Decimal::finite(s, crate::arith::base10_exponent(&limbs, limb_exponent), limbs);
+
+    let result = ctx.without_clamping(|ctx| {
+        if fraction_length > 0 {
+            // log10(16) < 1.21, so four decimal digits per input digit is
+            // always enough to make the division exact.
+            let total_digits = digits_text.len() as i64;
+            let divisor = crate::arith::int_pow(
+                ctx,
+                &Decimal::from_i32(base as i32),
+                fraction_length,
+                fraction_length * 2,
+            );
+            let rm = ctx.cfg.rounding;
+            x = crate::arith::divide(ctx, &x, &divisor, Some(total_digits * 4), rm, false, None);
+        }
+
+        if binary_exponent != 0 {
+            let two = Decimal::from_i32(2);
+            let scale = crate::arith::int_pow(
+                ctx,
+                &two,
+                binary_exponent.abs(),
+                ctx.cfg.precision + 10,
+            );
+            let rm = ctx.cfg.rounding;
+            x = if binary_exponent > 0 {
+                crate::arith::mul(ctx, &x, &scale)
+            } else {
+                crate::arith::divide(ctx, &x, &scale, None, rm, false, None)
+            };
+        }
+        x.clone()
+    });
+
+    let mut result = result;
+    crate::round::finalise(ctx, &mut result, None, ctx.cfg.rounding, false);
+    Ok(result)
+}
+
 /// Clamp an exponent into a range wide enough to contain every representable
 /// value and narrow enough that the limb arithmetic cannot overflow.
 ///

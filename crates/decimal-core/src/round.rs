@@ -47,7 +47,7 @@
 //! the float. The rule followed throughout is to match the original's
 //! arithmetic, not to improve on it.
 
-use crate::{digit_count, pow10, Ctx, Decimal, BASE, LOG_BASE};
+use crate::{digit_count, div_pow10, mod_pow10, pow10, Ctx, Decimal, BASE, LOG_BASE};
 
 /// Round `x` to `sd` significant digits with rounding mode `rm`, then apply
 /// the exponent limits.
@@ -127,7 +127,7 @@ fn round_to_significant_digits(
         j = sd;
         xdi = 0;
         w = xd[0];
-        rd = (w / pow10(digits - j - 1)) % 10;
+        rd = (div_pow10(u64::from(w), digits - j - 1) % 10) as u32;
     } else {
         xdi = (i + LOG_BASE) / LOG_BASE; // ceil((i + 1) / LOG_BASE)
 
@@ -159,7 +159,7 @@ fn round_to_significant_digits(
             rd = if j < 0 {
                 0
             } else {
-                (w / pow10(digits - j - 1)) % 10
+                (div_pow10(u64::from(w), digits - j - 1) % 10) as u32
             };
         }
     }
@@ -174,7 +174,7 @@ fn round_to_significant_digits(
         || if j < 0 {
             w != 0
         } else {
-            w % pow10(digits - j - 1) != 0
+            mod_pow10(w, digits - j - 1) != 0
         };
 
     // The rounding decision itself. The four directed modes (0..=3) round away
@@ -198,7 +198,7 @@ fn round_to_significant_digits(
                         // neighbour were even.
                         let left = if i > 0 {
                             if j > 0 {
-                                u64::from(w) / u64::from(pow10(digits - j))
+                                div_pow10(u64::from(w), digits - j)
                             } else {
                                 0
                             }
@@ -251,7 +251,7 @@ fn round_to_significant_digits(
         // Zero the digits of `w` from position `j` onwards, keeping the ones
         // to its left: 56700 becomes 56000 when 7 is the rounding digit.
         xd[xdi as usize] = if j > 0 {
-            (w / pow10(digits - j) % pow10(j)) * k
+            ((div_pow10(u64::from(w), digits - j) % u64::from(pow10(j))) as u32) * k
         } else {
             0
         };

@@ -812,6 +812,65 @@ pub fn divide(
     q
 }
 
+/// Truncate a digit array to `len` limbs, reporting whether anything was lost.
+///
+/// The original's `truncate`, whose return value is `undefined` rather than
+/// `false` when nothing was dropped — used only for its truthiness.
+fn truncate_limbs(d: &mut Vec<u32>, len: usize) -> bool {
+    if d.len() > len {
+        d.truncate(len);
+        true
+    } else {
+        false
+    }
+}
+
+/// `x^n` for an integer `n`, by exponentiation by squaring.
+///
+/// The working arrays are truncated to `⌈pr/7⌉ + 4` limbs at every step rather
+/// than being allowed to grow, which is what keeps a large exponent from
+/// producing a multi-megabyte intermediate. The final `++r.d[n]` looks like a
+/// mistake and is not: when the result was truncated but happens to end in a
+/// zero limb, that zero would make the value look exact to `finalise`, so the
+/// original bumps it to keep the inexactness visible. It is transcribed
+/// exactly, including the fact that it perturbs the last limb.
+pub fn int_pow(ctx: &mut Ctx, x: &Decimal, n: i64, pr: i64) -> Decimal {
+    let mut is_truncated = false;
+    let mut r = Decimal::from_i32(1);
+    let mut x = x.clone();
+    let mut n = n;
+    let k = ceil_div(pr, LOG_BASE) + 4;
+
+    ctx.without_clamping(|ctx| {
+        loop {
+            if n % 2 != 0 {
+                r = mul(ctx, &r, &x);
+                if let Some(d) = r.d.as_mut() {
+                    if truncate_limbs(d, k as usize) {
+                        is_truncated = true;
+                    }
+                }
+            }
+            n /= 2;
+            if n == 0 {
+                if let Some(d) = r.d.as_mut() {
+                    let last = d.len() - 1;
+                    if is_truncated && d[last] == 0 {
+                        d[last] += 1;
+                    }
+                }
+                break;
+            }
+            x = mul(ctx, &x, &x);
+            if let Some(d) = x.d.as_mut() {
+                truncate_limbs(d, k as usize);
+            }
+        }
+    });
+
+    r
+}
+
 /// Format helper used by the tests below and by the CLI: the value as
 /// `toString` would render it under `ctx`.
 pub fn render(ctx: &Ctx, x: &Decimal) -> String {
