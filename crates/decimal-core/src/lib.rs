@@ -76,6 +76,7 @@ pub(crate) mod exact;
 pub mod format;
 pub mod ops;
 pub mod parse;
+pub mod power;
 pub mod roots;
 pub mod round;
 

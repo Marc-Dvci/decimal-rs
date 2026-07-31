@@ -399,6 +399,26 @@ unary!(m_ceil, |ctx, x| ops::ceil(ctx, x));
 unary!(m_floor, |ctx, x| ops::floor(ctx, x));
 unary!(m_round, |ctx, x| ops::round(ctx, x));
 unary!(m_trunc, |ctx, x| ops::trunc(ctx, x));
+unary!(m_sqrt, |ctx, x| decimal_core::roots::sqrt(ctx, x));
+unary!(m_cbrt, |ctx, x| decimal_core::roots::cbrt(ctx, x));
+unary!(m_exp, |ctx, x| decimal_core::elementary::exp(ctx, x));
+
+/// `naturalLogarithm`, which can raise `[DecimalError] Precision limit
+/// exceeded` when the configured precision outruns the 1025-digit `LN10`
+/// constant.
+unsafe extern "C" fn m_ln(
+    env: sys::napi_env,
+    info: sys::napi_callback_info,
+) -> sys::napi_value {
+    let env = Env(env);
+    let Some((_, x, st)) = receiver(env, info, 0) else {
+        return env.undefined();
+    };
+    match decimal_core::elementary::ln(&mut st.ctx, &x) {
+        Ok(value) => make(env, st, value),
+        Err(e) => fail(env, e),
+    }
+}
 
 binary!(m_plus, |ctx, x, y| arith::add(ctx, x, y));
 binary!(m_minus, |ctx, x, y| arith::sub(ctx, x, y));
@@ -480,22 +500,87 @@ not_yet_ported!(m_asin);
 not_yet_ported!(m_asinh);
 not_yet_ported!(m_atan);
 not_yet_ported!(m_atanh);
-not_yet_ported!(m_cbrt);
 not_yet_ported!(m_cos);
 not_yet_ported!(m_cosh);
-not_yet_ported!(m_exp);
-not_yet_ported!(m_ln);
-not_yet_ported!(m_log);
-not_yet_ported!(m_pow);
 not_yet_ported!(m_sin);
 not_yet_ported!(m_sinh);
-not_yet_ported!(m_sqrt);
 not_yet_ported!(m_tan);
 not_yet_ported!(m_tanh);
 not_yet_ported!(m_to_binary);
 not_yet_ported!(m_to_hex);
 not_yet_ported!(m_to_octal);
 not_yet_ported!(m_to_fraction);
+
+/// `logarithm`, whose base argument is optional and defaults to 10.
+unsafe extern "C" fn m_log(
+    env: sys::napi_env,
+    info: sys::napi_callback_info,
+) -> sys::napi_value {
+    let env = Env(env);
+    let Some((args, x, st)) = receiver(env, info, 1) else {
+        return env.undefined();
+    };
+    let base = match args.first().copied() {
+        None => None,
+        Some(v) if matches!(env.type_of(v), JsType::Undefined | JsType::Null) => None,
+        Some(v) => match coerce(env, st, v) {
+            Ok(b) => Some(b),
+            Err(e) => return fail(env, e),
+        },
+    };
+    match decimal_core::power::logarithm(&mut st.ctx, &x, base.as_ref()) {
+        Ok(value) => make(env, st, value),
+        Err(e) => fail(env, e),
+    }
+}
+
+/// `toPower`.
+unsafe extern "C" fn m_pow(
+    env: sys::napi_env,
+    info: sys::napi_callback_info,
+) -> sys::napi_value {
+    let env = Env(env);
+    let Some((args, x, st)) = receiver(env, info, 1) else {
+        return env.undefined();
+    };
+    let y = match argument(env, st, &args, 0) {
+        Ok(y) => y,
+        Err(e) => return fail(env, e),
+    };
+    match decimal_core::power::to_power(&mut st.ctx, &x, &y) {
+        Ok(value) => make(env, st, value),
+        Err(e) => fail(env, e),
+    }
+}
+
+/// `Decimal.log2` and `Decimal.log10`, which are the logarithm with the base
+/// supplied rather than taken from the caller.
+macro_rules! static_log_base {
+    ($name:ident, $base:literal) => {
+        unsafe extern "C" fn $name(
+            env: sys::napi_env,
+            info: sys::napi_callback_info,
+        ) -> sys::napi_value {
+            let env = Env(env);
+            let (args, _, data) = env.callback_info(info, 1);
+            // SAFETY: `data` is the leaked ConstructorState for this class.
+            let st = unsafe { state(data) };
+            let first = args.first().copied().unwrap_or_else(|| env.undefined());
+            let x = match coerce(env, st, first) {
+                Ok(v) => v,
+                Err(e) => return fail(env, e),
+            };
+            let base = Decimal::from_i32($base);
+            match decimal_core::power::logarithm(&mut st.ctx, &x, Some(&base)) {
+                Ok(value) => make(env, st, value),
+                Err(e) => fail(env, e),
+            }
+        }
+    };
+}
+
+static_log_base!(s_log2, 2);
+static_log_base!(s_log10, 10);
 
 /// `clampedTo`, which takes two bounds and can reject an inverted range.
 unsafe extern "C" fn m_clamp(
@@ -908,8 +993,6 @@ macro_rules! static_not_yet_ported {
 
 static_not_yet_ported!(s_atan2);
 static_not_yet_ported!(s_hypot);
-static_not_yet_ported!(s_log2);
-static_not_yet_ported!(s_log10);
 static_not_yet_ported!(s_random);
 static_not_yet_ported!(s_sum);
 
