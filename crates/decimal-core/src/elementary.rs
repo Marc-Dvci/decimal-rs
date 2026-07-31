@@ -51,6 +51,9 @@
 //! above about 10^1.5e15. Beyond that threshold it instead recurses on the
 //! mantissa alone and adds `e·ln(10)` — the same identity, applied before the
 //! reduction rather than after.
+//!
+//! **The truncation flag.** See [`TRUNCATED_BY_ASSIGNMENT`], which is the
+//! subtlest thing in this file and is invisible in the original.
 
 use crate::arith::{add, compare, divide, mul, sub};
 use crate::config::rounding;
@@ -58,6 +61,40 @@ use crate::constants::{LN10, LN10_PRECISION};
 use crate::format::digits_to_string;
 use crate::round::finalise;
 use crate::{digit_count, Ctx, Decimal, Error, Result, Sign, LOG_BASE};
+
+/// The `isTruncated` argument the original passes when a series sum reaches
+/// `finalise`, and the reason it is easy to miss.
+///
+/// All three sites are written like this:
+///
+/// ```js
+/// return finalise(sum, Ctor.precision = pr, rm, external = true);
+/// ```
+///
+/// `finalise(x, sd, rm, isTruncated)` takes four parameters. The fourth
+/// argument here is `external = true` — an *assignment expression*, which
+/// restores the global clamping flag **and** evaluates to `true`. So
+/// `isTruncated` is true, and the line does two jobs while looking like it does
+/// one. Read as bookkeeping, it disappears; read as an argument, it is the
+/// difference between a right answer and a wrong one.
+///
+/// And it is the right value on the merits, not an accident of golfing: a
+/// series sum is by definition a truncation of something infinite, so digits
+/// beyond the rounding position always exist, even when the ones this
+/// computation happened to produce are zeros. Without the flag,
+///
+/// ```text
+///   ln(1.000000000000000000000000000000000000001) at precision 46, ROUND_UP
+///     = 0.…9995              digits 41…46 came out zero, so nothing rounds up
+///     = 0.…9995000001        knowing the tail is non-empty
+/// ```
+///
+/// — the true tail sits around the 79th digit, far past any working precision
+/// the routine uses, so the flag is the *only* thing that can carry it.
+///
+/// Named rather than written as a bare `true` so that the three call sites say
+/// which `true` they mean.
+const TRUNCATED_BY_ASSIGNMENT: bool = true;
 
 /// `ln(10)` to `sd` digits, truncated.
 ///
@@ -242,7 +279,7 @@ pub fn natural_exponential(ctx: &mut Ctx, x: &Decimal, sd: Option<i64>) -> Decim
                 }
                 ctx.cfg.precision = pr;
                 ctx.external = true;
-                finalise(ctx, &mut sum, Some(pr), rm, false);
+                finalise(ctx, &mut sum, Some(pr), rm, TRUNCATED_BY_ASSIGNMENT);
                 break sum;
             }
 
@@ -332,7 +369,7 @@ pub fn natural_logarithm(ctx: &mut Ctx, y: &Decimal, sd: Option<i64>) -> Result<
         ctx.cfg.precision = pr;
         if sd.is_none() {
             ctx.external = true;
-            finalise(ctx, &mut result, Some(pr), rm, false);
+            finalise(ctx, &mut result, Some(pr), rm, TRUNCATED_BY_ASSIGNMENT);
         } else {
             ctx.external = external_before;
         }
@@ -402,7 +439,7 @@ pub fn natural_logarithm(ctx: &mut Ctx, y: &Decimal, sd: Option<i64>) -> Result<
                 }
                 ctx.cfg.precision = pr;
                 ctx.external = true;
-                finalise(ctx, &mut sum, Some(pr), rm, false);
+                finalise(ctx, &mut sum, Some(pr), rm, TRUNCATED_BY_ASSIGNMENT);
                 break sum;
             }
 
@@ -564,5 +601,41 @@ mod tests {
             Error::PrecisionLimitExceeded
         );
         assert!(get_ln10(&mut ctx, LN10_PRECISION).is_ok());
+    }
+
+    /// The series sum is a truncation, and `finalise` has to be told so.
+    ///
+    /// Both cases round *up* at a precision where every digit of the computed
+    /// tail came out zero, so only [`TRUNCATED_BY_ASSIGNMENT`] can distinguish
+    /// "the tail is zero" from "the tail was never reached". The true tails
+    /// here sit near the 79th and 140th digits, far past any working precision
+    /// these routines use. Both expectations are the original suite's own, and
+    /// both lose their last digits without the flag.
+    #[test]
+    fn a_sum_that_stops_short_still_rounds_as_if_it_had_not() {
+        let mut ctx = Ctx::default();
+        ctx.cfg.rounding = rounding::UP;
+        ctx.cfg.to_exp_neg = -9_000_000_000_000_000;
+
+        ctx.cfg.precision = 46;
+        assert_eq!(
+            show_ln(&mut ctx, "1.000000000000000000000000000000000000001"),
+            concat!(
+                "0.0000000000000000000000000000000000000009999999999999999999999999999999999999",
+                "995000001"
+            )
+        );
+
+        ctx.cfg.precision = 85;
+        assert_eq!(
+            show_ln(
+                &mut ctx,
+                "1.0000000000000000000000000000000000000000000000000001230000000000756"
+            ),
+            concat!(
+                "0.0000000000000000000000000000000000000000000000000001230000000000755999999999",
+                "999999999999999999999999999924354999999907011999999971423201"
+            )
+        );
     }
 }
