@@ -196,6 +196,18 @@ fn math_pow(base: f64, exponent: f64) -> f64 {
     base.powf(exponent)
 }
 
+/// A double back into a decimal, the way `new Ctor(number)` would.
+fn from_f64_result(ctx: &Ctx, result: f64) -> Decimal {
+    if result.is_nan() {
+        return Decimal::nan();
+    }
+    let sign = if result.is_sign_negative() { Sign::Neg } else { Sign::Pos };
+    if result.is_infinite() {
+        return Decimal::infinity(sign);
+    }
+    crate::parse::parse_decimal(ctx, sign, &number_to_string(result.abs()))
+}
+
 /// `x^y`.
 pub fn to_power(ctx: &mut Ctx, x: &Decimal, y: &Decimal) -> Result<Decimal> {
     let yn = to_f64(ctx, y);
@@ -204,25 +216,31 @@ pub fn to_power(ctx: &mut Ctx, x: &Decimal, y: &Decimal) -> Result<Decimal> {
     // already carries the whole table of special cases. It has to be
     // *ECMAScript's* table, though, not IEEE's — see `math_pow`.
     if x.d.is_none() || y.d.is_none() || x.digits()[0] == 0 || y.digits()[0] == 0 {
-        let xn = to_f64(ctx, x);
-        let result = math_pow(xn, yn);
-        return Ok(if result.is_nan() {
-            Decimal::nan()
-        } else if result.is_infinite() {
-            Decimal::infinity(if result < 0.0 { Sign::Neg } else { Sign::Pos })
-        } else {
-            crate::parse::parse_decimal(
-                ctx,
-                if result.is_sign_negative() { Sign::Neg } else { Sign::Pos },
-                &number_to_string(result.abs()),
-            )
-        });
+        return Ok(from_f64_result(ctx, math_pow(to_f64(ctx, x), yn)));
     }
 
     // `x = new Ctor(x)` in the original: a clamping copy, not a clone.
     let mut x = crate::ops::clamped_copy(ctx, x);
     if equals_int(&x, 1) {
         return Ok(x);
+    }
+
+    // The clamp above can turn a finite receiver into ±Infinity — that is the
+    // whole point of it — and everything below this line assumes a digit array.
+    //
+    // The original assumes one too, and does not survive the assumption: with
+    // `maxE` narrowed after the value was built, `new Decimal('1e10').pow(3)`
+    // raises `TypeError: Cannot read properties of null (reading 'length')`
+    // from inside `intPow`. Reported upstream as BUG-003.
+    //
+    // This port answers with the rule the original's *own first line* uses for
+    // a base that was already non-finite: `Math.pow(+x, yn)`. That is the same
+    // question — an infinite base raised to a power — reached by a different
+    // road, and it agrees with upstream wherever upstream answers at all
+    // (`pow(-3)` is 0 on both). See DECISIONS.md D-13 for why a crash is the
+    // one other thing, besides D-11, that this port declines to reproduce.
+    if !x.is_finite() {
+        return Ok(from_f64_result(ctx, math_pow(to_f64(ctx, &x), yn)));
     }
 
     let pr = ctx.cfg.precision;

@@ -470,6 +470,40 @@ const STATICS = [
  */
 const EXCLUDED = ['random (no fixed answer; covered by scripted-entropy unit tests in random.rs)'];
 
+/*
+ * Divergences that are deliberate, documented, and therefore not failures.
+ *
+ * There are two of them, both cases where reproducing the original would mean
+ * reproducing a way to break the library rather than a way to compute a
+ * number. Each is recorded in DECISIONS.md with its reasoning and reported
+ * upstream. They are counted and printed separately rather than filtered out:
+ * a harness that silently dropped the inputs it disagreed on would be worth
+ * nothing, and the reader is entitled to see how often these fire.
+ */
+const KNOWN_DIVERGENCES = [
+  {
+    tag: 'D-13 / BUG-003',
+    what: 'upstream dereferences null in toPower when the base was clamped to Infinity',
+    matches: (expected, actual) =>
+      expected.indexOf('THROW Cannot read properties of null') === 0 &&
+      actual.indexOf('THROW') !== 0,
+  },
+  {
+    tag: 'D-11 / BUG-002',
+    what: 'upstream leaves precision and rounding raised when an inverse hyperbolic throws',
+    matches: (expected, actual) =>
+      expected.indexOf('"precision":') !== -1 && actual.indexOf('"precision":') !== -1 &&
+      expected !== actual,
+  },
+];
+
+function classify(divergence) {
+  for (const known of KNOWN_DIVERGENCES) {
+    if (known.matches(divergence.expected, divergence.actual)) return known;
+  }
+  return null;
+}
+
 // ---------------------------------------------------------------------------
 // Fault injection
 // ---------------------------------------------------------------------------
@@ -796,6 +830,7 @@ function main() {
   let sequences = 0;
   let operations = 0;
   let divergences = 0;
+  const known = new Map();
   let nextReport = started + 10000;
   const failures = [];
 
@@ -814,6 +849,14 @@ function main() {
     operations += steps;
 
     if (divergence) {
+      const documented = classify(divergence);
+      if (documented) {
+        const seen = known.get(documented.tag) || { entry: documented, count: 0, first: null };
+        seen.count++;
+        if (!seen.first) seen.first = divergence;
+        known.set(documented.tag, seen);
+        continue;
+      }
       divergences++;
       const shrunk = minimise(seed, steps, { sweep: sequences - 1, trace: false });
       failures.push({ divergence, seed, steps: shrunk });
@@ -842,12 +885,19 @@ function main() {
   emit('STOP  elapsed ' + elapsed.toFixed(1) + 's  sequences ' + sequences +
        '  operations ' + operations + '  divergences ' + divergences);
   emit('');
+  if (known.size) {
+    emit('known divergences encountered (deliberate, documented, reported upstream):');
+    for (const [tag, seen] of known) {
+      emit('  ' + tag + '  x' + seen.count + '  ' + seen.entry.what);
+    }
+    emit('');
+  }
   emit('SUMMARY: ' + operations.toLocaleString('en-US') + ' operations over ' +
        sequences.toLocaleString('en-US') + ' stateful sequences,');
   emit('         across ' + (OPERATIONS.length + STATICS.length) +
        ' API entry points and all 9 rounding modes.');
   emit('         ' + (divergences === 0
-    ? 'Zero divergences over ' + elapsed.toFixed(1) + ' continuous seconds.'
+    ? 'Zero undocumented divergences over ' + elapsed.toFixed(1) + ' continuous seconds.'
     : divergences + ' divergence(s); see above.'));
 
   finish(lines, options, divergences === 0 ? 0 : 1);
