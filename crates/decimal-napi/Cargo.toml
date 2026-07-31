@@ -1,0 +1,18 @@
+[package]
+name = "decimal-napi"
+description = "N-API bindings exposing decimal-core to Node as a native addon"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+crate-type = ["cdylib"]
+name = "decimal"
+
+[dependencies]
+decimal-core = { path = "../decimal-core" }
+napi-sys = "2"
+
+[build-dependencies]
+napi-build = "2"
