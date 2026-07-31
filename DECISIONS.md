@@ -340,3 +340,119 @@ implemented" and "implemented, and blocked by a documented property of the
 host API" is exactly what a reader of this file is entitled to know.
 
 ---
+
+### D-09 · The narrowing that turned a wrong answer into a hang
+
+**Context.** `taylorSeries` builds each denominator as `new Ctor(n++ * n++)`.
+`n` there is a JavaScript number — a double — so the product is exact to 2⁵³.
+The port had it as:
+
+```rust
+let denominator = Decimal::from_i32((a * b) as i32);
+```
+
+Every counter in this crate is an `i64`, so `a * b` is computed correctly; the
+`as i32` then discards the top half of it. For `n` above 46,340 the product
+exceeds `i32::MAX` and wraps, sometimes to a negative number.
+
+**The symptom was not a wrong digit.** A series whose denominators stop growing
+has terms that stop shrinking, so the convergence test — successive partial
+sums agreeing limb-for-limb — is never satisfied. `cosh(1e6)` reduces to an
+argument near 250,000 and needs about that many terms, which is comfortably
+past the boundary. The call did not return. Upstream answers it in two seconds.
+
+**Found by** the differential fuzz harness, within minutes of it first running,
+as a sequence that stopped producing output. It was not found by the original
+test suite, which passed 22,627 of 22,628 before and after: no assertion in it
+drives a series that long.
+
+**Decision.** Add `Decimal::from_integer(i64)`, exact across the whole range,
+and remove every narrowing conversion of a counter — six sites, in `trig.rs`,
+`elementary.rs` and `inverse.rs`, only one of which was reachable. Where the
+product can exceed 2⁵³, `series_denominator` deliberately routes through an
+`f64` so that the port rounds where the original rounds; that branch needs
+about 94 million terms to reach and exists so that the difference is written
+down rather than merely improbable.
+
+**Consequence.** `cosh(1e6)` now returns the same digits as upstream in 470 ms
+against upstream's 2,070 ms. Pinned by a test that hangs rather than fails if
+the narrowing returns.
+
+This is D-07 for the third time — JavaScript has one numeric type and it is a
+double, so every intermediate the original computes is exact to 2⁵³ and signed,
+and every place the port picks a narrower type is a place to justify rather
+than assume. D-07 was an intermediate going negative; the `pow` fix in the
+straggler pass was an array read past its end; this is a product outgrowing its
+type. Three symptoms, one cause.
+
+**A note on what the same investigation found upstream.** `cosh`'s argument
+reduction chooses how many times to fold by the operand's *digit count*
+(`k = ceil(len / 3)`), never by its *magnitude* — the maintainer's own comment
+there reads `TODO? Estimation reused from cosine() and may not be optimal
+here`. For `cos` that is sound, because the argument is first reduced modulo
+π/2; the hyperbolic functions have no periodicity to exploit, so a large
+argument stays large and the series needs work proportional to it. Upstream's
+`cosh(1e6)` takes two seconds, `cosh(1e8)` is minutes, and the growth is
+linear. That is a property of the original, so the port reproduces it, and the
+fuzz harness bounds the magnitude of hyperbolic arguments for this reason and
+says so in its log rather than silently skipping them.
+
+---
+
+### D-10 · Reproducing a limit that Rust does not have
+
+**Context.** `asinh` raises the working precision to
+`pr + 2·max(|x.e|, x.sd()) + 6`. For an argument near the exponent ceiling that
+is a precision around 1.8 × 10¹⁶, and the alignment inside the `plus` that
+follows then wants to prepend about 2.6 × 10¹⁵ zero limbs to the smaller
+operand.
+
+The original attempts this too. JavaScript stops it:
+
+```
+RangeError: Invalid array length
+    at P.plus (decimal.js:1604)
+```
+
+catchable, the calculation abandoned, the process fine.
+
+A Rust `Vec` has no maximum length, so the port instead asked the allocator for
+10,285,714,285,714,240 bytes and was killed:
+
+```
+memory allocation of 10285714285714240 bytes failed
+```
+
+**Found by** the differential fuzz harness on its third sequence, as a process
+that stopped existing. The original test suite does not reach it — no assertion
+in it calls an inverse hyperbolic function on an argument near the exponent
+limit.
+
+**Decision.** Reproduce JavaScript's array-length ceiling explicitly.
+`MAX_ARRAY_LENGTH` is 2³² − 1; `plus` and `minus` check the padding against it,
+set `Ctx::array_limit_exceeded`, and abandon the calculation. The Node binding
+turns that flag into a thrown `RangeError` carrying the original's exact
+message — `napi_throw_range_error`, not `napi_throw_error`, so that
+`err instanceof RangeError` is true on both sides and not merely the message.
+
+A flag rather than a `Result` because `plus` and `minus` are infallible in this
+crate and are called from several hundred places, none of which could produce
+the condition; the flag is read once, at the boundary, in `make`, which every
+returned Decimal passes through.
+
+**Consequence.** Identical observable behaviour, including the error's type:
+
+```
+port      threw: RangeError: Invalid array length | instanceof RangeError: true
+reference threw: RangeError: Invalid array length | instanceof RangeError: true
+```
+
+**The general point.** This is the first divergence in the port caused by Rust
+being *less* limited than JavaScript rather than differently limited. The
+recurring hazard recorded in D-07 and D-09 is that the original's numbers are
+doubles and the port's are not; this is its structural counterpart, and it is
+worse, because a missing ceiling has no symptom until the day it has a fatal
+one. Where the original depends on its host refusing something, the port has to
+refuse it too — and refuse it the same way.
+
+---

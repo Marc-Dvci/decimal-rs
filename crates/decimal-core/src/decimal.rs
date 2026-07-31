@@ -157,6 +157,21 @@ impl Decimal {
     /// two limbs. Used for the many `new Ctor(1)`, `new Ctor(2)`, `new
     /// Ctor(0.5)`-style constants inside the algorithms.
     pub fn from_i32(n: i32) -> Decimal {
+        Decimal::from_integer(i64::from(n))
+    }
+
+    /// A decimal from any `i64`, exactly.
+    ///
+    /// The wider constructor exists because narrowing one does not: the
+    /// original's series denominators are `n++ * n++` evaluated as a
+    /// *JavaScript number*, which is a double and stays exact to 2⁵³. Written
+    /// as `from_i32((a * b) as i32)` the same expression wraps silently once
+    /// `n` passes 46 340, and a Taylor series handed a negative denominator
+    /// does not converge — it runs until something kills the process. That is
+    /// what `cosh(1e6)` did.
+    ///
+    /// Callers holding a counter should use this and never narrow. See D-09.
+    pub fn from_integer(n: i64) -> Decimal {
         if n == 0 {
             return Decimal::zero(Sign::Pos);
         }
@@ -164,10 +179,11 @@ impl Decimal {
         let mut magnitude = n.unsigned_abs();
 
         // Split into base-10⁷ limbs, least significant first, then reverse.
+        let base = u64::from(crate::BASE);
         let mut limbs = Vec::new();
         while magnitude > 0 {
-            limbs.push(magnitude % crate::BASE);
-            magnitude /= crate::BASE;
+            limbs.push((magnitude % base) as u32);
+            magnitude /= base;
         }
         limbs.reverse();
 

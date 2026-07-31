@@ -128,12 +128,12 @@ pub fn atan(ctx: &mut Ctx, x: &Decimal) -> Result<Decimal> {
     while !converged {
         px = mul(ctx, &px, &x2);
         n += 2;
-        let term = divide(ctx, &px, &int(n as i32), None, rounding::DOWN, false, None);
+        let term = divide(ctx, &px, &Decimal::from_integer(n), None, rounding::DOWN, false, None);
         t = sub(ctx, &r, &term);
 
         px = mul(ctx, &px, &x2);
         n += 2;
-        let term = divide(ctx, &px, &int(n as i32), None, rounding::DOWN, false, None);
+        let term = divide(ctx, &px, &Decimal::from_integer(n), None, rounding::DOWN, false, None);
         r = add(ctx, &t, &term);
 
         if r.is_finite() && (r.digits().len() as i64) > j {

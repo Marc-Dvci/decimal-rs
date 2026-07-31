@@ -221,6 +221,13 @@ pub fn add(ctx: &mut Ctx, x: &Decimal, y: &Decimal) -> Decimal {
             shift = limit;
             target.truncate(1);
         }
+        // The cap bounds the padding by the working precision — but the
+        // working precision is itself unbounded, and `asinh` raises it to
+        // twice the operand's exponent. See `Ctx::array_limit_exceeded`.
+        if shift + target.len() as i64 > crate::MAX_ARRAY_LENGTH {
+            ctx.array_limit_exceeded = true;
+            return Decimal::nan();
+        }
         prepend_zeros(target, shift);
     }
 
@@ -326,6 +333,12 @@ pub fn sub(ctx: &mut Ctx, x: &Decimal, y: &Decimal) -> Decimal {
         if shift > limit {
             shift = limit;
             target.truncate(1);
+        }
+        // As in `add`: the cap is proportional to a precision that callers may
+        // have raised past anything allocatable.
+        if shift + target.len() as i64 > crate::MAX_ARRAY_LENGTH {
+            ctx.array_limit_exceeded = true;
+            return Decimal::nan();
         }
         prepend_zeros(target, shift);
         skip = shift;

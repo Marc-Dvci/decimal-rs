@@ -252,7 +252,7 @@ pub fn natural_exponential(ctx: &mut Ctx, x: &Decimal, sd: Option<i64>) -> Decim
         finalise(ctx, &mut pow, Some(wpr), rounding::DOWN, false);
 
         i += 1;
-        denominator = mul(ctx, &denominator, &Decimal::from_i32(i as i32));
+        denominator = mul(ctx, &denominator, &Decimal::from_integer(i));
 
         let term = divide(ctx, &pow, &denominator, Some(wpr), rounding::DOWN, false, None);
         let t = add(ctx, &sum, &term);
@@ -396,7 +396,7 @@ pub fn natural_logarithm(ctx: &mut Ctx, y: &Decimal, sd: Option<i64>) -> Result<
         numerator = mul(ctx, &numerator, &x2);
         finalise(ctx, &mut numerator, Some(wpr), rounding::DOWN, false);
 
-        let divisor = Decimal::from_i32(denominator as i32);
+        let divisor = Decimal::from_integer(denominator);
         let term = divide(ctx, &numerator, &divisor, Some(wpr), rounding::DOWN, false, None);
         let next = add(ctx, &sum, &term);
 
@@ -415,7 +415,7 @@ pub fn natural_logarithm(ctx: &mut Ctx, y: &Decimal, sd: Option<i64>) -> Result<
                 }
                 sum = add(ctx, &sum, &contribution);
             }
-            let divisor = Decimal::from_i32(n as i32);
+            let divisor = Decimal::from_integer(n);
             sum = divide(ctx, &sum, &divisor, Some(wpr), rounding::DOWN, false, None);
 
             if sd.is_none() {

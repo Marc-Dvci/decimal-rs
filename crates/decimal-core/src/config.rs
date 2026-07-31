@@ -152,6 +152,30 @@ pub struct Ctx {
     /// reduction modulo π/2. Written by `toLessThanHalfPi`, read by `sin`,
     /// `cos` and `tan`.
     pub quadrant: u8,
+    /// Set when an operation needed a digit array longer than JavaScript
+    /// permits, i.e. longer than [`crate::MAX_ARRAY_LENGTH`].
+    ///
+    /// # Why a flag rather than a `Result`
+    ///
+    /// The condition arises inside `plus` and `minus`, which are infallible in
+    /// this crate and are called from everywhere; threading a `Result` out of
+    /// them would change several hundred call sites to carry an error that
+    /// cannot occur in any of them.
+    ///
+    /// It is not a hypothetical. `asinh` raises the working precision to
+    /// `pr + 2·max(|e|, sd) + 6`, so an argument near the exponent ceiling
+    /// asks for a precision around 1.8 × 10¹⁶ — and the alignment inside the
+    /// following `plus` then wants to prepend 2.6 × 10¹⁵ zero limbs. The
+    /// original attempts it too and JavaScript stops it: `RangeError: Invalid
+    /// array length`, catchable, the calculation abandoned. Rust's `Vec` has no
+    /// such ceiling, so the port instead asked for ten petabytes and the
+    /// allocator aborted the process — a strictly worse outcome than the
+    /// original's, and one that no amount of fidelity elsewhere makes up for.
+    ///
+    /// So the arithmetic sets this and returns early, and the boundary — the
+    /// Node binding, or any embedder of this crate — turns it into a thrown
+    /// error. Found by the differential fuzzer; see DECISIONS.md D-10.
+    pub array_limit_exceeded: bool,
 }
 
 impl Default for Ctx {
@@ -169,7 +193,17 @@ impl Ctx {
             external: true,
             inexact: false,
             quadrant: 0,
+            array_limit_exceeded: false,
         }
+    }
+
+    /// Report and clear [`Ctx::array_limit_exceeded`].
+    ///
+    /// Callers at an API boundary use this to decide whether the value they are
+    /// holding is a real answer or the placeholder left behind by an abandoned
+    /// calculation.
+    pub fn take_array_limit_exceeded(&mut self) -> bool {
+        core::mem::replace(&mut self.array_limit_exceeded, false)
     }
 
     /// Run `body` with the overflow and underflow clamps suppressed, restoring

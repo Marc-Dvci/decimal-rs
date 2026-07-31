@@ -203,6 +203,19 @@ fn decimal_of(env: Env, value: Value) -> Option<Decimal> {
 /// one mutable cell, and when they did not, every method failed with the
 /// constructor's own "Invalid argument: undefined".
 fn make(env: Env, st: &mut ConstructorState, value: Decimal) -> Value {
+    // An abandoned calculation reaches here holding a placeholder. Every method
+    // that returns a Decimal comes through this function, so this is the one
+    // place the condition has to be checked.
+    //
+    // The original fails the same operations, in the same place, with
+    // `RangeError: Invalid array length` — thrown by JavaScript itself when the
+    // alignment inside `plus` tries to prepend more zeros than an array can
+    // hold. The message is reproduced exactly; see `Ctx::array_limit_exceeded`.
+    if st.ctx.take_array_limit_exceeded() {
+        env.throw_range_error("Invalid array length");
+        return env.undefined();
+    }
+
     let ctor = env.reference_value(st.ctor);
     let placeholder = env.number(0.0);
     let object = env.construct(ctor, &[placeholder]);

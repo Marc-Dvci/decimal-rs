@@ -108,6 +108,15 @@ pub const EXP_LIMIT: i64 = 9_000_000_000_000_000;
 /// `Number.MAX_SAFE_INTEGER`, i.e. 2⁵³ − 1.
 pub const MAX_SAFE_INTEGER: i64 = 9_007_199_254_740_991;
 
+/// The most elements a JavaScript array can hold, 2³² − 1.
+///
+/// This is a limit of the *original's* host rather than of Rust, and it is
+/// reproduced on purpose. A `Vec` has no such bound, which sounds like an
+/// improvement right up until an operation the original refuses in a catchable
+/// way instead asks the allocator for ten petabytes and takes the process down
+/// with it. See [`Ctx::array_limit_exceeded`].
+pub const MAX_ARRAY_LENGTH: i64 = 4_294_967_295;
+
 /// Powers of ten up to the base, for limb-splitting arithmetic.
 ///
 /// Indexing this table rather than calling a general `pow` matters: the

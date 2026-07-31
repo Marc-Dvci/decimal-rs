@@ -111,6 +111,31 @@ fn int(n: i32) -> Decimal {
     Decimal::from_i32(n)
 }
 
+/// The series denominator `a·b`, built the way the original builds it.
+///
+/// The original writes `new Ctor(n++ * n++)`, and `n` there is a JavaScript
+/// number — a double. So the product is exact while it stays under 2⁵³ and
+/// *rounds* above it. Both halves are reproduced: an `i64` below the boundary,
+/// and a deliberate trip through an `f64` above it, so that the port rounds
+/// where the original rounds.
+///
+/// The upper branch needs about 94 million series terms to reach and so cannot
+/// be observed before a run is abandoned. It is here anyway, because the
+/// alternative is a silent difference whose unreachability is an argument
+/// nobody wrote down.
+fn series_denominator(ctx: &Ctx, a: i64, b: i64) -> Decimal {
+    let product = a * b;
+    if product.unsigned_abs() <= crate::MAX_SAFE_INTEGER as u64 {
+        Decimal::from_integer(product)
+    } else {
+        crate::parse::parse_decimal(
+            ctx,
+            Sign::Pos,
+            &crate::format::number_to_string(product as f64),
+        )
+    }
+}
+
 /// Sum the Taylor series for `cos`, `cosh`, `sin` or `sinh`.
 ///
 /// `n` seeds the factorial denominators — 1 for the cosine family, 2 for the
@@ -148,7 +173,7 @@ pub fn taylor_series(
         let b = n;
         n += 1;
         let numerator = mul(ctx, &u, &x2);
-        let denominator = Decimal::from_i32((a * b) as i32);
+        let denominator = series_denominator(ctx, a, b);
         t = divide(ctx, &numerator, &denominator, Some(pr), rounding::DOWN, false, None);
 
         u = if is_hyperbolic {
@@ -162,7 +187,7 @@ pub fn taylor_series(
         let b = n;
         n += 1;
         let numerator = mul(ctx, &t, &x2);
-        let denominator = Decimal::from_i32((a * b) as i32);
+        let denominator = series_denominator(ctx, a, b);
         y = divide(ctx, &numerator, &denominator, Some(pr), rounding::DOWN, false, None);
 
         t = add(ctx, &u, &y);
@@ -696,5 +721,46 @@ mod tests {
             Error::PrecisionLimitExceeded
         );
         assert!(get_pi(&mut ctx, PI_PRECISION, rounding::DOWN).is_ok());
+    }
+
+    /// The series denominator must not be narrowed to 32 bits.
+    ///
+    /// `cosh(1e6)` reduces to an argument near 250,000 and needs about that
+    /// many terms, so `n` passes 46,340 and `n(n+1)` passes `i32::MAX`. Written
+    /// as `from_i32((a * b) as i32)` the product wrapped — to a *negative*
+    /// denominator, among others — and a series whose terms stop shrinking
+    /// never satisfies the convergence test. The call did not return a wrong
+    /// answer; it did not return.
+    ///
+    /// The expectation is upstream's, and the test is a timeout in disguise:
+    /// if the narrowing comes back, this hangs rather than fails.
+    #[test]
+    fn a_long_series_does_not_overflow_its_denominator() {
+        let mut ctx = Ctx::default();
+        assert_eq!(
+            to_string(&cosh(&mut ctx, &d("1e6")), &ctx.cfg),
+            "1.5166076984010437725e+434294"
+        );
+        // Just below the boundary, which passed even before the fix — so the
+        // pair together says the boundary is where it is claimed to be.
+        assert_eq!(
+            to_string(&cosh(&mut ctx, &d("1e5")), &ctx.cfg),
+            "1.4033316802130615897e+43429"
+        );
+    }
+
+    /// `from_integer` is exact across the range the counters use, including
+    /// past the point where an `i32` would have wrapped.
+    #[test]
+    fn integers_convert_exactly_past_the_thirty_two_bit_boundary() {
+        let cfg = crate::Config::default();
+        for n in [
+            0i64, 1, 9_999_999, 10_000_000, 2_147_483_647, 2_147_483_648,
+            46_341 * 46_342, 9_007_199_254_740_991,
+        ] {
+            assert_eq!(to_string(&Decimal::from_integer(n), &cfg), n.to_string());
+            assert_eq!(to_string(&Decimal::from_integer(-n), &cfg),
+                       if n == 0 { "0".to_string() } else { (-n).to_string() });
+        }
     }
 }

@@ -504,6 +504,22 @@ impl Env {
         }
     }
 
+    /// Throw a JavaScript `RangeError`.
+    ///
+    /// Distinct from [`Env::throw`] because the original does not raise this
+    /// one: JavaScript does, when an array is asked to exceed its maximum
+    /// length. Reproducing the message but not the constructor would leave
+    /// `err instanceof RangeError` false where the original makes it true.
+    pub fn throw_range_error(self, message: &str) {
+        let message = std::ffi::CString::new(message.replace('\0', ""))
+            .expect("NULs were just removed");
+        // SAFETY: a null code and a valid NUL-terminated message is the
+        // documented way to throw a `RangeError`.
+        unsafe {
+            sys::napi_throw_range_error(self.0, ptr::null(), message.as_ptr());
+        }
+    }
+
     /// Whether an exception is already pending, in which case the caller must
     /// return without throwing another.
     pub fn is_exception_pending(self) -> bool {
