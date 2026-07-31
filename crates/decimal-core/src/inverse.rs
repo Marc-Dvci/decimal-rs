@@ -163,6 +163,91 @@ pub fn atan(ctx: &mut Ctx, x: &Decimal) -> Result<Decimal> {
     Ok(r)
 }
 
+/// `atan2(y, x)` — the angle from the positive *x*-axis to the point `(x, y)`,
+/// in `(−π, π]`.
+///
+/// # Why this is not `atan(y/x)` with a fix-up
+///
+/// The quotient `y/x` discards which half-plane the point is in: `(1, 1)` and
+/// `(−1, −1)` both give 1. So the quadrant has to be restored from the signs,
+/// and the original does it by adding or subtracting a whole π rather than by
+/// selecting a formula per quadrant. The choice of sign is `y.s`, so that the
+/// result of a third-quadrant point comes out negative and the range stays
+/// half-open at −π.
+///
+/// # The two precisions
+///
+/// Four guard digits are used throughout — except in one branch. When `x` is
+/// −∞ or `y` is ±0 with `x` negative, the answer is exactly π, and the original
+/// asks `getPi` for π at the *configured* precision and rounding rather than at
+/// the working precision. That is deliberate, not an oversight: there is no
+/// subsequent arithmetic to lose digits to, so rounding once is rounding
+/// correctly, and rounding twice would not be. Reproduced as written.
+///
+/// # The zeros
+///
+/// `y.isZero()` is true for both `+0` and `−0`, and the sign is reapplied
+/// afterwards by `r.s = y.s`. So `atan2(-0, -1)` is −π and `atan2(0, -1)` is
+/// +π: the two zeros give different answers, as IEEE 754 requires and as the
+/// original test suite checks.
+pub fn atan2(ctx: &mut Ctx, y: &Decimal, x: &Decimal) -> Result<Decimal> {
+    let (pr, rm) = (ctx.cfg.precision, ctx.cfg.rounding);
+    let wpr = pr + 4;
+
+    let r = if y.is_nan() || x.is_nan() {
+        // Either NaN.
+        Decimal::nan()
+    } else if !y.is_finite() && !x.is_finite() {
+        // Both ±Infinity: the point is on a diagonal, so the answer is a
+        // quarter or three-quarters of π, chosen by the sign of x alone.
+        let pi = get_pi(ctx, wpr, rounding::DOWN)?;
+        let fraction = literal(ctx, if x.s.is_negative() { "0.75" } else { "0.25" });
+        let mut r = mul(ctx, &pi, &fraction);
+        r.s = y.s;
+        r
+    } else if !x.is_finite() || y.is_zero() {
+        // x is ±Infinity, or y is ±0: the point lies on the x-axis, at 0 or π.
+        let mut r = if x.s.is_negative() {
+            get_pi(ctx, pr, rm)?
+        } else {
+            Decimal::zero(Sign::Pos)
+        };
+        r.s = y.s;
+        r
+    } else if !y.is_finite() || x.is_zero() {
+        // y is ±Infinity, or x is ±0: the point lies on the y-axis, at ±π/2.
+        let pi = get_pi(ctx, wpr, rounding::DOWN)?;
+        let half = literal(ctx, "0.5");
+        let mut r = mul(ctx, &pi, &half);
+        r.s = y.s;
+        r
+    } else if x.s.is_negative() {
+        // Second or third quadrant. `atan` of the quotient lands in the first
+        // or fourth; a whole π moves it across, in the direction of y's sign.
+        ctx.cfg.precision = wpr;
+        ctx.cfg.rounding = rounding::DOWN;
+        let quotient = divide(ctx, y, x, Some(wpr), rounding::DOWN, false, None);
+        let angle = atan(ctx, &quotient)?;
+        let pi = get_pi(ctx, wpr, rounding::DOWN)?;
+        ctx.cfg.precision = pr;
+        ctx.cfg.rounding = rm;
+        if y.s.is_negative() {
+            sub(ctx, &angle, &pi)
+        } else {
+            add(ctx, &angle, &pi)
+        }
+    } else {
+        // First or fourth quadrant: `atan` already answers.
+        let quotient = divide(ctx, y, x, Some(wpr), rounding::DOWN, false, None);
+        atan(ctx, &quotient)?
+    };
+
+    // The original returns `r` unfinalised: every branch has already rounded to
+    // the configured precision, either through `atan` or through the final
+    // `plus`/`minus`. Calling `finalise` again here would be a second rounding.
+    Ok(r)
+}
+
 /// `asin(x)`.
 pub fn asin(ctx: &mut Ctx, x: &Decimal) -> Result<Decimal> {
     if x.is_zero() {
@@ -382,6 +467,57 @@ mod tests {
         assert_eq!(call(&mut ctx, atan, "0"), "0");
         assert_eq!(call(&mut ctx, atan, "1"), "0.78539816339744830962");
         assert_eq!(call(&mut ctx, atan, "-1"), "-0.78539816339744830962");
+    }
+
+    /// The four quadrants, the axes, and the two zeros.
+    #[test]
+    fn two_argument_arctangent_knows_its_quadrant() {
+        let mut ctx = Ctx::default();
+        let at = |ctx: &mut Ctx, y: &str, x: &str| {
+            to_string(&atan2(ctx, &d(y), &d(x)).unwrap(), &Ctx::default().cfg)
+        };
+
+        assert_eq!(at(&mut ctx, "1", "1"), "0.78539816339744830962");
+        assert_eq!(at(&mut ctx, "1", "-1"), "2.3561944901923449288");
+        assert_eq!(at(&mut ctx, "-1", "-1"), "-2.3561944901923449288");
+        assert_eq!(at(&mut ctx, "-1", "1"), "-0.78539816339744830962");
+        assert_eq!(at(&mut ctx, "1", "0"), "1.5707963267948966192");
+
+        // The quotient is 1 in both of the diagonal cases above, so anything
+        // that reduced to `atan(y/x)` would return the same answer for both.
+        assert_ne!(at(&mut ctx, "1", "1"), at(&mut ctx, "-1", "-1"));
+    }
+
+    /// `atan2(±0, −1)` is `±π`: the sign of a zero survives, as IEEE 754 says
+    /// it must, because the branch reapplies `y.s` after choosing π.
+    #[test]
+    fn the_two_zeros_land_on_opposite_sides_of_the_cut() {
+        let mut ctx = Ctx::default();
+        let minus_one = d("-1");
+
+        let from_plus_zero = atan2(&mut ctx, &Decimal::zero(Sign::Pos), &minus_one).unwrap();
+        let from_minus_zero = atan2(&mut ctx, &Decimal::zero(Sign::Neg), &minus_one).unwrap();
+
+        assert_eq!(to_string(&from_plus_zero, &ctx.cfg), "3.1415926535897932385");
+        assert_eq!(to_string(&from_minus_zero, &ctx.cfg), "-3.1415926535897932385");
+    }
+
+    /// Both infinite: the point is on a diagonal, and only `x`'s sign chooses
+    /// between a quarter and three quarters of π.
+    #[test]
+    fn both_infinite_gives_a_diagonal() {
+        let mut ctx = Ctx::default();
+        let (pos, neg) = (Decimal::infinity(Sign::Pos), Decimal::infinity(Sign::Neg));
+
+        assert_eq!(
+            to_string(&atan2(&mut ctx, &pos, &pos).unwrap(), &ctx.cfg),
+            "0.78539816339744830962"
+        );
+        assert_eq!(
+            to_string(&atan2(&mut ctx, &neg, &neg).unwrap(), &ctx.cfg),
+            "-2.3561944901923449288"
+        );
+        assert!(atan2(&mut ctx, &Decimal::nan(), &pos).unwrap().is_nan());
     }
 
     #[test]

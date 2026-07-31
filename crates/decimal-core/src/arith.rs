@@ -871,6 +871,50 @@ pub fn int_pow(ctx: &mut Ctx, x: &Decimal, n: i64, pr: i64) -> Decimal {
     r
 }
 
+/// `x₀ + x₁ + …`, rounded **once**.
+///
+/// # Why this is not a fold of `plus`
+///
+/// It very nearly is — but the clamps are suppressed for the whole
+/// accumulation and `finalise` is applied only at the end, so the sum is
+/// carried at full working width and rounded a single time. A plain fold would
+/// round at every step and accumulate the error of every one of them; that is
+/// the difference between a sum and a `reduce`, and it is why the original
+/// gives this its own function instead of leaving it to the caller.
+///
+/// # The early exit
+///
+/// The loop stops at the first NaN, because nothing can un-poison a sum, and
+/// because the original's `for (; x.s && ++i < args.length;)` tests the
+/// accumulator's sign *before* advancing. Note the consequence: an argument
+/// after the first NaN is never even constructed, so `Decimal.sum(NaN, {})`
+/// returns NaN where `Decimal.sum({}, NaN)` throws. Reproduced, because a
+/// conversion that never happens cannot fail.
+///
+/// An empty list is not the identity; the original constructs `new this(args[0])`
+/// unconditionally and so raises on `undefined`. Callers therefore reject the
+/// empty case before reaching here, and this returns NaN if they do not.
+pub fn sum(ctx: &mut Ctx, values: &[Decimal]) -> Decimal {
+    let Some((first, rest)) = values.split_first() else {
+        return Decimal::nan();
+    };
+
+    let mut x = ctx.without_clamping(|ctx| {
+        let mut x = first.clone();
+        for y in rest {
+            if x.is_nan() {
+                break;
+            }
+            x = add(ctx, &x, y);
+        }
+        x
+    });
+
+    let (pr, rm) = (ctx.cfg.precision, ctx.cfg.rounding);
+    finalise(ctx, &mut x, Some(pr), rm, false);
+    x
+}
+
 /// Format helper used by the tests below and by the CLI: the value as
 /// `toString` would render it under `ctx`.
 pub fn render(ctx: &Ctx, x: &Decimal) -> String {
@@ -1157,5 +1201,35 @@ mod tests {
                 show(&relative)
             );
         }
+    }
+
+    // -- sum -------------------------------------------------------------
+
+    /// The reason `sum` exists as its own function rather than as a fold.
+    ///
+    /// `1e20 + 1` rounds back to `1e20` at precision 20, so folding `plus`
+    /// over these three loses the `1` at the first step and answers zero. `sum`
+    /// keeps the accumulation unrounded and answers one. Both are shown here,
+    /// because the test is the contrast and not either value alone.
+    #[test]
+    fn a_sum_rounds_once_where_a_fold_rounds_every_step() {
+        let mut ctx = Ctx::default();
+        let terms = [d("1e20"), d("1"), d("-1e20")];
+
+        assert_eq!(show(&sum(&mut ctx, &terms)), "1");
+
+        let mut folded = terms[0].clone();
+        for term in &terms[1..] {
+            folded = add(&mut ctx, &folded, term);
+        }
+        assert_eq!(show(&folded), "0");
+    }
+
+    #[test]
+    fn a_sum_stops_at_the_first_nan() {
+        let mut ctx = Ctx::default();
+        assert!(sum(&mut ctx, &[d("1"), Decimal::nan(), d("2")]).is_nan());
+        assert!(sum(&mut ctx, &[]).is_nan(), "no terms is not the identity");
+        assert_eq!(show(&sum(&mut ctx, &[d("100"), d("200"), d("300")])), "600");
     }
 }

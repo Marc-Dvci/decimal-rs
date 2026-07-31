@@ -112,6 +112,34 @@ impl Env {
         (argv, this, data)
     }
 
+    /// The same, for the genuinely variadic functions — `Decimal.sum`,
+    /// `Decimal.hypot`, `Decimal.max`, `Decimal.min` — where every argument
+    /// counts and no cap would be honest.
+    ///
+    /// Node reports the true argument count when the `argv` pointer is null, so
+    /// this asks first and allocates second. The alternative, guessing a
+    /// generous fixed cap, silently drops the tail of a longer call; and the
+    /// tail of a `sum` is exactly where a NaN would be hiding.
+    pub fn callback_info_variadic(
+        self,
+        info: sys::napi_callback_info,
+    ) -> (Vec<Value>, Value, *mut c_void) {
+        let mut argc: usize = 0;
+        // SAFETY: `info` is live; a null `argv` requests only the count, which
+        // is what `argc` receives. `this` and `data` are not wanted here.
+        unsafe {
+            sys::napi_get_cb_info(
+                self.0,
+                info,
+                &mut argc,
+                ptr::null_mut(),
+                ptr::null_mut(),
+                ptr::null_mut(),
+            );
+        }
+        self.callback_info(info, argc)
+    }
+
     /// `typeof value`.
     pub fn type_of(self, value: Value) -> JsType {
         let mut result: sys::napi_valuetype = 0;

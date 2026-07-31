@@ -337,6 +337,53 @@ pub(crate) fn difference(ctx: &mut Ctx, x: &Decimal, y: &Decimal) -> Decimal {
     sub(ctx, x, y)
 }
 
+/// `hypot(x₀, x₁, …)` — the Euclidean length `√(x₀² + x₁² + …)`.
+///
+/// # The sum is exact
+///
+/// The squares and their sum are accumulated with the clamps suppressed, so no
+/// intermediate can overflow to Infinity or underflow to zero on its way to a
+/// perfectly ordinary answer; only the closing `sqrt` rounds. That is what
+/// makes `hypot(1e-6000, 1e-6000)` finite rather than zero.
+///
+/// It is *not*, however, the scaled algorithm found in C's `hypot`, and the
+/// difference is worth being clear about: this squares directly, so the sum
+/// carries the rounding of each square at the working precision. The original
+/// makes that trade and so does this, because reproducing the original's
+/// answers is the point.
+///
+/// # The infinity rule
+///
+/// An infinite argument makes the result infinite immediately, whatever else
+/// is in the list — including a NaN that has not been read yet. A NaN
+/// encountered first, by contrast, poisons the accumulator (`t = n`, and every
+/// later `t.d` test then fails) so the answer is NaN. So the two are not
+/// symmetric, and the order of the arguments matters. This mirrors the
+/// original's loop exactly; `hypot(NaN, Infinity)` is Infinity and
+/// `hypot(Infinity, NaN)` is Infinity, but `hypot(NaN, 1)` is NaN.
+pub fn hypot(ctx: &mut Ctx, values: &[Decimal]) -> Decimal {
+    let total = ctx.without_clamping(|ctx| {
+        let mut t = Decimal::zero(Sign::Pos);
+        for n in values {
+            if !n.is_finite() {
+                if !n.is_nan() {
+                    return Err(Decimal::infinity(Sign::Pos));
+                }
+                t = n.clone();
+            } else if t.is_finite() {
+                let square = mul(ctx, n, n);
+                t = add(ctx, &t, &square);
+            }
+        }
+        Ok(t)
+    });
+
+    match total {
+        Ok(t) => sqrt(ctx, &t),
+        Err(infinite) => infinite,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -356,6 +403,13 @@ mod tests {
     /// keeps `ctx` from being borrowed mutably and immutably at once.
     fn run(ctx: &mut Ctx, f: fn(&mut Ctx, &Decimal) -> Decimal, x: &Decimal) -> String {
         let value = f(ctx, x);
+        to_string(&value, &ctx.cfg)
+    }
+
+    /// `hypot` over literals, rendered.
+    fn run_many(ctx: &mut Ctx, texts: &[&str]) -> String {
+        let values: Vec<Decimal> = texts.iter().map(|t| d(t)).collect();
+        let value = hypot(ctx, &values);
         to_string(&value, &ctx.cfg)
     }
 
@@ -459,5 +513,32 @@ mod tests {
         assert_eq!(run(&mut ctx, sqrt, &&d("1e400")), "1e+200");
         assert_eq!(run(&mut ctx, sqrt, &&d("1e-400")), "1e-200");
         assert_eq!(run(&mut ctx, cbrt, &&d("1e600")), "1e+200");
+    }
+
+    /// `hypot` is exact where a naive `sqrt(x*x + y*y)` is not: both squares
+    /// underflow a double completely, and would underflow the exponent limits
+    /// too if the clamps were not suppressed for the accumulation.
+    #[test]
+    fn euclidean_length_survives_operands_that_square_to_nothing() {
+        let mut ctx = Ctx::default();
+        assert_eq!(run_many(&mut ctx, &["3", "4"]), "5");
+        assert_eq!(
+            run_many(&mut ctx, &["1e-6000", "1e-6000"]),
+            "1.4142135623730950488e-6000"
+        );
+    }
+
+    /// Infinity wins wherever it appears; NaN wins only if nothing infinite
+    /// follows it. The asymmetry is the original's, and is load-bearing.
+    #[test]
+    fn infinity_outranks_a_nan_that_came_first() {
+        let mut ctx = Ctx::default();
+        let inf = Decimal::infinity(Sign::Pos);
+        let nan = Decimal::nan();
+
+        assert!(hypot(&mut ctx, &[nan.clone(), inf.clone()]).is_infinite());
+        assert!(hypot(&mut ctx, &[inf, nan.clone()]).is_infinite());
+        assert!(hypot(&mut ctx, &[nan, d("1")]).is_nan());
+        assert_eq!(run_many(&mut ctx, &[]), "0");
     }
 }

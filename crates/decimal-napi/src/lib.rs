@@ -43,7 +43,7 @@
 mod napi;
 
 use decimal_core::arith::{self, compare};
-use decimal_core::{format, ops, parse, Config, Ctx, Decimal, Error, Sign};
+use decimal_core::{format, inverse, ops, parse, roots, Config, Ctx, Decimal, Error, Sign};
 use napi::{define_class, bind_symbols, Env, JsType, Value};
 use napi_sys as sys;
 use std::ffi::c_void;
@@ -1005,10 +1005,103 @@ macro_rules! static_not_yet_ported {
     };
 }
 
-static_not_yet_ported!(s_atan2);
-static_not_yet_ported!(s_hypot);
 static_not_yet_ported!(s_random);
-static_not_yet_ported!(s_sum);
+
+/// `Decimal.atan2(y, x)`.
+///
+/// Both arguments are coerced before either is used, so a bad `x` raises even
+/// when `y` is already NaN — the original writes `y = new this(y); x = new
+/// this(x);` on two consecutive lines, ahead of every test.
+unsafe extern "C" fn s_atan2(
+    env: sys::napi_env,
+    info: sys::napi_callback_info,
+) -> sys::napi_value {
+    let env = Env(env);
+    let (args, _, data) = env.callback_info(info, 2);
+    // SAFETY: `data` is the leaked ConstructorState for this class.
+    let st = unsafe { state(data) };
+
+    let y = match argument(env, st, &args, 0) {
+        Ok(v) => v,
+        Err(e) => return fail(env, e),
+    };
+    let x = match argument(env, st, &args, 1) {
+        Ok(v) => v,
+        Err(e) => return fail(env, e),
+    };
+
+    match inverse::atan2(&mut st.ctx, &y, &x) {
+        Ok(value) => make(env, st, value),
+        Err(e) => fail(env, e),
+    }
+}
+
+/// `Decimal.hypot(…)`.
+///
+/// Arguments are coerced one at a time, inside the loop, because the original
+/// does: an infinite argument returns before the rest are ever looked at, so a
+/// later value that would fail to convert never gets the chance.
+unsafe extern "C" fn s_hypot(
+    env: sys::napi_env,
+    info: sys::napi_callback_info,
+) -> sys::napi_value {
+    let env = Env(env);
+    let (args, _, data) = env.callback_info_variadic(info);
+    // SAFETY: `data` is the leaked ConstructorState for this class.
+    let st = unsafe { state(data) };
+
+    let mut values = Vec::with_capacity(args.len());
+    for index in 0..args.len() {
+        match argument(env, st, &args, index) {
+            Ok(v) => {
+                let infinite = v.is_infinite();
+                values.push(v);
+                if infinite {
+                    break;
+                }
+            }
+            Err(e) => return fail(env, e),
+        }
+    }
+
+    let value = roots::hypot(&mut st.ctx, &values);
+    make(env, st, value)
+}
+
+/// `Decimal.sum(…)`.
+///
+/// Coerced lazily for the same reason as `hypot`, and stopping at the first
+/// NaN: `Decimal.sum(NaN, {})` is NaN, because the `{}` is never constructed.
+unsafe extern "C" fn s_sum(
+    env: sys::napi_env,
+    info: sys::napi_callback_info,
+) -> sys::napi_value {
+    let env = Env(env);
+    let (args, _, data) = env.callback_info_variadic(info);
+    // SAFETY: `data` is the leaked ConstructorState for this class.
+    let st = unsafe { state(data) };
+
+    // With no arguments at all the original still evaluates `new this(args[0])`
+    // — that is, `new Decimal(undefined)` — and raises. Deferring to `argument`
+    // with an out-of-range index reproduces both the error and its text.
+    let count = args.len().max(1);
+    let mut values = Vec::with_capacity(count);
+    for index in 0..count {
+        match argument(env, st, &args, index) {
+            Ok(v) => {
+                let is_nan = v.is_nan();
+                values.push(v);
+                if is_nan {
+                    break;
+                }
+            }
+            Err(e) => return fail(env, e),
+        }
+    }
+
+    let value = arith::sum(&mut st.ctx, &values);
+    make(env, st, value)
+}
 
 /// `Decimal.max` and `Decimal.min`, which take any number of arguments.
 ///
