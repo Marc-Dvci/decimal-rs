@@ -79,6 +79,7 @@ pub mod parse;
 pub mod power;
 pub mod roots;
 pub mod round;
+pub mod trig;
 
 pub use config::{rounding, Config, Ctx};
 pub use decimal::{Decimal, Sign};

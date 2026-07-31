@@ -402,6 +402,35 @@ unary!(m_trunc, |ctx, x| ops::trunc(ctx, x));
 unary!(m_sqrt, |ctx, x| decimal_core::roots::sqrt(ctx, x));
 unary!(m_cbrt, |ctx, x| decimal_core::roots::cbrt(ctx, x));
 unary!(m_exp, |ctx, x| decimal_core::elementary::exp(ctx, x));
+unary!(m_sinh, |ctx, x| decimal_core::trig::sinh(ctx, x));
+unary!(m_cosh, |ctx, x| decimal_core::trig::cosh(ctx, x));
+unary!(m_tanh, |ctx, x| decimal_core::trig::tanh(ctx, x));
+
+/// Declares a unary instance method that can raise `[DecimalError] Precision
+/// limit exceeded`, which the circular functions do when the configured
+/// precision outruns the 1025-digit `PI` constant.
+macro_rules! fallible_unary {
+    ($name:ident, $body:expr) => {
+        unsafe extern "C" fn $name(
+            env: sys::napi_env,
+            info: sys::napi_callback_info,
+        ) -> sys::napi_value {
+            let env = Env(env);
+            let Some((_, x, st)) = receiver(env, info, 0) else {
+                return env.undefined();
+            };
+            let f: fn(&mut Ctx, &Decimal) -> Result<Decimal, Error> = $body;
+            match f(&mut st.ctx, &x) {
+                Ok(value) => make(env, st, value),
+                Err(e) => fail(env, e),
+            }
+        }
+    };
+}
+
+fallible_unary!(m_sin, |ctx, x| decimal_core::trig::sin(ctx, x));
+fallible_unary!(m_cos, |ctx, x| decimal_core::trig::cos(ctx, x));
+fallible_unary!(m_tan, |ctx, x| decimal_core::trig::tan(ctx, x));
 
 /// `naturalLogarithm`, which can raise `[DecimalError] Precision limit
 /// exceeded` when the configured precision outruns the 1025-digit `LN10`
@@ -428,16 +457,7 @@ binary!(m_div, |ctx, x, y| {
     arith::divide(ctx, x, y, None, rm, false, None)
 });
 binary!(m_mod, |ctx, x, y| ops::modulo(ctx, x, y));
-binary!(m_div_to_int, |ctx, x, y| {
-    // The original: divide with the quotient truncated towards zero, then
-    // rounded to the working precision.
-    let (pr, rm) = (ctx.cfg.precision, ctx.cfg.rounding);
-    let mut q = ctx.without_clamping(|ctx| {
-        arith::divide(ctx, x, y, Some(0), decimal_core::rounding::DOWN, true, None)
-    });
-    decimal_core::round::finalise(ctx, &mut q, Some(pr), rm, false);
-    q
-});
+binary!(m_div_to_int, |ctx, x, y| decimal_core::trig::div_to_int(ctx, x, y));
 
 predicate!(m_is_nan, |x| x.is_nan());
 predicate!(m_is_finite, |x| x.is_finite());
@@ -500,12 +520,6 @@ not_yet_ported!(m_asin);
 not_yet_ported!(m_asinh);
 not_yet_ported!(m_atan);
 not_yet_ported!(m_atanh);
-not_yet_ported!(m_cos);
-not_yet_ported!(m_cosh);
-not_yet_ported!(m_sin);
-not_yet_ported!(m_sinh);
-not_yet_ported!(m_tan);
-not_yet_ported!(m_tanh);
 not_yet_ported!(m_to_binary);
 not_yet_ported!(m_to_hex);
 not_yet_ported!(m_to_octal);
