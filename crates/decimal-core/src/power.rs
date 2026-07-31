@@ -219,7 +219,8 @@ pub fn to_power(ctx: &mut Ctx, x: &Decimal, y: &Decimal) -> Result<Decimal> {
         });
     }
 
-    let mut x = x.clone();
+    // `x = new Ctor(x)` in the original: a clamping copy, not a clone.
+    let mut x = crate::ops::clamped_copy(ctx, x);
     if equals_int(&x, 1) {
         return Ok(x);
     }

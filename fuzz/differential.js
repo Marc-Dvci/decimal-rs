@@ -308,64 +308,90 @@ function attempt(D, thunk) {
 const OPERATIONS = [];
 
 /*
- * Some operations are unusably slow in *both* implementations for arguments of
- * large magnitude, and skipping those is not the same as skipping the
- * operation.
+ * ---------------------------------------------------------------------------
+ * One bound, and the reason for it
+ * ---------------------------------------------------------------------------
  *
- * `cosh`, `sinh` and `tanh` choose how many times to fold their argument from
- * its digit *count*, never its *magnitude* — upstream's own comment there says
- * `TODO? Estimation reused from cosine() and may not be optimal here`. For
- * `cos` that is fine, because the argument is first reduced modulo π/2; the
- * hyperbolic functions have no periodicity to exploit, so a large argument
- * stays large and the series needs work proportional to it. Upstream's
- * `cosh(1e6)` takes two seconds and `cosh(1e8)` takes minutes, growing
- * linearly.
+ * The corpus deliberately includes values at the exponent limits — 1e9e15 and
+ * 1e-9e15 are legal, `maxE` says so — and most of the API handles them in
+ * constant time, because the exponent is a field and not a length.
  *
- * So a bound of 1e4 here is not a place the port is untested — it is the point
- * past which the *oracle* stops answering in reasonable time, and a harness
- * that spent its minute inside one of them would test almost nothing. Both
- * sides are still compared right up to the bound, and DECISIONS.md D-09
- * records the finding. The bound is printed in the log.
+ * Some of it does not. Three families have a cost proportional to the
+ * *magnitude* of the exponent rather than to the number of digits:
+ *
+ *   · the transcendentals, which raise their working precision to
+ *     `pr + max(|e|, sd) + k` before computing, so an operand at the ceiling
+ *     asks for a precision of 9e15;
+ *   · `mod`, `divToInt`, `toNearest` and `toFraction`, which form an integer
+ *     quotient or denominator whose digit count is the gap between the
+ *     operands' exponents;
+ *   · `toFixed` and the radix renderings, whose output is one character per
+ *     digit before the point.
+ *
+ * At the limits, all three ask for something in the region of 10^15 digits.
+ * Upstream's answer is to exhaust the heap, or to run for hours, or — for
+ * `acosh` — to throw `RangeError: Invalid array length` and leave its own
+ * configuration wrecked (see D-11). None of that is the port disagreeing; it is
+ * the oracle being unable to answer, and an oracle that cannot answer cannot
+ * referee.
+ *
+ * So those families are fuzzed for `|e| < EXPONENT_BOUND` and everything else
+ * across the whole range. The bound is stated in the log header, family by
+ * family, and it is the only restriction on the input space besides
+ * `Decimal.random`.
+ */
+const EXPONENT_BOUND = 10000;
+
+/** Cost proportional to the exponent: fuzz these within the bound. */
+function withinExponentBound(a, b) {
+  if (a.isFinite() && Math.abs(a.e) >= EXPONENT_BOUND) return false;
+  if (b && b.isFinite() && Math.abs(b.e) >= EXPONENT_BOUND) return false;
+  return true;
+}
+
+/*
+ * `sinh`, `cosh` and `tanh` need a second, tighter bound on the *value* rather
+ * than the exponent. They choose how many times to fold their argument from its
+ * digit count and never from its magnitude — upstream's own comment there reads
+ * `TODO? Estimation reused from cosine() and may not be optimal here` — so where
+ * `cos` first reduces modulo π/2, these do not, and the series needs work
+ * proportional to |x|. Upstream's `cosh(1e6)` takes two seconds; `cosh(1e8)`
+ * takes minutes. See D-09.
  */
 const HYPERBOLIC_BOUND = 1e4;
 
-function boundedMagnitude(a) {
-  return !a.isFinite() || a.abs().lt(HYPERBOLIC_BOUND);
+function withinHyperbolicBound(a) {
+  return withinExponentBound(a) && (!a.isFinite() || a.abs().lt(HYPERBOLIC_BOUND));
 }
 
-function unary(name) {
-  OPERATIONS.push({ name, arity: 1, apply: (a) => a[name]() });
+function unary(name, guard) {
+  OPERATIONS.push({ name, arity: 1, guard, apply: (a) => a[name]() });
 }
 
-function binary(name) {
-  OPERATIONS.push({ name, arity: 2, apply: (a, b) => a[name](b) });
+function binary(name, guard) {
+  OPERATIONS.push({ name, arity: 2, guard, apply: (a, b) => a[name](b) });
 }
 
+// Constant in the exponent: fuzzed across the whole range, limits included.
 [
   'abs', 'neg', 'ceil', 'floor', 'round', 'trunc', 'sqrt', 'cbrt',
-  'exp', 'ln', 'sin', 'cos', 'tan',
-  'asin', 'acos', 'atan', 'asinh', 'acosh', 'atanh',
   'toString', 'valueOf', 'toNumber', 'toJSON',
-  'toBinary', 'toHex', 'toOctal',
   'isNaN', 'isFinite', 'isInteger', 'isZero', 'isNegative', 'isPositive',
   'dp', 'sd',
-].forEach(unary);
+].forEach((name) => unary(name));
 
-[
-  'plus', 'minus', 'times', 'div', 'divToInt', 'mod', 'pow', 'log',
-  'cmp', 'eq', 'lt', 'lte', 'gt', 'gte',
-].forEach(binary);
+['plus', 'minus', 'times', 'div', 'cmp', 'eq', 'lt', 'lte', 'gt', 'gte']
+  .forEach((name) => binary(name));
+
+// Proportional to the exponent: bounded.
+['exp', 'ln', 'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'asinh', 'acosh', 'atanh']
+  .forEach((name) => unary(name, withinExponentBound));
+
+['sinh', 'cosh', 'tanh'].forEach((name) => unary(name, withinHyperbolicBound));
+
+['pow', 'log', 'divToInt', 'mod'].forEach((name) => binary(name, withinExponentBound));
 
 // The ones whose extra arguments matter enough to generate.
-// The hyperbolic three, guarded — see HYPERBOLIC_BOUND.
-['sinh', 'cosh', 'tanh'].forEach((name) => {
-  OPERATIONS.push({ name, arity: 1, guard: boundedMagnitude, apply: (a) => a[name]() });
-});
-
-OPERATIONS.push({
-  name: 'toFixed', arity: 1,
-  apply: (a, _b, rng) => a.toFixed(rng.below(40), rng.below(9)),
-});
 OPERATIONS.push({
   name: 'toExponential', arity: 1,
   apply: (a, _b, rng) => a.toExponential(rng.below(40), rng.below(9)),
@@ -383,20 +409,35 @@ OPERATIONS.push({
   apply: (a, _b, rng) => a.toSD(1 + rng.below(40), rng.below(9)),
 });
 OPERATIONS.push({
-  name: 'toNearest', arity: 2,
-  apply: (a, b, rng) => a.toNearest(b, rng.below(9)),
-});
-OPERATIONS.push({
-  name: 'toFraction', arity: 1,
-  apply: (a, _b, rng) => (rng.chance(0.5) ? a.toFraction() : a.toFraction(1 + rng.below(100000))),
+  name: 'precision(true)', arity: 1,
+  apply: (a) => a.precision(true),
 });
 OPERATIONS.push({
   name: 'clamp', arity: 3,
   apply: (a, b, _rng, c) => a.clamp(b, c),
 });
 OPERATIONS.push({
-  name: 'precision(true)', arity: 1,
-  apply: (a) => a.precision(true),
+  name: 'toNearest', arity: 2, guard: withinExponentBound,
+  apply: (a, b, rng) => a.toNearest(b, rng.below(9)),
+});
+OPERATIONS.push({
+  name: 'toFixed', arity: 1, guard: withinExponentBound,
+  apply: (a, _b, rng) => a.toFixed(rng.below(40), rng.below(9)),
+});
+OPERATIONS.push({
+  name: 'toFraction', arity: 1, guard: withinExponentBound,
+  apply: (a, _b, rng) => (rng.chance(0.5) ? a.toFraction() : a.toFraction(1 + rng.below(100000))),
+});
+// Both forms of each radix rendering: bare, which expands every digit, and
+// with a significant-digit count, which switches to exponential notation and
+// takes a different path through the same code.
+['toBinary', 'toHex', 'toOctal'].forEach((name) => {
+  OPERATIONS.push({
+    name, arity: 1, guard: withinExponentBound,
+    apply: (a, _b, rng) => (rng.chance(0.5)
+      ? a[name]()
+      : a[name](1 + rng.below(40), rng.below(9))),
+  });
 });
 
 // Statics. `D` is the constructor under test, which differs between the two
@@ -557,7 +598,7 @@ function runSequence(steps, seed, options) {
     // An operation with a guard that its operand fails is not run at all, and
     // the step is spent. Substituting a different operand instead would bias
     // the input distribution towards whatever the guard admits.
-    if (!useStatic && op.guard && !op.guard(chosen[0].r)) continue;
+    if (!useStatic && op.guard && !op.guard(chosen[0].r, chosen[1] && chosen[1].r)) continue;
 
     const operandsBefore = chosen.map((v) => [describe(R, v.r), describe(P, v.p)]);
 
@@ -704,8 +745,19 @@ function main() {
   emit('  decimalPlaces, negative-zero, thrown message, and the constructor');
   emit('  configuration before and after.');
   emit('excluded: ' + EXCLUDED.join('; '));
-  emit('bounded: sinh/cosh/tanh arguments to |x| < ' + HYPERBOLIC_BOUND +
-       '  (upstream is linear in |x| there; see DECISIONS.md D-09)');
+  emit('bounded: operations whose cost is proportional to the operand exponent are');
+  emit('  fuzzed for |e| < ' + EXPONENT_BOUND + ' — the transcendentals (they raise their working');
+  emit('  precision to pr + max(|e|, sd) + k), mod/divToInt/toNearest/toFraction (they');
+  emit('  form an integer quotient of that many digits), and toFixed/toBinary/toHex/');
+  emit('  toOctal (their output is one character per digit before the point). sinh,');
+  emit('  cosh and tanh take a tighter |x| < ' + HYPERBOLIC_BOUND + ' because upstream folds by digit');
+  emit('  count and not by magnitude. At the limits the *oracle* cannot answer — it');
+  emit('  exhausts the heap, or runs for hours, or throws and wrecks its own config');
+  emit('  (D-09, D-11) — so these are bounds on what can be refereed, not on what the');
+  emit('  port can do. Everything else, arithmetic and comparison and the default');
+  emit('  renderings, is fuzzed across the whole exponent range, 1e9000000000000000');
+  emit('  included.');
+
   emit('');
 
   // -- self-check ---------------------------------------------------------

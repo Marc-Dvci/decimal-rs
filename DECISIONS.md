@@ -456,3 +456,142 @@ one. Where the original depends on its host refusing something, the port has to
 refuse it too — and refuse it the same way.
 
 ---
+
+### D-11 · The second place the port deliberately differs
+
+**Context.** `acosh`, `asinh` and `atanh` raise the working precision, compute,
+and lower it again:
+
+```js
+pr = Ctor.precision;
+rm = Ctor.rounding;
+Ctor.precision = pr + Math.max(Math.abs(x.e), x.sd()) + 4;
+Ctor.rounding = 1;
+external = false;
+x = x.times(x).minus(1).sqrt().plus(x);   // can throw
+external = true;
+Ctor.precision = pr;                      // then never reached
+Ctor.rounding = rm;
+return x.ln();
+```
+
+There is no `try`/`finally`. For an argument near the exponent ceiling — an
+ordinary value, well inside the documented `maxE` of 9e15 — the raised
+precision is about 9e15 and the alignment inside `minus` throws `RangeError:
+Invalid array length`. The restoring assignments are skipped.
+
+The constructor is then left at `precision = 8999999999999024`, `rounding = 1`,
+and `external = false`, permanently. The damage is not confined to the value
+that failed:
+
+```
+decimal.js  (reference)
+  before          precision=20 rounding=4
+  acosh(9.87e+8999999999999000)  threw RangeError: Invalid array length
+  after           precision=8999999999999024 rounding=1
+  then 1/3        threw RangeError: Invalid array length   (2204 ms)
+
+decimal-rs  (this port)
+  before          precision=20 rounding=4
+  acosh(9.87e+8999999999999000)  threw RangeError: Invalid array length
+  after           precision=20 rounding=4
+  then 1/3        0.33333333333333333333   (0 ms)
+```
+
+`fuzz/repro-upstream-config-leak.js` produces exactly that output.
+
+**Decision.** Do not reproduce the leak. This is, with D-08, one of only two
+places where the port knowingly behaves differently from the original, and the
+only one that is a choice rather than a constraint.
+
+The standing rule is fidelity, and it is not set aside lightly. Three things
+justify it here:
+
+1. **No assertion covers it.** The port passes 22,627 of 22,628 with the leak
+   absent, so nothing being preserved depends on it.
+2. **The maintainer's own code shows the opposite intent.** `getLn10` restores
+   state *before* it throws, with a comment saying that is deliberate, so that
+   a caught `[DecimalError]` does not leave the library wedged. The inverse
+   hyperbolic functions simply do not implement the intention the rest of the
+   library holds.
+3. **Reproducing it would make the port destructible.** One call on a value the
+   API accepts would leave every later operation computing at a precision of
+   9e15 — throwing, or exhausting memory, until the process is restarted. A
+   port that faithfully reproduces a way to render itself permanently unusable
+   has preserved the wrong thing.
+
+**Consequence.** Reported upstream as BUG-002 (see `docs/upstream/`). The
+differential harness bounds the exponent of inverse-hyperbolic arguments and
+says so in its log header, because one such call corrupts the *oracle* for the
+rest of the process and every comparison after it would be against a reference
+in a state no user would ever see.
+
+Note that the port's own `Ctx` makes this class of bug structurally difficult:
+`without_clamping` restores rather than sets, and the working precision is
+restored on the way out of each routine rather than at a single point that an
+early return can skip. That was a choice made for D-06 and it paid for itself
+here.
+
+---
+
+### D-12 · `new Ctor(x)` is not a copy, it is a re-judgement
+
+**Context.** Nine of the original's methods begin by passing the receiver back
+through the constructor:
+
+```js
+P.floor = function () { return finalise(new this.constructor(this), this.e + 1, 3); };
+P.abs   = function () { var x = new this.constructor(this); if (x.s < 0) x.s = 1; return finalise(x); };
+```
+
+Read as defensive copying — which is how the port first read it — this is
+`x.clone()`. It is not. The constructor, given an existing Decimal, **clamps it
+to the exponent limits currently in force**:
+
+```js
+if (external) {
+  if (!v.d || v.e > Decimal.maxE) { x.e = NaN; x.d = null; }   // Infinity
+  else if (v.e < Decimal.minE)    { x.e = 0; x.d = [0]; }      // zero
+  else { x.e = v.e; x.d = v.d.slice(); }
+}
+```
+
+So a value is judged against `minE` and `maxE` **when it is used**, not only
+when it was built. Narrow `maxE` after constructing a large value and the next
+`abs`, `floor`, `round`, `trunc`, `neg`, `toDP`, `toSD`, `toNearest` or `pow`
+returns Infinity.
+
+**Found by** the differential fuzzer, on a sequence that set `minE` between
+building a value and calling `floor` on it — which the original's own test
+suite never does, and which is why 22,627 assertions passed either way.
+
+**Decision.** Transcribe it: `ops::clamped_copy`, used at all nine sites.
+
+Including where the result is absurd. `floor` rounds the *clamped* copy but
+takes its significant-digit count from `this.e + 1` — the exponent of the
+**original**. When the clamp fires those are different values, and
+`floor(-1.785e-8999999999999976)` with `minE` at −872 returns
+`-1e+8999999999999976`: a request to floor something smaller than one, answered
+with a number of nine quadrillion digits. The port now returns exactly that.
+
+It is tempting to call this the third upstream bug and fix it. It is not
+reported as one, because unlike D-09 and D-11 it needs a configuration change
+between two operations on the same value to reach — a sequence no ordinary
+program performs — and because the rule here is fidelity. D-11 was set aside
+only because reproducing it would let a caller render the library permanently
+unusable. Returning one wrong number does not meet that bar.
+
+**Consequence.** Four cases the port previously answered plausibly and wrongly,
+now matching upstream exactly, including the ordinary one:
+
+```
+maxE = 200:  abs(9.87e300)  →  Infinity          (was 9.87e+300)
+             toSD(9.87e300, 5) → Infinity        (was 9.87e+300)
+minE = -872: neg(-1.78e-8999999999999976) → 0    (was the value)
+             floor(same)    →  -1e+8999999999999976   (was -1)
+```
+
+The first two are not exotic. Any program that narrows `maxE` after
+constructing its values would have seen the difference.
+
+---

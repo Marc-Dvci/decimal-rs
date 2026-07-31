@@ -27,7 +27,7 @@ use crate::{Ctx, Decimal, Sign, MAX_DIGITS};
 
 /// `|x|`.
 pub fn abs(ctx: &mut Ctx, x: &Decimal) -> Decimal {
-    let mut out = x.clone();
+    let mut out = clamped_copy(ctx, x);
     if out.s.is_negative() {
         out.s = Sign::Pos;
     }
@@ -37,7 +37,7 @@ pub fn abs(ctx: &mut Ctx, x: &Decimal) -> Decimal {
 
 /// `-x`. NaN negates to NaN; zero keeps a signed zero.
 pub fn neg(ctx: &mut Ctx, x: &Decimal) -> Decimal {
-    let mut out = negated(x);
+    let mut out = negated(&clamped_copy(ctx, x));
     finalise(ctx, &mut out, None, ctx.cfg.rounding, false);
     out
 }
@@ -62,10 +62,52 @@ pub fn round(ctx: &mut Ctx, x: &Decimal) -> Decimal {
     round_to_integer(ctx, x, ctx.cfg.rounding)
 }
 
+/// A copy of `x` as the *constructor* would make one.
+///
+/// # Why this is not `x.clone()`
+///
+/// Nine of the original's methods begin `new Ctor(x)` or
+/// `new this.constructor(this)` rather than working on the receiver, and that
+/// is not merely defensive copying. Passing an existing Decimal through the
+/// constructor **clamps it to the current exponent limits**: anything above
+/// `maxE` becomes ±Infinity, anything below `minE` becomes ±0. So a value
+/// built under one configuration and used under a narrower one is re-judged by
+/// the narrower one, at the moment it is used.
+///
+/// A plain clone skips that, which is invisible until `minE` or `maxE` has been
+/// moved. `floor` was the case that exposed it, and only because a fuzz
+/// sequence happened to change `minE` between constructing a value and using
+/// it — the original test suite never does.
+///
+/// The clamp applies only when `external` is set, i.e. not to the intermediate
+/// values of a calculation in progress; that is the whole purpose of the flag.
+pub fn clamped_copy(ctx: &Ctx, x: &Decimal) -> Decimal {
+    let mut copy = x.clone();
+    if !ctx.external {
+        return copy;
+    }
+    if copy.is_nan() {
+        return copy;
+    }
+    if copy.d.is_none() || copy.e > ctx.cfg.max_e {
+        copy = Decimal::infinity(copy.s);
+    } else if copy.e < ctx.cfg.min_e {
+        copy = Decimal::zero(copy.s);
+    }
+    copy
+}
+
 fn round_to_integer(ctx: &mut Ctx, x: &Decimal, rm: u8) -> Decimal {
-    let mut out = x.clone();
+    let mut out = clamped_copy(ctx, x);
     // `x.e + 1` is the number of significant digits standing before the point,
     // so rounding to that many discards exactly the fractional ones.
+    //
+    // Note that this reads the exponent of the *original*, not of the clamped
+    // copy: the original writes `finalise(new Ctor(x), x.e + 1, rm)`, and `x`
+    // there is still the receiver. When the two differ — which is exactly when
+    // the clamp fired — the significant-digit count and the value it is applied
+    // to come from different places. That is the original's arithmetic and it
+    // is transcribed, not corrected; see DECISIONS.md D-12.
     let sd = x.e.saturating_add(1);
     finalise(ctx, &mut out, Some(sd), rm, false);
     out
@@ -78,7 +120,7 @@ pub fn to_decimal_places(
     dp: Option<f64>,
     rm: Option<f64>,
 ) -> Result<Decimal> {
-    let mut out = x.clone();
+    let mut out = clamped_copy(ctx, x);
     let Some(dp) = dp else {
         return Ok(out);
     };
@@ -104,7 +146,7 @@ pub fn to_significant_digits(
             resolve_rounding_mode(ctx, rm)?,
         ),
     };
-    let mut out = x.clone();
+    let mut out = clamped_copy(ctx, x);
     finalise(ctx, &mut out, Some(sd), rm, false);
     Ok(out)
 }
@@ -116,7 +158,7 @@ pub fn to_nearest(
     y: Option<&Decimal>,
     rm: Option<f64>,
 ) -> Result<Decimal> {
-    let mut out = x.clone();
+    let mut out = clamped_copy(ctx, x);
 
     let (y, rm) = match y {
         None => {
@@ -486,5 +528,39 @@ mod tests {
         assert!(!abs(&mut ctx, &Decimal::zero(Sign::Neg)).is_negative());
         assert!(neg(&mut ctx, &Decimal::zero(Sign::Pos)).is_negative());
         assert!(neg(&mut ctx, &Decimal::nan()).is_nan());
+    }
+
+    /// The clamp that `new Ctor(x)` applies, and a plain clone does not.
+    ///
+    /// A value is judged against the exponent limits in force *when it is
+    /// used*, not only when it was built. Narrowing `maxE` afterwards makes an
+    /// existing value infinite the next time any of these methods touches it.
+    ///
+    /// Every expectation was read off upstream decimal.js in Node. The port
+    /// used to answer `9.87e+300`, `9.87e+300`, `-1.785178753e-8999999999999976`
+    /// and `-1` to these four — plausible values, all of them wrong.
+    #[test]
+    fn the_exponent_limits_are_applied_when_a_value_is_used() {
+        let mut ctx = Ctx::default();
+        ctx.cfg.max_e = 200;
+        ctx.cfg.min_e = -872;
+
+        let big = d("9.87e300");
+        assert!(abs(&mut ctx, &big).is_infinite(), "above maxE, so infinite");
+        assert!(
+            to_significant_digits(&mut ctx, &big, Some(5.0), None).unwrap().is_infinite()
+        );
+
+        // Below minE, so zero — and `neg` of it is a zero too, not the value.
+        let tiny = d("-1785178753e-8999999999999985");
+        let negated = neg(&mut ctx, &tiny);
+        assert!(negated.is_zero(), "below minE, so zero");
+
+        // And the case that exposed it. `floor` rounds the *clamped* copy but
+        // takes its significant-digit count from the original's exponent, so
+        // the two come from different values and the answer is enormous. That
+        // is upstream's arithmetic, reproduced; see D-12.
+        let floored = floor(&mut ctx, &tiny);
+        assert_eq!(crate::format::to_string(&floored, &ctx.cfg), "-1e+8999999999999976");
     }
 }
