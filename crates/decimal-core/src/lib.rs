@@ -69,13 +69,16 @@
 pub mod arith;
 pub mod config;
 pub mod decimal;
+pub mod error;
 pub(crate) mod exact;
 pub mod format;
+pub mod ops;
 pub mod parse;
 pub mod round;
 
 pub use config::{rounding, Config, Ctx};
 pub use decimal::{Decimal, Sign};
+pub use error::{Error, Result};
 
 /// The base in which digit limbs are stored: each limb holds seven decimal
 /// digits, so limb values run from 0 to 9 999 999.
