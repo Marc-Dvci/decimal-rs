@@ -285,3 +285,58 @@ the wrong one. The exponent saturation in D-04 is the same hazard wearing a
 different hat.
 
 ---
+
+### D-08 · One assertion is left failing, and it is a Node-API signature
+
+**Context.** `test/modules/clone.js` opens with
+
+```js
+t(Decimal.prototype === D9.prototype);
+```
+
+and it is the single assertion of 22,628 that this port does not satisfy.
+
+The original earns it structurally. `clone()` builds a fresh `Decimal`
+function but assigns it the *same* prototype object every constructor shares —
+one `P`, created once when the module loads. Per-constructor configuration
+still works because a method reads its settings through `this.constructor`,
+which the constructor body sets as an own property on each instance
+(`x.constructor = Decimal`), deliberately shadowing the `constructor` that
+`P` inherits from `Object`.
+
+**What was tried.** `Decimal.prototype` turns out to be writable on a class
+built by `napi_define_class`, and assigning the shared object across works as
+far as the object model is concerned:
+
+```
+proto is the shared P : true
+x instanceof D2       : true
+but a method throws   : Illegal invocation
+```
+
+`napi_define_class` attaches a V8 *signature* to every method it defines,
+binding it to the `FunctionTemplate` of the class that declared it. A method
+reached through a different constructor's instance fails the signature check
+before its body runs. So the prototype can be shared, but nothing on it can
+then be called.
+
+**Decision.** Leave the assertion failing.
+
+Satisfying it means abandoning `napi_define_class` for instance methods:
+create the prototype as a plain object, define all fifty-odd methods on it
+with `napi_define_properties` — which attaches no signature — resolve each
+call's configuration from the instance rather than from the callback data it
+was defined with, and set `constructor` as an own property per instance. That
+is a rewrite of how the binding builds its class, in exchange for one
+assertion out of 22,628, and it trades away the signature check that currently
+makes `Decimal.prototype.abs.call({})` impossible rather than merely
+undefined.
+
+**Consequence.** 22,627 of 22,628. The deviation is confined to the *binding*:
+`decimal-core`, which is the deliverable under the stricter reading of rule 5,
+has no notion of prototypes and is unaffected. Recorded here rather than left
+as an unexplained red line in the output, because the distinction between "not
+implemented" and "implemented, and blocked by a documented property of the
+host API" is exactly what a reader of this file is entitled to know.
+
+---
