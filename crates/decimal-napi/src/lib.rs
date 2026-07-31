@@ -10,6 +10,26 @@
 use napi_sys as sys;
 use std::ptr;
 
+/// Bind the Node-API entry points before first use.
+///
+/// The two platform families get here differently, and the difference is not
+/// cosmetic. On ELF targets the `napi_*` symbols are exported by the host
+/// `node` executable itself, so the dynamic linker has already resolved them
+/// by the time this addon is loaded and there is nothing to do. On Windows an
+/// executable's exports cannot be linked against in that way, so the symbols
+/// must be located in the loaded process image at run time.
+///
+/// The returned library handle is leaked deliberately: the symbols must stay
+/// valid for as long as the process lives, which is strictly longer than any
+/// scope available here.
+#[cfg(any(windows, feature = "dyn-symbols"))]
+unsafe fn bind_node_api_symbols() {
+    std::mem::forget(sys::setup());
+}
+
+#[cfg(not(any(windows, feature = "dyn-symbols")))]
+unsafe fn bind_node_api_symbols() {}
+
 unsafe extern "C" fn decimal_ctor(
     env: sys::napi_env,
     info: sys::napi_callback_info,
@@ -35,10 +55,7 @@ pub unsafe extern "C" fn napi_register_module_v1(
     env: sys::napi_env,
     _exports: sys::napi_value,
 ) -> sys::napi_value {
-    // napi-sys resolves the Node-API symbols out of the host process at load
-    // time rather than link time, so they must be bound before first use.
-    // Leaked deliberately: the symbols stay valid for the life of the process.
-    std::mem::forget(sys::setup());
+    bind_node_api_symbols();
 
     let mut ctor: sys::napi_value = ptr::null_mut();
     sys::napi_define_class(
