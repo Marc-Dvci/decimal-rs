@@ -261,16 +261,15 @@ impl Env {
         out
     }
 
-    /// An array of numbers — used for the `d` accessor, which must hand back
-    /// something the original's test helper can index and take `.length` of.
-    pub fn number_array(self, values: &[u32]) -> Value {
+    /// An array of arbitrary values — used by `toFraction`, which returns a
+    /// two-element `[numerator, denominator]`.
+    pub fn array(self, elements: &[Value]) -> Value {
         let mut array: Value = ptr::null_mut();
         // SAFETY: valid out-pointer.
         unsafe {
-            sys::napi_create_array_with_length(self.0, values.len(), &mut array);
+            sys::napi_create_array_with_length(self.0, elements.len(), &mut array);
         }
-        for (index, &value) in values.iter().enumerate() {
-            let element = self.number(f64::from(value));
+        for (index, &element) in elements.iter().enumerate() {
             // SAFETY: `array` is a live array handle just created, `index` is
             // within the length it was created with, and `element` is live.
             unsafe {
@@ -278,6 +277,13 @@ impl Env {
             }
         }
         array
+    }
+
+    /// An array of numbers — used for the `d` accessor, which must hand back
+    /// something the original's test helper can index and take `.length` of.
+    pub fn number_array(self, values: &[u32]) -> Value {
+        let elements: Vec<Value> = values.iter().map(|&v| self.number(f64::from(v))).collect();
+        self.array(&elements)
     }
 
     // -- properties --------------------------------------------------------

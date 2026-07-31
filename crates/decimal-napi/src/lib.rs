@@ -43,7 +43,7 @@
 mod napi;
 
 use decimal_core::arith::{self, compare};
-use decimal_core::{format, inverse, ops, parse, roots, Config, Ctx, Decimal, Error, Sign};
+use decimal_core::{format, fraction, inverse, ops, parse, roots, Config, Ctx, Decimal, Error, Sign};
 use napi::{define_class, bind_symbols, Env, JsType, Value};
 use napi_sys as sys;
 use std::ffi::c_void;
@@ -523,7 +523,42 @@ macro_rules! not_yet_ported {
     };
 }
 
-not_yet_ported!(m_to_fraction);
+/// `toFraction([maxDenominator])`, which returns a two-element array rather
+/// than a Decimal — except for a non-finite receiver, where it returns a
+/// Decimal after all.
+///
+/// The optional argument accepts `null` as well as `undefined` to mean
+/// "absent", because the original's test is `maxD == null`, which is the loose
+/// equality that holds for both. `argument` would coerce a `null` into a thrown
+/// `[DecimalError] Invalid argument: null`, so the check has to come first.
+unsafe extern "C" fn m_to_fraction(
+    env: sys::napi_env,
+    info: sys::napi_callback_info,
+) -> sys::napi_value {
+    let env = Env(env);
+    let Some((args, x, st)) = receiver(env, info, 1) else {
+        return env.undefined();
+    };
+
+    let given = match args.first().copied() {
+        None => None,
+        Some(v) if matches!(env.type_of(v), JsType::Undefined | JsType::Null) => None,
+        Some(v) => match coerce(env, st, v) {
+            Ok(bound) => Some(bound),
+            Err(e) => return fail(env, e),
+        },
+    };
+
+    match fraction::to_fraction(&mut st.ctx, &x, given.as_ref()) {
+        Ok(fraction::Fractional::Ratio(f)) => {
+            let numerator = make(env, st, f.numerator);
+            let denominator = make(env, st, f.denominator);
+            env.array(&[numerator, denominator])
+        }
+        Ok(fraction::Fractional::NonFinite(value)) => make(env, st, value),
+        Err(e) => fail(env, e),
+    }
+}
 
 /// `logarithm`, whose base argument is optional and defaults to 10.
 unsafe extern "C" fn m_log(

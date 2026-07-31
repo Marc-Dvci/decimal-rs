@@ -74,6 +74,7 @@ pub mod elementary;
 pub mod error;
 pub(crate) mod exact;
 pub mod format;
+pub mod fraction;
 pub mod inverse;
 pub mod ops;
 pub mod parse;

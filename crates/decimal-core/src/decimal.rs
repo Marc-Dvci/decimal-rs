@@ -212,17 +212,26 @@ impl Decimal {
         self.s.is_negative()
     }
 
-    /// Whether the value is a finite integer.
+    /// Whether the value is a **finite** integer.
     ///
-    /// The original writes this as `!this.d || mathfloor(this.e / LOG_BASE) +
-    /// 1 >= this.d.length`: the value is an integer exactly when the digit
-    /// array does not extend past the units place. Note that it reports
-    /// `true` for ±Infinity — `!this.d` is the first disjunct — and the
-    /// `isFiniteEtc` module checks that it does.
+    /// The original writes this as `!!this.d && mathfloor(this.e / LOG_BASE) >
+    /// this.d.length - 2`: the digit array must exist, and must not extend past
+    /// the units place.
+    ///
+    /// The leading `!!this.d` is the whole of the difference between this and
+    /// the predicate one would write from the name. `Infinity` is not an
+    /// integer here, and neither is `NaN` — which is the answer IEEE 754 gives
+    /// and the answer `isFiniteEtc` checks for, but it is *not* the answer that
+    /// falls out of "the digits do not reach past the point", since a
+    /// non-finite value has no digits at all.
+    ///
+    /// It matters beyond that module: `toFraction` validates its argument with
+    /// `!n.isInt()`, and so rejects a non-finite maximum denominator through
+    /// this predicate rather than through a finiteness test of its own.
     #[inline]
     pub fn is_integer(&self) -> bool {
         match &self.d {
-            None => true,
+            None => false,
             Some(limbs) => self.e.div_euclid(LOG_BASE) + 1 >= limbs.len() as i64,
         }
     }
@@ -369,10 +378,15 @@ mod tests {
     fn integrality_matches_the_digit_extent() {
         // 1 -> e = 0, one limb: integer.
         assert!(Decimal::from_i32(1).is_integer());
-        // Infinity reports true, as in the original.
-        assert!(Decimal::infinity(Sign::Pos).is_integer());
         // 0.5 -> e = -1, one limb: not an integer.
         let half = Decimal::finite(Sign::Pos, -1, vec![5_000_000]);
         assert!(!half.is_integer());
+
+        // Neither infinity nor NaN is an integer — the original's leading
+        // `!!this.d`. Read off `new Decimal(Infinity).isInt()` in Node, which
+        // answers false; the predicate is about *finite* integrality.
+        assert!(!Decimal::infinity(Sign::Pos).is_integer());
+        assert!(!Decimal::infinity(Sign::Neg).is_integer());
+        assert!(!Decimal::nan().is_integer());
     }
 }
