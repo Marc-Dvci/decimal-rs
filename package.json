@@ -1,0 +1,19 @@
+{
+  "name": "decimal-rs",
+  "version": "0.1.0",
+  "description": "A Rust port of decimal.js. The original test suite runs unmodified against the compiled Rust artifact.",
+  "license": "MIT",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Marc-Dvci/decimal-rs.git"
+  },
+  "scripts": {
+    "verify-tests": "node scripts/verify-tests.js",
+    "test": "node scripts/verify-tests.js && node test/test.js",
+    "fuzz": "node fuzz/differential.js",
+    "soak": "node scripts/soak.js",
+    "bench": "node bench/run.js"
+  },
+  "comment": "No dependencies, and no 'main' entry: nothing here loads the port except the original test suite, which reaches it through Node's own resolver via require('../decimal') -> decimal.node."
+}
