@@ -255,9 +255,7 @@ pub fn clamp(ctx: &mut Ctx, x: &Decimal, min: &Decimal, max: &Decimal) -> Result
         return Ok(Decimal::nan());
     }
     if crate::arith::compare(min, max) == Some(Ordering::Greater) {
-        return Err(Error::InvalidArgument(crate::format::to_string(
-            max, &ctx.cfg,
-        )));
+        return Err(Error::InvalidArgument(crate::format::interpolated(max, &ctx.cfg)));
     }
     Ok(match crate::arith::compare(x, min) {
         Some(Ordering::Less) => min.clone(),

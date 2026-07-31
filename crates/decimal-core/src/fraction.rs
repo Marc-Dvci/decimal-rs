@@ -138,7 +138,7 @@ pub fn to_fraction(
         None => ceiling,
         Some(n) => {
             if !n.is_integer() || compare(n, &one) == Some(core::cmp::Ordering::Less) {
-                return Err(Error::InvalidArgument(to_string(n, &ctx.cfg)));
+                return Err(Error::InvalidArgument(crate::format::interpolated(n, &ctx.cfg)));
             }
             // A bound above `10^e` cannot buy a better answer, so it is capped
             // rather than honoured.

@@ -167,6 +167,24 @@ pub fn value_of(x: &Decimal, cfg: &Config) -> String {
     }
 }
 
+/// A value as it appears when interpolated into an error message.
+///
+/// The original writes `throw Error(invalidArgument + max)`, and `+` applied to
+/// an object is not `toString()`. String concatenation calls `ToPrimitive` with
+/// the **default** hint, which tries `valueOf` first and falls back to
+/// `toString` only if that returns an object — and `valueOf` is the one
+/// rendering in this library that shows the sign of a negative zero.
+///
+/// So `new Decimal(1).clamp(1, -0)` raises `[DecimalError] Invalid argument:
+/// -0`, and not `: 0`. One character, in an error message, decided by an
+/// implicit coercion rule three specifications deep.
+///
+/// Found by the differential fuzzer. The original's own suite has no assertion
+/// for it, and the port said `0` here until it did.
+pub fn interpolated(x: &Decimal, cfg: &Config) -> String {
+    value_of(x, cfg)
+}
+
 /// Whether the configured thresholds put this value in exponential notation.
 fn uses_exponential(x: &Decimal, cfg: &Config) -> bool {
     x.e <= cfg.to_exp_neg || x.e >= cfg.to_exp_pos

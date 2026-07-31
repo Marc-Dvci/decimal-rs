@@ -374,7 +374,7 @@ function binary(name, guard) {
 
 // Constant in the exponent: fuzzed across the whole range, limits included.
 [
-  'abs', 'neg', 'ceil', 'floor', 'round', 'trunc', 'sqrt', 'cbrt',
+  'abs', 'neg', 'ceil', 'floor', 'round', 'trunc', 'sqrt',
   'toString', 'valueOf', 'toNumber', 'toJSON',
   'isNaN', 'isFinite', 'isInteger', 'isZero', 'isNegative', 'isPositive',
   'dp', 'sd',
@@ -386,6 +386,12 @@ function binary(name, guard) {
 // Proportional to the exponent: bounded.
 ['exp', 'ln', 'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'asinh', 'acosh', 'atanh']
   .forEach((name) => unary(name, withinExponentBound));
+
+// `cbrt` joins them for a reason of its own: upstream does not return at all
+// for an operand near the exponent floor. `cbrt(-602e-8999999999999975)` had
+// not finished after 45 seconds, where this port answers in under a
+// millisecond. Bounded so that the oracle stays an oracle.
+unary('cbrt', withinExponentBound);
 
 ['sinh', 'cosh', 'tanh'].forEach((name) => unary(name, withinHyperbolicBound));
 
