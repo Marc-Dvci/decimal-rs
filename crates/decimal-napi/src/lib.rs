@@ -431,6 +431,12 @@ macro_rules! fallible_unary {
 fallible_unary!(m_sin, |ctx, x| decimal_core::trig::sin(ctx, x));
 fallible_unary!(m_cos, |ctx, x| decimal_core::trig::cos(ctx, x));
 fallible_unary!(m_tan, |ctx, x| decimal_core::trig::tan(ctx, x));
+fallible_unary!(m_asin, |ctx, x| decimal_core::inverse::asin(ctx, x));
+fallible_unary!(m_acos, |ctx, x| decimal_core::inverse::acos(ctx, x));
+fallible_unary!(m_atan, |ctx, x| decimal_core::inverse::atan(ctx, x));
+fallible_unary!(m_asinh, |ctx, x| decimal_core::inverse::asinh(ctx, x));
+fallible_unary!(m_acosh, |ctx, x| decimal_core::inverse::acosh(ctx, x));
+fallible_unary!(m_atanh, |ctx, x| decimal_core::inverse::atanh(ctx, x));
 
 /// `naturalLogarithm`, which can raise `[DecimalError] Precision limit
 /// exceeded` when the configured precision outruns the 1025-digit `LN10`
@@ -514,12 +520,6 @@ macro_rules! not_yet_ported {
     };
 }
 
-not_yet_ported!(m_acos);
-not_yet_ported!(m_acosh);
-not_yet_ported!(m_asin);
-not_yet_ported!(m_asinh);
-not_yet_ported!(m_atan);
-not_yet_ported!(m_atanh);
 not_yet_ported!(m_to_binary);
 not_yet_ported!(m_to_hex);
 not_yet_ported!(m_to_octal);
