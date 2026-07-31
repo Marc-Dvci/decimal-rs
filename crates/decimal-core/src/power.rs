@@ -166,16 +166,46 @@ pub fn logarithm(ctx: &mut Ctx, arg: &Decimal, base: Option<&Decimal>) -> Result
     Ok(r)
 }
 
+/// `Math.pow(base, exponent)` — ECMAScript's, which is **not** `f64::powf`.
+///
+/// Rust's `powf` implements IEEE 754's `pow`, and C99's before it. ECMAScript
+/// deliberately departs from both in two places, and its own specification
+/// spells the departures out (`Number::exponentiate`, steps 1 and 8–9):
+///
+/// ```text
+///     Math.pow(1, NaN)       is NaN      IEEE pow(1, NaN)       is 1
+///     Math.pow(±1, ±Infinity) is NaN     IEEE pow(±1, ±Infinity) is 1
+/// ```
+///
+/// IEEE makes `pow(1, anything)` be 1 on the reasoning that 1 raised to any
+/// power is 1 whatever the exponent turns out to be. ECMAScript takes the
+/// opposite view — that an indeterminate exponent gives an indeterminate
+/// result — and the original inherits it wholesale, because this branch of
+/// `toPower` is literally `mathpow(+x, yn)`. The test suite checks all four:
+/// `Decimal(1).pow(Infinity)` is NaN, and so is `Decimal(-1).pow(-Infinity)`.
+///
+/// Everything else agrees, including the signed zeros and the odd-integer
+/// rules for a negative base, so those are left to `powf`.
+fn math_pow(base: f64, exponent: f64) -> f64 {
+    if exponent.is_nan() {
+        return f64::NAN;
+    }
+    if base.abs() == 1.0 && exponent.is_infinite() {
+        return f64::NAN;
+    }
+    base.powf(exponent)
+}
+
 /// `x^y`.
 pub fn to_power(ctx: &mut Ctx, x: &Decimal, y: &Decimal) -> Result<Decimal> {
     let yn = to_f64(ctx, y);
 
     // Any non-finite or zero operand: defer to double arithmetic, which
-    // already implements the full IEEE table of special cases — including the
-    // surprising ones, such as 1^Infinity being 1 and (-1)^Infinity being 1.
+    // already carries the whole table of special cases. It has to be
+    // *ECMAScript's* table, though, not IEEE's — see `math_pow`.
     if x.d.is_none() || y.d.is_none() || x.digits()[0] == 0 || y.digits()[0] == 0 {
         let xn = to_f64(ctx, x);
-        let result = xn.powf(yn);
+        let result = math_pow(xn, yn);
         return Ok(if result.is_nan() {
             Decimal::nan()
         } else if result.is_infinite() {
@@ -226,9 +256,20 @@ pub fn to_power(ctx: &mut Ctx, x: &Decimal, y: &Decimal) -> Result<Decimal> {
         if e < y.digits().len() as i64 - 1 {
             return Ok(Decimal::nan());
         }
-        // The result is positive when the last digit of the integer exponent
-        // is even.
-        if y.digits().get(e as usize).is_some_and(|d| d & 1 == 0) {
+        // The result is positive when the limb holding the exponent's units
+        // digit is even — `(y.d[e] & 1) == 0` in the original.
+        //
+        // `e` can point past the end of the array, and that is not an error:
+        // `1e307` is the single limb `[1]` with `e = 43`, because a value
+        // stores only its significant digits. JavaScript answers `undefined`
+        // for the missing limb, and `undefined & 1` is `0` — even. So an
+        // exponent whose units digit lies in a limb that was never stored is
+        // even, which is right, since every such digit is a trailing zero.
+        //
+        // A missing limb must therefore read as 0, not as "no answer": with
+        // `is_some_and` this returned false and `(-1)^1e307` came out −1.
+        let units_limb = y.digits().get(e as usize).copied().unwrap_or(0);
+        if units_limb & 1 == 0 {
             s = Sign::Pos;
         }
         // (-1)^y is just ±1.
@@ -378,12 +419,45 @@ mod tests {
     #[test]
     fn the_ieee_special_cases_come_from_double_arithmetic() {
         let mut ctx = Ctx::default();
-        // 1^Infinity is 1, not NaN — the IEEE table, not the intuitive answer.
-        let one_to_inf = to_power(&mut ctx, &d("1"), &Decimal::infinity(Sign::Pos)).unwrap();
-        assert_eq!(to_string(&one_to_inf, &ctx.cfg), "1");
 
+        // The two places ECMAScript departs from IEEE 754, both of which the
+        // original inherits by calling `Math.pow` here. `f64::powf` answers 1
+        // to all four of these.
+        let infinite = Decimal::infinity(Sign::Pos);
+        let negative_infinite = Decimal::infinity(Sign::Neg);
+        for (base, exponent) in [
+            (d("1"), infinite.clone()),
+            (d("1"), negative_infinite.clone()),
+            (d("-1"), infinite),
+            (d("-1"), negative_infinite),
+        ] {
+            let value = to_power(&mut ctx, &base, &exponent).unwrap();
+            assert!(
+                value.is_nan(),
+                "ECMAScript makes |1| to an infinite power NaN, got {}",
+                to_string(&value, &ctx.cfg)
+            );
+        }
+        assert!(to_power(&mut ctx, &d("1"), &Decimal::nan()).unwrap().is_nan());
+
+        // Everything else is the IEEE table, unmodified.
         assert_eq!(pow_str(&mut ctx, "0", "0"), "1", "0^0 is 1");
         assert!(to_power(&mut ctx, &d("0"), &d("-1")).unwrap().is_infinite());
+        assert_eq!(pow_str(&mut ctx, "2", "0"), "1");
+    }
+
+    /// `(-1)^y` for an even `y` whose units digit lives in a limb the value
+    /// never stored. The original reads `undefined & 1`, which is 0; reading
+    /// it as "no limb, so not known to be even" gave −1.
+    #[test]
+    fn a_huge_even_exponent_is_still_even() {
+        let mut ctx = Ctx::default();
+        ctx.cfg.precision = 100;
+        ctx.cfg.rounding = rounding::DOWN;
+        assert_eq!(pow_str(&mut ctx, "-1", "1e307"), "1");
+        assert_eq!(pow_str(&mut ctx, "-1", "1e309"), "1");
+        // An odd exponent, for contrast: this one's units digit is stored.
+        assert_eq!(pow_str(&mut ctx, "-1", "101"), "-1");
     }
 
     #[test]

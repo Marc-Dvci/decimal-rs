@@ -300,6 +300,25 @@ impl Env {
         out
     }
 
+    /// Define properties on an existing object.
+    ///
+    /// Used to install method aliases after the class exists, so that both
+    /// spellings resolve to the same function object — `napi_define_class`
+    /// would create a separate function for each descriptor, and the original's
+    /// `P.absoluteValue = P.abs = …` makes them one.
+    ///
+    /// # Safety
+    ///
+    /// `object` is a live handle, and every descriptor's `utf8name` is a
+    /// NUL-terminated string that outlives the call.
+    pub unsafe fn define_properties(
+        self,
+        object: Value,
+        properties: &[sys::napi_property_descriptor],
+    ) {
+        sys::napi_define_properties(self.0, object, properties.len(), properties.as_ptr());
+    }
+
     /// `globalThis`.
     pub fn global(self) -> Value {
         let mut out: Value = ptr::null_mut();

@@ -762,14 +762,30 @@ unsafe extern "C" fn m_precision(
     let Some((args, x, _)) = receiver(env, info, 1) else {
         return env.undefined();
     };
+
+    // `z !== void 0 && z !== !!z && z !== 1 && z !== 0` — so the argument may
+    // be absent, a boolean, or the *numbers* 1 and 0, and nothing else. The
+    // string `'1'` is refused, which is why this cannot be a truthiness test.
+    let include_zeros = match args.first().copied() {
+        None => false,
+        Some(v) => match env.type_of(v) {
+            JsType::Undefined => false,
+            JsType::Boolean => env.as_bool(v).unwrap_or(false),
+            JsType::Number if env.as_f64(v) == Some(1.0) => true,
+            JsType::Number if env.as_f64(v) == Some(0.0) => false,
+            _ => {
+                return fail(env, Error::InvalidArgument(describe(env, v)));
+            }
+        },
+    };
+
     if !x.is_finite() {
         return env.number(f64::NAN);
     }
+
+    // With the flag set, an integer's trailing zeros count: `1e+123` has one
+    // significant digit but 124 places before the point.
     let mut k = x.significant_digits();
-    let include_zeros = args
-        .first()
-        .and_then(|&v| env.as_bool(v))
-        .unwrap_or(false);
     if include_zeros && x.e + 1 > k {
         k = x.e + 1;
     }
@@ -969,6 +985,38 @@ macro_rules! setting_accessor {
             env.undefined()
         }
     };
+}
+
+/// `Decimal.crypto`, which is a boolean and so cannot join the numeric
+/// settings table.
+///
+/// Reading it is how the config tests check that `config` took the setting;
+/// writing it directly is, as with the numeric settings, an unvalidated plain
+/// property write in the original — `config` is the only validating door.
+unsafe extern "C" fn get_crypto(
+    env: sys::napi_env,
+    info: sys::napi_callback_info,
+) -> sys::napi_value {
+    let env = Env(env);
+    let (_, _, data) = env.callback_info(info, 0);
+    // SAFETY: `data` is the leaked ConstructorState for this class.
+    let st = unsafe { state(data) };
+    env.boolean(st.ctx.cfg.crypto)
+}
+
+unsafe extern "C" fn set_crypto(
+    env: sys::napi_env,
+    info: sys::napi_callback_info,
+) -> sys::napi_value {
+    let env = Env(env);
+    let (args, _, data) = env.callback_info(info, 1);
+    // SAFETY: as above.
+    let st = unsafe { state(data) };
+    st.ctx.cfg.crypto = args
+        .first()
+        .and_then(|&v| env.as_bool(v))
+        .unwrap_or(false);
+    env.undefined()
 }
 
 setting_accessor!(get_precision, set_precision, 0);
@@ -1255,40 +1303,69 @@ unsafe extern "C" fn s_sum(
 
 /// `Decimal.max` and `Decimal.min`, which take any number of arguments.
 ///
-/// The original returns NaN if *any* argument is NaN, rather than skipping it,
-/// so the loop below cannot short-circuit on the first comparison.
+/// # The tie-break, which is the whole of the difficulty
+///
+/// The original's test is `k === n || k === 0 && x.s === n`, where `n` is −1
+/// for `max` and 1 for `min`. The first disjunct is the obvious comparison. The
+/// second exists because `cmp` reports `-0` and `0` as **equal**, so a plain
+/// comparison could not choose between them — and the tests demand a choice:
+/// `Decimal.max(-2, -1, -0, 0)` is `0`, while `Decimal.min(0, -0)` is `-0`.
+///
+/// Reading it as a rule: on a tie, replace the incumbent when its sign is the
+/// wrong one. `max` discards a negative incumbent for an equal challenger, so
+/// the last non-negative equal value wins; `min` does the mirror image.
+///
+/// # The early exit
+///
+/// A NaN *argument* ends the scan immediately, so later arguments are never
+/// converted and a later value that would fail to convert never gets the
+/// chance. A NaN produced by the first argument does not exit — nothing can
+/// displace it, since every comparison against it is unordered.
 unsafe extern "C" fn s_max_or_min<const WANT_GREATER: bool>(
     env: sys::napi_env,
     info: sys::napi_callback_info,
 ) -> sys::napi_value {
     let env = Env(env);
-    let (args, _, data) = env.callback_info(info, 16);
+    let (args, _, data) = env.callback_info_variadic(info);
     // SAFETY: `data` is the leaked ConstructorState for this class.
     let st = unsafe { state(data) };
 
-    let mut best: Option<Decimal> = None;
-    for &arg in &args {
-        let value = match coerce(env, st, arg) {
+    // With no arguments the original evaluates `new Ctor(args[0])`, i.e.
+    // `new Decimal(undefined)`, and raises. Asking for index 0 regardless
+    // reproduces the error and its wording.
+    let mut best = match argument(env, st, &args, 0) {
+        Ok(v) => v,
+        Err(e) => return fail(env, e),
+    };
+
+    // `n` in the original: the comparison outcome that means "replace".
+    let replacing = if WANT_GREATER {
+        core::cmp::Ordering::Less
+    } else {
+        core::cmp::Ordering::Greater
+    };
+    let wrong_sign = |s: Sign| s.is_negative() == WANT_GREATER;
+
+    for index in 1..args.len() {
+        let challenger = match argument(env, st, &args, index) {
             Ok(v) => v,
             Err(e) => return fail(env, e),
         };
-        if value.is_nan() {
-            return make(env, st, Decimal::nan());
+        if challenger.is_nan() {
+            best = challenger;
+            break;
         }
-        let replace = match &best {
-            None => true,
-            Some(current) => match compare(&value, current) {
-                Some(core::cmp::Ordering::Greater) => WANT_GREATER,
-                Some(core::cmp::Ordering::Less) => !WANT_GREATER,
-                _ => false,
-            },
+        let replace = match compare(&best, &challenger) {
+            Some(order) if order == replacing => true,
+            Some(core::cmp::Ordering::Equal) => wrong_sign(best.s),
+            _ => false,
         };
         if replace {
-            best = Some(value);
+            best = challenger;
         }
     }
 
-    make(env, st, best.unwrap_or_else(Decimal::nan))
+    make(env, st, best)
 }
 
 unsafe extern "C" fn s_max(
@@ -1373,16 +1450,30 @@ unsafe extern "C" fn s_clone(
 
     let class = build_class(env, cfg);
 
-    // Apply any other settings the argument carries, by routing them through
-    // the same validation `config` uses.
-    if let Some(&object) = args.first() {
-        if env.type_of(object) == JsType::Object {
-            let config_fn = env.get_named(class, "config");
-            let mut result: Value = ptr::null_mut();
-            let argv = [object];
-            // SAFETY: `class` and `config_fn` are live handles this function
-            // just created; `argv` holds one live handle.
-            sys::napi_call_function(env.0, class, config_fn, 1, argv.as_ptr(), &mut result);
+    // The original ends with an *unconditional* `Decimal.config(obj)`, having
+    // replaced an absent argument with `{}` — and only an absent one. So
+    // `clone(null)` reaches `config(null)`, which refuses it: "Object expected".
+    // Routing every non-absent argument through the real `config` is therefore
+    // both the validation and the application, and it keeps the two spellings
+    // of every settings check in one place.
+    //
+    // The constructor is built first here as it is there, so a rejected
+    // argument throws *after* the class exists — which nothing can observe,
+    // since the throw discards the return value.
+    let given = args
+        .first()
+        .copied()
+        .filter(|&v| env.type_of(v) != JsType::Undefined);
+
+    if let Some(object) = given {
+        let config_fn = env.get_named(class, "config");
+        let mut result: Value = ptr::null_mut();
+        let argv = [object];
+        // SAFETY: `class` and `config_fn` are live handles this function just
+        // created; `argv` holds one live handle.
+        sys::napi_call_function(env.0, class, config_fn, 1, argv.as_ptr(), &mut result);
+        if env.is_exception_pending() {
+            return env.undefined();
         }
     }
 
@@ -1422,6 +1513,26 @@ fn getter(name: &'static str, cb: sys::napi_callback, data: *mut c_void) -> sys:
 }
 
 /// A property descriptor for a static method or accessor on the constructor.
+/// A property holding an existing value, with the attributes
+/// `napi_define_class` gives a method: not writable, not enumerable, not
+/// configurable.
+///
+/// Matching those attributes is the reason this exists rather than a plain
+/// `set_named`, which would make the alias enumerable and so put it in
+/// `Object.keys(Decimal.prototype)` where the original has neither name.
+fn same_function(name: &'static str, value: Value) -> sys::napi_property_descriptor {
+    sys::napi_property_descriptor {
+        utf8name: name.as_ptr().cast(),
+        name: ptr::null_mut(),
+        method: None,
+        getter: None,
+        setter: None,
+        value,
+        attributes: sys::PropertyAttributes::default,
+        data: ptr::null_mut(),
+    }
+}
+
 fn static_entry(
     name: &'static str,
     method_cb: sys::napi_callback,
@@ -1457,116 +1568,74 @@ fn build_class(env: Env, cfg: Config) -> Value {
 
     let mut properties: Vec<sys::napi_property_descriptor> = Vec::new();
 
-    // Instance methods, including every alias the original defines. The
-    // aliases are genuinely the same function object in the original
-    // (`P.absoluteValue = P.abs = ...`), and the tests use both spellings.
-    let instance: &[(&'static str, sys::napi_callback)] = &[
-        ("absoluteValue\0", Some(m_abs)),
-        ("abs\0", Some(m_abs)),
-        ("negated\0", Some(m_neg)),
-        ("neg\0", Some(m_neg)),
-        ("ceil\0", Some(m_ceil)),
-        ("floor\0", Some(m_floor)),
-        ("round\0", Some(m_round)),
-        ("truncated\0", Some(m_trunc)),
-        ("trunc\0", Some(m_trunc)),
-        ("plus\0", Some(m_plus)),
-        ("add\0", Some(m_plus)),
-        ("minus\0", Some(m_minus)),
-        ("sub\0", Some(m_minus)),
-        ("times\0", Some(m_times)),
-        ("mul\0", Some(m_times)),
-        ("dividedBy\0", Some(m_div)),
-        ("div\0", Some(m_div)),
-        ("dividedToIntegerBy\0", Some(m_div_to_int)),
-        ("divToInt\0", Some(m_div_to_int)),
-        ("modulo\0", Some(m_mod)),
-        ("mod\0", Some(m_mod)),
-        ("comparedTo\0", Some(m_compared_to)),
-        ("cmp\0", Some(m_compared_to)),
-        ("equals\0", Some(m_equals)),
-        ("eq\0", Some(m_equals)),
-        ("lessThan\0", Some(m_lt)),
-        ("lt\0", Some(m_lt)),
-        ("lessThanOrEqualTo\0", Some(m_lte)),
-        ("lte\0", Some(m_lte)),
-        ("greaterThan\0", Some(m_gt)),
-        ("gt\0", Some(m_gt)),
-        ("greaterThanOrEqualTo\0", Some(m_gte)),
-        ("gte\0", Some(m_gte)),
-        ("isNaN\0", Some(m_is_nan)),
-        ("isFinite\0", Some(m_is_finite)),
-        ("isInteger\0", Some(m_is_integer)),
-        ("isInt\0", Some(m_is_integer)),
-        ("isZero\0", Some(m_is_zero)),
-        ("isNegative\0", Some(m_is_negative)),
-        ("isNeg\0", Some(m_is_negative)),
-        ("isPositive\0", Some(m_is_positive)),
-        ("isPos\0", Some(m_is_positive)),
-        ("decimalPlaces\0", Some(m_decimal_places)),
-        ("dp\0", Some(m_decimal_places)),
-        ("precision\0", Some(m_precision)),
-        ("sd\0", Some(m_precision)),
-        ("toDecimalPlaces\0", Some(m_to_dp)),
-        ("toDP\0", Some(m_to_dp)),
-        ("toSignificantDigits\0", Some(m_to_sd)),
-        ("toSD\0", Some(m_to_sd)),
-        ("toFixed\0", Some(m_to_fixed)),
-        ("toExponential\0", Some(m_to_exponential)),
-        ("toPrecision\0", Some(m_to_precision)),
-        ("toNumber\0", Some(m_to_number)),
-        ("toString\0", Some(m_to_string)),
-        ("valueOf\0", Some(m_value_of)),
-        ("toJSON\0", Some(m_value_of)),
-        ("clampedTo\0", Some(m_clamp)),
-        ("clamp\0", Some(m_clamp)),
-        ("toNearest\0", Some(m_to_nearest)),
-        // Present so that loading a module cannot abort the run; not yet
-        // ported, and each returns NaN. See DECISIONS.md.
-        ("inverseCosine\0", Some(m_acos)),
-        ("acos\0", Some(m_acos)),
-        ("inverseHyperbolicCosine\0", Some(m_acosh)),
-        ("acosh\0", Some(m_acosh)),
-        ("inverseSine\0", Some(m_asin)),
-        ("asin\0", Some(m_asin)),
-        ("inverseHyperbolicSine\0", Some(m_asinh)),
-        ("asinh\0", Some(m_asinh)),
-        ("inverseTangent\0", Some(m_atan)),
-        ("atan\0", Some(m_atan)),
-        ("inverseHyperbolicTangent\0", Some(m_atanh)),
-        ("atanh\0", Some(m_atanh)),
-        ("cubeRoot\0", Some(m_cbrt)),
-        ("cbrt\0", Some(m_cbrt)),
-        ("cosine\0", Some(m_cos)),
-        ("cos\0", Some(m_cos)),
-        ("hyperbolicCosine\0", Some(m_cosh)),
-        ("cosh\0", Some(m_cosh)),
-        ("naturalExponential\0", Some(m_exp)),
-        ("exp\0", Some(m_exp)),
-        ("naturalLogarithm\0", Some(m_ln)),
-        ("ln\0", Some(m_ln)),
-        ("logarithm\0", Some(m_log)),
-        ("log\0", Some(m_log)),
-        ("toPower\0", Some(m_pow)),
-        ("pow\0", Some(m_pow)),
-        ("sine\0", Some(m_sin)),
-        ("sin\0", Some(m_sin)),
-        ("hyperbolicSine\0", Some(m_sinh)),
-        ("sinh\0", Some(m_sinh)),
-        ("squareRoot\0", Some(m_sqrt)),
-        ("sqrt\0", Some(m_sqrt)),
-        ("tangent\0", Some(m_tan)),
-        ("tan\0", Some(m_tan)),
-        ("hyperbolicTangent\0", Some(m_tanh)),
-        ("tanh\0", Some(m_tanh)),
-        ("toBinary\0", Some(m_to_binary)),
-        ("toHexadecimal\0", Some(m_to_hex)),
-        ("toHex\0", Some(m_to_hex)),
-        ("toOctal\0", Some(m_to_octal)),
-        ("toFraction\0", Some(m_to_fraction)),
+    // Instance methods. Each row is one function and every name it answers
+    // to; the first is defined on the class and the rest are installed
+    // afterwards as *the same function object*, because the original writes
+    // `P.absoluteValue = P.abs = function …` and its tests check the identity
+    // — `Decimal.prototype.toDP === Decimal.prototype.toDecimalPlaces` is an
+    // assertion, not an assumption.
+    let instance: &[(&'static [&'static str], sys::napi_callback)] = &[
+        (&["absoluteValue\0", "abs\0"], Some(m_abs)),
+        (&["negated\0", "neg\0"], Some(m_neg)),
+        (&["ceil\0"], Some(m_ceil)),
+        (&["floor\0"], Some(m_floor)),
+        (&["round\0"], Some(m_round)),
+        (&["truncated\0", "trunc\0"], Some(m_trunc)),
+        (&["plus\0", "add\0"], Some(m_plus)),
+        (&["minus\0", "sub\0"], Some(m_minus)),
+        (&["times\0", "mul\0"], Some(m_times)),
+        (&["dividedBy\0", "div\0"], Some(m_div)),
+        (&["dividedToIntegerBy\0", "divToInt\0"], Some(m_div_to_int)),
+        (&["modulo\0", "mod\0"], Some(m_mod)),
+        (&["comparedTo\0", "cmp\0"], Some(m_compared_to)),
+        (&["equals\0", "eq\0"], Some(m_equals)),
+        (&["lessThan\0", "lt\0"], Some(m_lt)),
+        (&["lessThanOrEqualTo\0", "lte\0"], Some(m_lte)),
+        (&["greaterThan\0", "gt\0"], Some(m_gt)),
+        (&["greaterThanOrEqualTo\0", "gte\0"], Some(m_gte)),
+        (&["isNaN\0"], Some(m_is_nan)),
+        (&["isFinite\0"], Some(m_is_finite)),
+        (&["isInteger\0", "isInt\0"], Some(m_is_integer)),
+        (&["isZero\0"], Some(m_is_zero)),
+        (&["isNegative\0", "isNeg\0"], Some(m_is_negative)),
+        (&["isPositive\0", "isPos\0"], Some(m_is_positive)),
+        (&["decimalPlaces\0", "dp\0"], Some(m_decimal_places)),
+        (&["precision\0", "sd\0"], Some(m_precision)),
+        (&["toDecimalPlaces\0", "toDP\0"], Some(m_to_dp)),
+        (&["toSignificantDigits\0", "toSD\0"], Some(m_to_sd)),
+        (&["toFixed\0"], Some(m_to_fixed)),
+        (&["toExponential\0"], Some(m_to_exponential)),
+        (&["toPrecision\0"], Some(m_to_precision)),
+        (&["toNumber\0"], Some(m_to_number)),
+        (&["toString\0"], Some(m_to_string)),
+        (&["valueOf\0", "toJSON\0"], Some(m_value_of)),
+        (&["clampedTo\0", "clamp\0"], Some(m_clamp)),
+        (&["toNearest\0"], Some(m_to_nearest)),
+        (&["inverseCosine\0", "acos\0"], Some(m_acos)),
+        (&["inverseHyperbolicCosine\0", "acosh\0"], Some(m_acosh)),
+        (&["inverseSine\0", "asin\0"], Some(m_asin)),
+        (&["inverseHyperbolicSine\0", "asinh\0"], Some(m_asinh)),
+        (&["inverseTangent\0", "atan\0"], Some(m_atan)),
+        (&["inverseHyperbolicTangent\0", "atanh\0"], Some(m_atanh)),
+        (&["cubeRoot\0", "cbrt\0"], Some(m_cbrt)),
+        (&["cosine\0", "cos\0"], Some(m_cos)),
+        (&["hyperbolicCosine\0", "cosh\0"], Some(m_cosh)),
+        (&["naturalExponential\0", "exp\0"], Some(m_exp)),
+        (&["naturalLogarithm\0", "ln\0"], Some(m_ln)),
+        (&["logarithm\0", "log\0"], Some(m_log)),
+        (&["toPower\0", "pow\0"], Some(m_pow)),
+        (&["sine\0", "sin\0"], Some(m_sin)),
+        (&["hyperbolicSine\0", "sinh\0"], Some(m_sinh)),
+        (&["squareRoot\0", "sqrt\0"], Some(m_sqrt)),
+        (&["tangent\0", "tan\0"], Some(m_tan)),
+        (&["hyperbolicTangent\0", "tanh\0"], Some(m_tanh)),
+        (&["toBinary\0"], Some(m_to_binary)),
+        (&["toHexadecimal\0", "toHex\0"], Some(m_to_hex)),
+        (&["toOctal\0"], Some(m_to_octal)),
+        (&["toFraction\0"], Some(m_to_fraction)),
     ];
-    for &(name, cb) in instance {
-        properties.push(method(name, cb, data));
+    for &(names, cb) in instance {
+        properties.push(method(names[0], cb, data));
     }
 
     let accessors: &[(&'static str, sys::napi_callback)] =
@@ -1576,8 +1645,10 @@ fn build_class(env: Env, cfg: Config) -> Value {
     }
 
     // Statics.
+    // `set` is not defined here: it is installed below as the very function
+    // object `config` becomes, because `Decimal.set === Decimal.config` is one
+    // of the original's assertions.
     properties.push(static_entry("config\0", Some(s_config), None, None, data));
-    properties.push(static_entry("set\0", Some(s_config), None, None, data));
     properties.push(static_entry("clone\0", Some(s_clone), None, None, data));
     properties.push(static_entry("isDecimal\0", Some(s_is_decimal), None, None, data));
 
@@ -1632,10 +1703,31 @@ fn build_class(env: Env, cfg: Config) -> Value {
     properties.push(static_entry("toExpPos\0", None, Some(get_to_exp_pos), Some(set_to_exp_pos), data));
     properties.push(static_entry("minE\0", None, Some(get_min_e), Some(set_min_e), data));
     properties.push(static_entry("maxE\0", None, Some(get_max_e), Some(set_max_e), data));
+    properties.push(static_entry("crypto\0", None, Some(get_crypto), Some(set_crypto), data));
 
     // SAFETY: `properties` lives until after the call returns, and `data` is
     // leaked, so both outlive every invocation of the methods they describe.
     let class = unsafe { define_class(env, "Decimal", Some(construct_decimal), data, &properties) };
+
+    // Install every alias as the function object already defined, rather than
+    // as a second function over the same callback. `Decimal.set` must *be*
+    // `Decimal.config`, and `toDP` must *be* `toDecimalPlaces`; the original
+    // gets that for free from `P.toDP = P.toDecimalPlaces = …`, and a
+    // descriptor table does not — it would mint one function per row.
+    let prototype = env.get_named(class, "prototype");
+    let mut aliases: Vec<sys::napi_property_descriptor> = Vec::new();
+    for &(names, _) in instance {
+        let function = env.get_named(prototype, names[0].trim_end_matches('\0'));
+        for &alias in &names[1..] {
+            aliases.push(same_function(alias, function));
+        }
+    }
+    // SAFETY: `aliases` outlives the call and every name is NUL-terminated.
+    unsafe { env.define_properties(prototype, &aliases) };
+
+    let config_fn = env.get_named(class, "config");
+    // SAFETY: as above.
+    unsafe { env.define_properties(class, &[same_function("set\0", config_fn)]) };
 
     // The rounding-mode constants, and the reference the methods use to build
     // their results.
