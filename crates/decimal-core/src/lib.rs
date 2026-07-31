@@ -66,6 +66,7 @@
 
 #![deny(missing_docs)]
 
+pub mod arith;
 pub mod config;
 pub mod decimal;
 pub(crate) mod exact;
