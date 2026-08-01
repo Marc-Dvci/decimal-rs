@@ -3,6 +3,13 @@
 **Track F (JavaScript → Rust)** · Port Mortem 2026 · solo entry
 Upstream: [MikeMcl/decimal.js](https://github.com/MikeMcl/decimal.js) @ [`cd73a7f`](https://github.com/MikeMcl/decimal.js/commit/cd73a7f830f07bc98e906d2ebe76e8c02cc20c8f) (v10.6.0, MIT)
 
+[![verify](https://github.com/Marc-Dvci/decimal-rs/actions/workflows/verify.yml/badge.svg)](https://github.com/Marc-Dvci/decimal-rs/actions/workflows/verify.yml)
+— the documented command, on a machine that has never seen this code, on every
+push. [`.github/workflows/verify.yml`](.github/workflows/verify.yml) runs
+`docker build && docker run` with nothing installed on the runner, and
+separately the port's own tests, `rustfmt`, `clippy -D warnings`, the 3,528-call
+conformance check, and every upstream reproduction.
+
 | | |
 |---|---|
 | **Original test suite** | **exactly one failure**, documented ([D-08](DECISIONS.md)) — of about 22,650 assertions |
@@ -51,6 +58,14 @@ docker run --rm decimal-rs ./bin/decimal-calc 2 sqrt --precision 40
 are generated with `Math.random()`, so the denominator moves from run to run —
 22,628 and 22,688 in two consecutive runs here. The number that does not move is
 the failures: **one**, always the same one, explained in [D-08](DECISIONS.md).
+
+That is also why the suite is run through
+[`scripts/expect-one-failure.js`](scripts/expect-one-failure.js) rather than
+directly. Upstream's runner **exits 0 whatever happens** — it prints its
+failures and returns success — so a container or a CI job that gated on its exit
+code would gate on nothing, and would stay green through a five-thousand-failure
+regression. The wrapper reads the summary line, subtracts, and fails on anything
+beyond the documented one.
 
 ## How the original tests reach the Rust code
 

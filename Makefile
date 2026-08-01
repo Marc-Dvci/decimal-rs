@@ -39,8 +39,12 @@ verify-tests:
 	@$(NODE) scripts/verify-tests.js
 
 ## The original decimal.js suite, unmodified, against the Rust artifact.
+##
+## Through `expect-one-failure.js`, because upstream's runner exits 0 whatever
+## happens: gating on its exit code would gate on nothing. The wrapper reads the
+## summary line and fails on any failure beyond the one D-08 documents.
 test-original: addon verify-tests
-	$(NODE) test/test.js
+	$(NODE) scripts/expect-one-failure.js
 
 ## The port's own Rust unit tests (kept out of test/ by design).
 test-rust:

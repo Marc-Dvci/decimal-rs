@@ -67,4 +67,10 @@ RUN node scripts/verify-tests.js
 
 # Three claims, checked in the order a sceptic would want them: the suite is
 # unmodified, it passes, and the core crate contains no unsafe.
-CMD ["sh", "-c", "node scripts/verify-tests.js && echo '' && node test/test.js && echo '' && node scripts/unsafe-report.js"]
+#
+# The middle one runs through `expect-one-failure.js` rather than `test/test.js`
+# directly, because upstream's runner exits 0 whatever happens — so a container
+# that ran it and reported its exit code would report success through any
+# regression. The wrapper reads the summary line and fails on anything beyond
+# the one failure DECISIONS.md D-08 documents.
+CMD ["sh", "-c", "node scripts/verify-tests.js && echo '' && node scripts/expect-one-failure.js && echo '' && node scripts/unsafe-report.js"]

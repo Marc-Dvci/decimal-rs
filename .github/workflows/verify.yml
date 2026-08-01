@@ -1,0 +1,103 @@
+# The submission's claims, checked on a machine that has never seen this code.
+#
+# Rule 03 of the brief is "no works-on-my-machine submissions", and the honest
+# way to answer it is not to assert that the build is reproducible but to build
+# it somewhere else, from nothing, on every push.
+#
+# Two jobs, deliberately separate:
+#
+#   one-command   the documented command, exactly as the README gives it. It
+#                 compiles the port from source in a container, verifies that
+#                 all 69 files of the original test suite are byte-identical to
+#                 upstream, runs that unmodified suite against the compiled
+#                 artifact, and prints the unsafe report. Nothing is installed
+#                 on the runner; if this job passes, the command in the README
+#                 is the whole of what a judge needs.
+#
+#   toolchain     the things a container cannot show — the port's own tests,
+#                 rustfmt, and clippy at `-D warnings` — plus the two
+#                 conformance checks, which need the vendored oracle and a
+#                 Node the image does not run them under by default.
+#
+# Neither job is allowed to be advisory. A red badge here means the submission
+# does not do what it says.
+
+name: verify
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  one-command:
+    name: docker build && docker run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The documented command, unmodified. `verify-tests.js` runs inside the
+      # image build as well, so a tampered test file fails here rather than at
+      # judging time.
+      - name: docker build -t decimal-rs .
+        run: docker build -t decimal-rs .
+
+      - name: docker run --rm decimal-rs
+        run: docker run --rm decimal-rs
+
+      # The rest of the evidence the image carries, so that a reader who trusts
+      # only this file can still see it.
+      - name: the exponent-clamp conformance check
+        run: docker run --rm decimal-rs node scripts/clamp-conformance.js
+
+      - name: the standalone binary, with no Node present
+        run: docker run --rm decimal-rs ./bin/decimal-calc 2 sqrt --precision 40
+
+  toolchain:
+    name: cargo test · fmt · clippy · conformance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # rust-toolchain.toml pins the version; `rustup show` installs it.
+      - name: install the pinned toolchain
+        run: rustup show
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: cargo fmt --check
+        run: cargo fmt --all -- --check
+
+      - name: cargo clippy -D warnings
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: cargo test --release
+        run: cargo test --release
+
+      - name: build the addon and put it where Node's resolver looks
+        run: |
+          cargo build --release
+          cp target/release/libdecimal.so ./decimal.node
+
+      # `expect-one-failure.js` and not `test/test.js` directly: upstream's
+      # runner exits 0 whatever happens, so gating on its exit code would gate
+      # on nothing. This reads the summary line and fails on any failure beyond
+      # the one D-08 documents.
+      - name: the original test suite, unmodified
+        run: |
+          node scripts/verify-tests.js
+          node scripts/expect-one-failure.js
+
+      # 3,528 calls, and the axis that found two defects on day 3. Slower than
+      # the suite by two orders of magnitude and still under four minutes.
+      - name: the exponent-clamp conformance check
+        run: node scripts/clamp-conformance.js
+
+      - name: every defect found in the original, on both implementations
+        run: node fuzz/repro-upstream.js
+
+      - name: the unsafe report
+        run: node scripts/unsafe-report.js
