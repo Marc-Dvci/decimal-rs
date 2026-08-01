@@ -397,28 +397,52 @@ async function main() {
   // if a slice does not reproduce, so this checks that it does before printing
   // any of them: one slice run twice must give byte-identical output, and a
   // slice run in two halves must account for exactly the work of the whole.
-  const probe = ['--slice', String(options.seed), '--sequences', '30'];
   const bounded = options.bounds ? [] : ['--bounds', 'off'];
-  const first = await runChild(probe.concat(bounded), { stall: 30000 });
-  const again = await runChild(probe.concat(bounded), { stall: 30000 });
-  const half1 = await runChild(['--slice', String(options.seed), '--sequences', '15', '--resume', '0']
-    .concat(bounded), { stall: 30000 });
-  const half2 = await runChild(['--slice', String(options.seed), '--sequences', '15', '--resume', '15']
-    .concat(bounded), { stall: 30000 });
+  const HALF = 8;
 
-  const whole = parseResult(first.stdout);
-  const repeat = parseResult(again.stdout);
-  const a = parseResult(half1.stdout);
-  const b = parseResult(half2.stdout);
-  const deterministic = whole && repeat && first.stdout === again.stdout;
-  const resumable = whole && a && b && a.operations + b.operations === whole.operations;
+  // The probe slice has to be one that *finishes*, and whether any given slice
+  // finishes is exactly what the watchdog exists to be unsure about. So try a
+  // few, and only conclude something about determinism from a slice that ran to
+  // completion twice. Reading a killed child's empty output as "not
+  // deterministic" would abort perfectly good runs at random.
+  let deterministic = false;
+  let resumable = false;
+  let attempts = 0;
+  let counts = null;
+
+  for (let attempt = 0; attempt < 6 && !(deterministic && resumable); attempt++) {
+    attempts = attempt + 1;
+    const seed = (options.seed ^ Math.imul(attempt + 1, 0x27d4eb2f)) >>> 0;
+    const whole = ['--slice', String(seed), '--sequences', String(HALF * 2)].concat(bounded);
+
+    const first = await runChild(whole, { stall: options.stall });
+    if (!parseResult(first.stdout)) continue;
+    const again = await runChild(whole, { stall: options.stall });
+    if (!parseResult(again.stdout)) continue;
+
+    const half1 = await runChild(
+      ['--slice', String(seed), '--sequences', String(HALF), '--resume', '0'].concat(bounded),
+      { stall: options.stall });
+    const half2 = await runChild(
+      ['--slice', String(seed), '--sequences', String(HALF), '--resume', String(HALF)]
+        .concat(bounded),
+      { stall: options.stall });
+    const a = parseResult(half1.stdout);
+    const b = parseResult(half2.stdout);
+    if (!a || !b) continue;
+
+    deterministic = first.stdout === again.stdout;
+    resumable = a.operations + b.operations === parseResult(first.stdout).operations;
+    counts = { a: a.operations, b: b.operations, whole: parseResult(first.stdout).operations };
+  }
 
   emit('[replay check] one slice run twice: ' +
-       (deterministic ? 'identical' : 'DIFFERED — seeds in this log are not replayable'));
+       (deterministic ? 'identical' : 'DIFFERED — seeds in this log would not be replayable') +
+       (attempts > 1 ? '  (' + attempts + ' probe slices tried; earlier ones stalled)' : ''));
   emit('[replay check] the same slice in two halves: ' +
-       (resumable ? 'accounts for the whole (' + a.operations + ' + ' + b.operations +
-        ' = ' + whole.operations + ' operations)'
-                  : 'DID NOT — resumption after a stall is unsound'));
+       (resumable ? 'accounts for the whole (' + counts.a + ' + ' + counts.b +
+        ' = ' + counts.whole + ' operations)'
+                  : 'DID NOT — resumption past a stall would be unsound'));
   if (!deterministic || !resumable) {
     emit('This run cannot publish replayable seeds and is aborted.');
     finish(lines, options, 1);

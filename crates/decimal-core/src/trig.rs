@@ -74,14 +74,16 @@ fn tiny_pow(b: f64, e: i64) -> f64 {
     n
 }
 
-/// `|x|`.
-fn abs(x: &Decimal) -> Decimal {
-    let mut out = x.clone();
-    if out.s.is_negative() {
-        out.s = Sign::Pos;
-    }
-    out
-}
+// `|x|` in this module is `ops::abs`, which is what `P.abs` actually is: a
+// *clamping* copy, then the sign cleared, then `finalise`. Not a sign flip.
+//
+// `new this.constructor(this)` re-judges the value against the current
+// `minE`/`maxE`, so `|x|` is zero whenever `x.e` is below `minE` — and
+// `toLessThanHalfPi` opens with `x = x.abs()`, which is how upstream disposes
+// of a tiny operand before any series is summed. A private sign-flipping
+// helper stood here instead, and left a value the reduction could not help
+// with: `tan(6.9e-302)` with `minE` at −179 never returned, where upstream
+// answers 0 in a millisecond.
 
 /// Whether the integer `x` is odd — the original's `isOdd`, which looks only
 /// at the last limb.
@@ -394,7 +396,7 @@ pub fn to_less_than_half_pi(ctx: &mut Ctx, x: &Decimal) -> Result<Decimal> {
     let half = crate::parse::parse_decimal(ctx, Sign::Pos, "0.5");
     let half_pi = mul(ctx, &pi, &half);
 
-    let x = abs(x);
+    let x = crate::ops::abs(ctx, x);
 
     if lte(&x, &half_pi) {
         ctx.quadrant = if is_negative { 4 } else { 1 };
@@ -450,7 +452,7 @@ pub fn to_less_than_half_pi(ctx: &mut Ctx, x: &Decimal) -> Result<Decimal> {
     };
 
     let shifted = sub(ctx, &x, &pi);
-    Ok(abs(&shifted))
+    Ok(crate::ops::abs(ctx, &shifted))
 }
 
 /// The working precision the circular functions raise to before reducing.
@@ -691,6 +693,44 @@ mod tests {
             parse_decimal(&ctx, Sign::Neg, rest)
         } else {
             parse_decimal(&ctx, Sign::Pos, text)
+        }
+    }
+
+    /// An operand below `minE` is gone before any series is summed.
+    ///
+    /// `toLessThanHalfPi` opens with `x = x.abs()`, and `P.abs` is a *clamping*
+    /// copy — `new this.constructor(this)` re-judges the value against the
+    /// current limits. So when `minE` sits above the operand's exponent the
+    /// reduction receives zero, and `sine` returns it on its first line.
+    ///
+    /// The port had a private `abs` that only flipped the sign, so the tiny
+    /// value survived into the Taylor series, where the partial sum underflows
+    /// to zero and the convergence test — which asks whether the sum has a limb
+    /// at position `k` — is false for ever. `tan(6.9e-302)` with `minE` at −179
+    /// did not return. Upstream answers 0 in a millisecond.
+    ///
+    /// Found by the campaign watchdog, and reported by it as a PORT DEFECT:
+    /// the oracle answered and the port did not.
+    #[test]
+    fn an_operand_below_min_e_reduces_to_zero() {
+        for (name, f) in [
+            ("sin", sin as fn(&mut Ctx, &Decimal) -> Result<Decimal>),
+            ("cos", cos),
+            ("tan", tan),
+        ] {
+            let mut ctx = Ctx::default();
+            let x = d("69058359908895768428033021569e-330");
+
+            ctx.cfg.precision = 20;
+            ctx.cfg.rounding = 8;
+            ctx.cfg.min_e = -179;
+
+            let value = f(&mut ctx, &x).expect("no error is raised");
+            assert_eq!(
+                to_string(&value, &ctx.cfg),
+                "0",
+                "{name} of a value below minE"
+            );
         }
     }
 
