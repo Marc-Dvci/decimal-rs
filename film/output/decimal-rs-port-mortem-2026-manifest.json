@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-01T15:37:04.687Z",
+  "output": "decimal-rs-port-mortem-2026.mp4",
+  "durationSeconds": 244.5,
+  "resolution": "1920x1080",
+  "fps": 30,
+  "videoCodec": "h264",
+  "audioCodec": "aac",
+  "sizeBytes": 25816356,
+  "captureSha256": "6b0e8923701a352885df4e57553ea40fe3a3b54e26c0552cda13fb414bad9991",
+  "narration": {
+    "audio/01-open.mp3": "187e9997cb4f42bdd659fb9a0b2ea35c7fe23076afe51b8ef2bc8736ef43d911",
+    "audio/02-one-command.mp3": "d0048c4e012f729e4ff3bf34324d58c30922d8663624e4a707a86b853e7c289d",
+    "audio/03-suite.mp3": "0f8db70621543fb44b34b82bbfa7e3bcd982bb0660d65d15c597cacbd44f3d0c",
+    "audio/04-fuzz.mp3": "fb2cc4e26a76b842c4aa02e44446f0c06a8164854e49d521248c4eebbd86f64d",
+    "audio/05-selftest.mp3": "710f66ca552212ad3495a742cb6d61af122b913df556bb57e53932c57dbec078",
+    "audio/06-port-defect.mp3": "99b09b9827df1be69ba6668c8e95e797c6fb2c831d5512e009a8363cf7498eab",
+    "audio/07-todp.mp3": "a4f08efb06d24c99c91a791456bbace86469b8b8dd2373ece2c2d6c956b6595a",
+    "audio/08-axis.mp3": "41b2195c93ec2f9b4b6c11f7d4f5a649e274eae3802923e82d3899e009f00173",
+    "audio/09-upstream.mp3": "d68a4a78e3727bbc97f50d38f793be03d5f4d8fcb5074a3c9393059fe95185ac",
+    "audio/10-safety.mp3": "4edb17c03d7bbbf26618727ad28ad835de2a0aec62a33c9991fbfef775237a92",
+    "audio/11-bench.mp3": "8fd9078e332a713bfa7fe4eb5ad428558bc22e702fb49a4f64f07982825cd2ae",
+    "audio/12-close.mp3": "0877262b6839f426fd6cc83a58f809945f2adbb0ee2730206657202cd35c8670"
+  },
+  "outputSha256": "d25fd997437ac698911ba4a84ba0e684460faf0687f992e2046a477a824e6522"
+}

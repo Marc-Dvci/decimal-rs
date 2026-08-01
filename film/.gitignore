@@ -1,6 +1,10 @@
-# The renderer's dependency tree and its outputs. The film's *sources* are
-# committed — the script, the timeline, the scenes, and the recording every
-# terminal in it replays — so that the claims it makes can be checked. The
-# rendered file itself is submitted, not stored here.
+# The renderer's dependency tree, and the intermediates. The film's *sources*
+# are committed — the script, the timeline, the scenes, and the recording every
+# terminal in it replays — along with the finished cut, its thumbnail and its
+# manifest, so that a judge who clones the repository has the deliverable
+# rather than a link to it.
 node_modules/
-output/
+output/*
+!output/decimal-rs-port-mortem-2026.mp4
+!output/decimal-rs-port-mortem-2026-thumbnail.png
+!output/decimal-rs-port-mortem-2026-manifest.json

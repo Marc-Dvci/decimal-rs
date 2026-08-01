@@ -22,15 +22,22 @@ conformance check, and every upstream reproduction.
 
 ## The demo film
 
-Four minutes, and **no terminal in it was typed**. Every command shown was run
-by [`film/scripts/capture.ts`](film/scripts/capture.ts), which records each line
-of output with the millisecond it arrived; the scenes read that recording and
-cannot supply text of their own. Where a recording is replayed faster than it
-ran, the factor and the real elapsed time are both on screen.
+**[film/output/decimal-rs-port-mortem-2026.mp4](film/output/decimal-rs-port-mortem-2026.mp4)**
+— 4 minutes 4 seconds, 1080p, in the repository rather than behind a link.
 
-The capture the film was built from is committed at
+**No terminal in it was typed.** Every command shown was run by
+[`film/scripts/capture.ts`](film/scripts/capture.ts), which records each line of
+output with the millisecond it arrived; the scenes read that recording and
+cannot supply text of their own — a scene quoting a line the command no longer
+prints fails the render rather than showing something plausible. Where a
+recording is replayed faster than it ran, the factor and the real elapsed time
+are both on screen; where a command finished in 300 ms, the film scrolls it at a
+readable pace and says so.
+
+The recording it was built from is committed at
 [`film/artifacts/capture.json`](film/artifacts/capture.json) — the same suite
-run, the same campaign, the same conformance output the sections below describe.
+run, the same campaign, the same conformance output the sections below describe,
+with the host, the commit and the exit code of each command beside it.
 
 ## Build and verify — one command
 
