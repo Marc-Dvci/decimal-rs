@@ -19,9 +19,10 @@ results.
 - it is not shipped, packaged, or loaded at runtime by anything the port
   installs.
 
-Deleting this directory breaks `make fuzz` and nothing else. That is the whole
-of its coupling to the project, and it is the reason it lives under `fuzz/`
-rather than anywhere a build could find it by accident.
+Deleting this directory breaks `make fuzz` and `make conformance` — everything
+that compares the two implementations, and nothing that builds or runs the port.
+That is the whole of its coupling to the project, and it is the reason it lives
+under `fuzz/` rather than anywhere a build could find it by accident.
 
 Its byte-identity to upstream is checked by `scripts/verify-tests.js` along
 with the test suite, so it cannot quietly drift into being a modified oracle —

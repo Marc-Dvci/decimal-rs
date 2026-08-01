@@ -28,8 +28,6 @@ toolchain  = "rustc 1.97.1 (pinned in rust-toolchain.toml), node 24"
 
 [tests]
 command        = "node test/test.js"
-total          = 22658
-passing        = 22657
 failing        = 1
 failing_reason = "DECISIONS.md D-08 — a Node-API signature constraint, not an arithmetic difference"
 files_modified = 0
@@ -37,8 +35,9 @@ files_total    = 69
 manifest       = "tests/ORIGINAL_HASHES.txt"
 manifest_check = "node scripts/verify-tests.js"
 # About 6,000 of the assertions are generated with Math.random(), so the
-# denominator moves between runs (22,598 / 22,628 / 22,658 all observed). The
-# failure count is the stable number.
+# denominator moves between runs (22,598 / 22,628 / 22,658 / 22,688 all
+# observed). `failing` is the stable number, and it is the only one stated here.
+total_approx = 22650
 note = "read the failure count, not the ratio"
 
 [tests.native]
@@ -55,10 +54,21 @@ limits_log   = "fuzz/log-limits.txt"
 command      = "node fuzz/campaign.js --seconds 70"
 self_check   = true   # a one-ulp fault is injected and must be detected before the run starts
 
+[conformance]
+# Two targeted checks, each exhaustive over an axis the original suite never
+# varies. Both compare against the vendored oracle and count their documented
+# divergences rather than filtering them out.
+clamp        = "node scripts/clamp-conformance.js"
+clamp_scope  = "43 methods x 6 operands x 4 exponent-limit pairs = 1032 calls"
+clamp_note   = "operands built under wide limits, limits narrowed before the call; DECISIONS.md D-12, D-18"
+host         = "node scripts/host-limits.js"
+host_scope   = "the array ceiling V8 enforces, measured live and compared with MAX_ARRAY_LENGTH"
+host_note    = "DECISIONS.md D-10, D-19"
+
 [safety]
 unsafe_core           = 0
 unsafe_cli            = 0
-unsafe_adapter        = 94
+unsafe_adapter        = 90
 method                = "unsafe_code = \"forbid\" in decimal-core and decimal-cli, compiler-enforced; textual cross-check in scripts/unsafe-report.js"
 command               = "node scripts/unsafe-report.js"
 dependencies_core     = 0
@@ -77,11 +87,14 @@ data    = "bench/soak.json"
 [findings]
 # Defects found in the original. Write-ups in docs/upstream/, all reproducible
 # with `node fuzz/repro-upstream.js`.
-count       = 6
+count       = 7
 crashes     = 3
 hangs       = 2
 index       = "docs/upstream/README.md"
 repro       = "node fuzz/repro-upstream.js"
+# BUG-007 is reproduced by the host-limit check rather than by repro-upstream.js,
+# because it is a threshold rather than a single input.
+repro_007   = "node scripts/host-limits.js"
 
 [docs]
 decisions = "DECISIONS.md"

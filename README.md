@@ -5,13 +5,13 @@ Upstream: [MikeMcl/decimal.js](https://github.com/MikeMcl/decimal.js) @ [`cd73a7
 
 | | |
 |---|---|
-| **Original test suite** | **22,657 / 22,658** — one failure, documented ([D-08](DECISIONS.md)) |
+| **Original test suite** | **exactly one failure**, documented ([D-08](DECISIONS.md)) — of about 22,650 assertions |
 | **Test files modified** | **0 of 69** — SHA-256 manifest enforced by the build |
 | **Differential fuzzing** | **zero undocumented divergences** over 70 continuous seconds, four independent seeds |
 | **Unsafe in `decimal-core`** | **0**, compiler-enforced (`unsafe_code = "forbid"`) |
 | **Dependencies of `decimal-core`** | **0** |
 | **JavaScript in the port** | **none** — Node's own resolver loads the Rust binary |
-| **Defects found in the original** | **6**, three of them crashes, two of them hangs |
+| **Defects found in the original** | **7**, three of them crashes, two of them hangs |
 
 ## Build and verify — one command
 
@@ -25,6 +25,11 @@ suite against the compiled Rust artifact.
 
 Without Docker: `make` (requires Rust 1.97.1 — pinned in `rust-toolchain.toml` —
 and Node 24).
+
+**Read the failure count, not the ratio.** About 6,000 of the suite's assertions
+are generated with `Math.random()`, so the denominator moves from run to run —
+22,628 and 22,688 in two consecutive runs here. The number that does not move is
+the failures: **one**, always the same one, explained in [D-08](DECISIONS.md).
 
 ## How the original tests reach the Rust code
 
@@ -55,25 +60,26 @@ port; nothing in `crates/` can reach it. See
 
 ## Performance, in one paragraph
 
-On CPU-bound arbitrary-precision arithmetic the port is **1.4× to 9.1× faster**,
-and the advantage is almost entirely a function of operand size: 2.9× at 100
-digits, 8.4× at 1 000, 9.1× at 10 000. Below about **40 significant digits it is
+On CPU-bound arbitrary-precision arithmetic the port is **1.4× to 8.5× faster**,
+and the advantage is almost entirely a function of operand size: 2.6× at 100
+digits, 8.1× at 1 000, 8.5× at 10 000. Below about **40 significant digits it is
 slower**, and at the library's default precision of twenty there is **no
-measurable difference** on most operations — the port's per-multiply cost is flat
-from 10 to 60 digits, because across that whole range it is paying a fixed
-~850 ns to cross the Node-API boundary and the arithmetic underneath is lost in
-it. Called one small operation at a time it is slower still, ~800 ns against
-~100 ns. Startup is 1.3 ms faster; the compiled artifact is 3.8× larger than the
+measurable difference** on most operations — the port's per-multiply cost barely
+moves from 30 digits to 100, 871 ns to 1.33 µs, because across that range it is
+paying to cross the Node-API boundary and the arithmetic underneath is lost in
+it. Called one small operation at a time it is slower still, ~900 ns against
+~200 ns. Startup is 1.5 ms faster; the compiled artifact is 3.8× larger than the
 original's source. Full table, methodology and the losses in
-[`bench/`](bench/README.md).
+[`bench/`](bench/README.md) — every number in this paragraph is a row of
+[`bench/results.json`](bench/results.json).
 
 ## Behavioural equivalence
 
-Two instruments, answering different questions.
+Four instruments, answering different questions.
 
-**The original suite** — 22,658 assertions, unmodified, hash-pinned. It is the
-strongest single piece of evidence and it is also fixed: it can only check what
-its author thought of, from one starting configuration.
+**The original suite** — some 22,650 assertions, unmodified, hash-pinned. It is
+the strongest single piece of evidence and it is also fixed: it can only check
+what its author thought of, from one starting configuration.
 
 **A differential campaign** — [`fuzz/campaign.js`](fuzz/campaign.js) — which
 checks the other thing: that the two implementations agree on inputs nobody
@@ -128,12 +134,46 @@ an absence, and the campaign prints it whether or not it is zero.
 
 **Every upstream defect below came out of that mechanism.**
 
-## Six defects in the original
+### Two targeted conformance checks
 
-Five of the six are crashes or hangs. Three of those leave the library in a
+Each was written because a campaign found one member of a family and the family
+turned out to be far larger than the member. A campaign reaches such a case by
+luck, once, after minutes; these reach every case in seconds and name the
+method rather than the seed.
+
+```
+node scripts/clamp-conformance.js     # 43 methods × 6 operands × 4 limit pairs
+node scripts/host-limits.js           # the ceilings the original's host imposes
+```
+
+[`scripts/clamp-conformance.js`](scripts/clamp-conformance.js) builds each
+operand under wide exponent limits and then **narrows the limits before the
+call**. That is the only arrangement in which the original's pervasive
+`x = new Ctor(x)` — thirty places, a re-judgement and not a copy — is observable
+at all, and it is why some 22,650 assertions have nothing to say about the whole
+family: the suite never narrows the limits after building an operand. This was
+the largest single family of defect in the port ([D-18](DECISIONS.md)). All
+1,032 calls agree; the documented divergences are counted, not hidden.
+
+[`scripts/host-limits.js`](scripts/host-limits.js) covers the opposite hazard —
+where the original is stopped by *its host* and Rust would not be. It measures
+the array ceiling V8 enforces on this machine, checks it against the constant
+compiled into the port, and compares five cases on both implementations
+including the type of the error thrown. One of the five is required **not** to
+throw, because a ceiling set far too low would otherwise pass the whole file.
+
+[D-19](DECISIONS.md) is the entry to read if you read one: the ceiling had been
+set to the specification's 2³² − 1 rather than the 2²⁷ V8 actually enforces, and
+the consequence was a divergence three lines long at the library's largest
+documented precision. It was live until the unbounded campaign's `PORT DEFECT`
+row stopped being zero.
+
+## Seven defects in the original
+
+Five of the seven are crashes or hangs. Three of those leave the library in a
 state it cannot recover from: afterwards, either every subsequent operation
 takes minutes, or the documented `minE`/`maxE` limits silently stop applying to
-anything at all. Each is reproducible in three to five lines with no unusual
+anything at all. Each is reproducible in two to five lines with no unusual
 operand.
 
 | | Defect | Failure |
@@ -144,6 +184,7 @@ operand.
 | [BUG-004](docs/upstream/BUG-004-tofraction-round-floor.md) | `toFraction` never returns under `ROUND_FLOOR` | infinite loop, **every finite value** |
 | [BUG-005](docs/upstream/BUG-005-taylorseries-null-dereference.md) | `taylorSeries` dereferences null, and leaves the exponent clamps off | `TypeError` + silent loss of `minE`/`maxE` |
 | [BUG-006](docs/upstream/BUG-006-argument-reduction-null-dereference.md) | the argument reduction of `sin`/`cos`/`tan` dereferences null | `TypeError` |
+| [BUG-007](docs/upstream/BUG-007-precision-above-939524081.md) | `precision` is documented to 1e9 and division fails above 939,524,081 | host `RangeError`, not `[DecimalError]` |
 
 BUG-004 is three lines:
 
@@ -159,9 +200,13 @@ timeout:
 node fuzz/repro-upstream.js
 ```
 
-Four of the six are one mistake wearing different hats, and two are one missing
-`finally`; both families, and the suggested sweeps, are in
-[`docs/upstream/README.md`](docs/upstream/README.md).
+Four of the seven are one mistake wearing different hats, and two are one
+missing `finally`; both families, and the suggested sweeps, are in
+[`docs/upstream/README.md`](docs/upstream/README.md). BUG-007 is in neither
+family and is the only one that is not a mistake in the arithmetic — it is a
+configuration range the documentation promises and the engine will not build the
+array for. `node scripts/host-limits.js` reproduces it, from both sides of a
+threshold the two implementations agree on to the digit.
 
 ## Fidelity, and the five places it is set aside
 
@@ -186,9 +231,9 @@ node scripts/unsafe-report.js
 
 | crate | lines | unsafe | |
 |---|---:|---:|---|
-| `decimal-core` | 9,086 | **0** | `unsafe_code = "forbid"`, compiler-enforced |
+| `decimal-core` | 9,636 | **0** | `unsafe_code = "forbid"`, compiler-enforced |
 | `decimal-cli` | 10 | **0** | same |
-| `decimal-napi` | 2,405 | 94 | the Node-API boundary; no arithmetic |
+| `decimal-napi` | 2,531 | 90 | the Node-API boundary; no arithmetic |
 
 `forbid` is not a lint level an inner `allow` can turn off, so `decimal-core`
 does not compile if an unsafe block appears anywhere in it, including one
@@ -231,7 +276,8 @@ tests/                ORIGINAL_HASHES.txt and verification artifacts.
 fuzz/                 the differential campaign, its oracle, and the upstream
                       reproductions.
 bench/                the benchmark harness, its methodology, and its results.
-scripts/              soak, unsafe report, test-manifest verification.
+scripts/              the two conformance checks, the soak, the unsafe report,
+                      test-manifest verification.
 docs/upstream/        one filable report per defect found in the original.
 ```
 
