@@ -345,11 +345,22 @@ pub fn to_power(ctx: &mut Ctx, x: &Decimal, y: &Decimal) -> Result<Decimal> {
     };
 
     // The estimate can be off by one, hence the ±1 slack on the limits.
+    //
+    // The original is `new Ctor(e > 0 ? s / 0 : 0)`, and the asymmetry is
+    // deliberate-looking enough to transcribe rather than tidy: the sign
+    // reaches the overflow through `s / 0` and the underflow is the *literal*
+    // `0`, which is positive. So `(-0.5)^99999999999999999999` — a negative
+    // base, an odd exponent, a result that underflows — is `0` upstream and was
+    // `-0` here. The two are distinguishable: `isNegative`, `1/x`, and the
+    // `sdz`/`neg0` channels the differential harness compares all see it.
+    //
+    // Found by the campaign at 32,094 refereed operations; nothing in the
+    // original suite raises a negative base to a power that underflows.
     if e > ctx.cfg.max_e + 1 || e < ctx.cfg.min_e - 1 {
         return Ok(if e > 0 {
             Decimal::infinity(s)
         } else {
-            Decimal::zero(s)
+            Decimal::zero(Sign::Pos)
         });
     }
 
@@ -517,6 +528,31 @@ mod tests {
         assert_eq!(pow_str(&mut ctx, "-1", "1e309"), "1");
         // An odd exponent, for contrast: this one's units digit is stored.
         assert_eq!(pow_str(&mut ctx, "-1", "101"), "-1");
+    }
+
+    /// The zero a power underflows to is positive even when the sign says it
+    /// should not be, because the original's underflow branch is the literal
+    /// `0` while only its overflow branch carries `s`. Both expectations were
+    /// read out of Node.
+    #[test]
+    fn an_underflowing_power_loses_its_sign_and_an_overflowing_one_keeps_it() {
+        let mut ctx = Ctx::default();
+
+        // A negative base and an odd exponent — the sign survives everywhere
+        // except here.
+        let under = to_power(&mut ctx, &d("-0.5"), &d("99999999999999999999")).unwrap();
+        assert!(under.is_zero());
+        assert_eq!(under.s, Sign::Pos, "upstream returns +0, not -0");
+
+        // The overflow on the same base, where the sign does reach the answer.
+        let over = to_power(&mut ctx, &d("-2"), &d("99999999999999999999")).unwrap();
+        assert!(over.is_infinite());
+        assert_eq!(over.s, Sign::Neg);
+
+        // And the exponent one lower, which is even: positive at both ends.
+        let even = to_power(&mut ctx, &d("-2"), &d("99999999999999999998")).unwrap();
+        assert!(even.is_infinite());
+        assert_eq!(even.s, Sign::Pos);
     }
 
     #[test]
