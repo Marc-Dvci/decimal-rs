@@ -1,0 +1,26 @@
+# What `docker build .` should not have to send.
+#
+# Without this the build context is about 145 MB, nearly all of it `target/` —
+# a compiled tree the image cannot use anyway, since stage 1 builds from source
+# inside the image and the host's artifacts are for a different platform. The
+# context that actually matters is around 2 MB.
+#
+# Everything the Dockerfile COPYs must stay out of this file: Cargo.toml,
+# Cargo.lock, rust-toolchain.toml, crates/, test/, tests/, scripts/,
+# fuzz/reference/, package.json, Makefile, DECISIONS.md, README.md,
+# .port-mortem.toml.
+
+target/
+.git/
+node_modules/
+
+# The host's build of the addon. Stage 1 produces the one the image runs, and
+# shipping a Windows or macOS artifact into a Linux image would at best be
+# ignored and at worst be confusing.
+decimal.node
+
+# Harness inputs and outputs that no build step reads.
+fuzz/log.txt
+fuzz/log-limits.txt
+bench/
+docs/
