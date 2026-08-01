@@ -872,6 +872,10 @@ documented divergences and counts them rather than hiding them, and it shards
 one child per method-and-operand so that the four cases neither implementation
 returns from cost four cases rather than four methods.
 
+*Written on day 1, and left as it was written.* Those were the axes it varied;
+the two it held constant hid two further defects of this same family, found on
+day 3. It is 67 methods and 3,528 calls now — **D-21**.
+
 **Consequence.** Every method agrees. This was the largest family of defect in
 the port and the one that most resembled an improvement: a port that saves and
 restores a flag is more careful than one that sets it, and is a port of a
