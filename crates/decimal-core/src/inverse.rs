@@ -78,13 +78,27 @@ pub fn atan(ctx: &mut Ctx, x: &Decimal) -> Result<Decimal> {
         if x.is_nan() {
             return Ok(Decimal::nan());
         }
-        if pr + 4 <= PI_PRECISION {
-            let pi = get_pi(ctx, pr + 4, rm)?;
-            let half = literal(ctx, "0.5");
-            let mut r = mul(ctx, &pi, &half);
-            r.s = x.s;
-            return Ok(r);
-        }
+        // ±Infinity is ±π/2 and nothing else, so this branch always returns.
+        //
+        // The original guards it with `pr + 4 <= PI_PRECISION` and, when the
+        // guard fails, falls through to the series below — with `x` infinite.
+        // Every term is then infinite, the partial sums never differ, and the
+        // convergence test is `r.d[j] !== void 0` on a value whose `d` is
+        // null: upstream raises `TypeError: Cannot read properties of null`,
+        // and this port, which checks finiteness before indexing, looped for
+        // ever instead. Reported as BUG-008; D-20 has the reasoning.
+        //
+        // Calling `get_pi` unguarded produces the answer the rest of the
+        // family already produces at these precisions: `asin(1)`, `acos(0)`,
+        // `acos(-1)`, `atan2(1, -1)` and `sin(1e9)` all raise `[DecimalError]
+        // Precision limit exceeded` from this very function, on both
+        // implementations. `atan` of an infinity was the one member that did
+        // not, because its guard skipped the call rather than letting it fail.
+        let pi = get_pi(ctx, pr + 4, rm)?;
+        let half = literal(ctx, "0.5");
+        let mut r = mul(ctx, &pi, &half);
+        r.s = x.s;
+        return Ok(r);
     } else if x.is_zero() {
         return Ok(x.clone());
     } else if magnitude_vs_one(x) == Some(core::cmp::Ordering::Equal) && pr + 4 <= PI_PRECISION {
@@ -465,6 +479,7 @@ mod tests {
     use super::*;
     use crate::format::to_string;
     use crate::parse::parse_decimal;
+    use crate::Error;
 
     fn d(text: &str) -> Decimal {
         let ctx = Ctx::default();
@@ -585,6 +600,36 @@ mod tests {
 
         let at_one = atanh(&mut ctx, &d("1")).unwrap();
         assert!(at_one.is_infinite() && !at_one.is_negative());
+    }
+
+    /// `atan(±∞)` above the precision the π constant carries.
+    ///
+    /// The answer is ±π/2 and π/2 is not available, so the only honest outcome
+    /// is the error the rest of the family already gives — and the one thing it
+    /// must not be is a series that cannot converge. See D-20 and BUG-008.
+    #[test]
+    fn an_infinity_above_the_pi_table_is_an_error_and_not_a_loop() {
+        let mut ctx = Ctx::default();
+        ctx.cfg.precision = PI_PRECISION - 3;
+
+        for sign in [Sign::Pos, Sign::Neg] {
+            assert_eq!(
+                atan(&mut ctx, &Decimal::infinity(sign)).unwrap_err(),
+                Error::PrecisionLimitExceeded,
+            );
+        }
+
+        // One digit lower the constant does stretch, and the answer is the one
+        // that was always there.
+        ctx.cfg.precision = PI_PRECISION - 4;
+        let half_pi = atan(&mut ctx, &Decimal::infinity(Sign::Pos)).unwrap();
+        assert!(half_pi.is_finite() && !half_pi.is_zero());
+
+        // The neighbouring guard is *not* removed: `atan(±1)` reaches the same
+        // precisions through the series, which converges, and upstream answers
+        // there. Checked on both sides in Node at precision 1130.
+        ctx.cfg.precision = 30;
+        assert_eq!(call(&mut ctx, atan, "1"), "0.78539816339744830961566084582");
     }
 
     /// The cancellation the two upstream pull requests removed.
