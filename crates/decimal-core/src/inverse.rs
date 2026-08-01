@@ -112,7 +112,6 @@ pub fn atan(ctx: &mut Ctx, x: &Decimal) -> Result<Decimal> {
         x = divide(ctx, &x, &divisor, None, rounding::DOWN, false, None);
     }
 
-    let external_before = ctx.external;
     ctx.external = false;
 
     let j = (wpr + crate::LOG_BASE - 1) / crate::LOG_BASE;
@@ -174,7 +173,10 @@ pub fn atan(ctx: &mut Ctx, x: &Decimal) -> Result<Decimal> {
         r = mul(ctx, &r, &scale);
     }
 
-    ctx.external = external_before;
+    // Set, not restored — `inverseTangent` ends with a bare `external = true`,
+    // as all eighteen of these sites in the original do. See the note on
+    // `Ctx::without_clamping` for why the difference is observable.
+    ctx.external = true;
     ctx.cfg.precision = pr;
     ctx.cfg.rounding = rm;
     finalise(ctx, &mut r, Some(pr), rm, true);

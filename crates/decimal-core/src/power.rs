@@ -116,7 +116,6 @@ pub fn logarithm(ctx: &mut Ctx, arg: &Decimal, base: Option<&Decimal>) -> Result
         }
     }
 
-    let external_before = ctx.external;
     ctx.external = false;
 
     let outcome = (|ctx: &mut Ctx| -> Result<Decimal> {
@@ -179,7 +178,8 @@ pub fn logarithm(ctx: &mut Ctx, arg: &Decimal, base: Option<&Decimal>) -> Result
         Ok(r)
     })(ctx);
 
-    ctx.external = external_before;
+    // Set, not restored, as `logarithm` does. See `Ctx::without_clamping`.
+    ctx.external = true;
     let mut r = outcome?;
     finalise(ctx, &mut r, Some(pr), rm, false);
     Ok(r)
@@ -353,7 +353,6 @@ pub fn to_power(ctx: &mut Ctx, x: &Decimal, y: &Decimal) -> Result<Decimal> {
         });
     }
 
-    let external_before = ctx.external;
     ctx.external = false;
     ctx.cfg.rounding = rounding::DOWN;
     x.s = Sign::Pos;
@@ -391,7 +390,8 @@ pub fn to_power(ctx: &mut Ctx, x: &Decimal, y: &Decimal) -> Result<Decimal> {
     })(ctx);
 
     ctx.cfg.rounding = rm;
-    ctx.external = external_before;
+    // Set, not restored, as `toPower` does. See `Ctx::without_clamping`.
+    ctx.external = true;
 
     let mut r = outcome?;
     r.s = s;

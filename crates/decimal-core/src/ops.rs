@@ -274,7 +274,17 @@ pub fn clamp(ctx: &mut Ctx, x: &Decimal, min: &Decimal, max: &Decimal) -> Result
         Some(Ordering::Less) => min.clone(),
         _ => match crate::arith::compare(x, max) {
             Some(Ordering::Greater) => max.clone(),
-            _ => x.clone(),
+            // `new Ctor(x)` in the original, and it is the interesting branch:
+            // the receiver is *inside* the requested range and is still
+            // re-judged against `minE`/`maxE` on the way out. So
+            // `x.clamp(-1e400, 1e400)` with `maxE` at 100 answers Infinity for
+            // a receiver of 1.5e300 — the clamp the caller asked for did not
+            // apply, and the one they did not ask for did. Reproduced (D-12).
+            //
+            // Note the asymmetry: the two bounds were already re-judged by the
+            // `new Ctor(min)`/`new Ctor(max)` at the top of the function, so
+            // returning one of *them* needs no further copy.
+            _ => clamped_copy(ctx, x),
         },
     })
 }

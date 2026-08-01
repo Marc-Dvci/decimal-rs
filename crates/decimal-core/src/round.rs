@@ -449,7 +449,33 @@ mod tests {
         assert!(big.is_finite(), "the clamp was suppressed");
         assert_eq!(big.e, 11);
 
-        // ...and the suppression is restored, not merely set.
+        // ...and the clamps are back on afterwards.
+        assert!(ctx.external);
+    }
+
+    /// Nesting turns the clamps back on for the rest of the *outer* region.
+    ///
+    /// That reads like a bug and is the original's actual behaviour, which is
+    /// why it gets a test rather than a comment. `acosh` suppresses the clamps
+    /// and then calls `sqrt`, which suppresses them again and ends with a bare
+    /// `external = true` — so everything after the square root in
+    /// `x.times(x).minus(1).sqrt().plus(x)` is clamped after all, and
+    /// `acosh(1.5e300)` with `maxE` at 100 is Infinity rather than 691.87.
+    ///
+    /// A port that restored the flag instead would be more careful and would
+    /// give a different answer. See `Ctx::without_clamping`.
+    #[test]
+    fn a_nested_suppression_leaves_the_clamps_on() {
+        let mut ctx = Ctx::new(Config::default());
+
+        ctx.without_clamping(|ctx| {
+            assert!(!ctx.external, "suppressed on the way in");
+            ctx.without_clamping(|_| {});
+            assert!(
+                ctx.external,
+                "the inner region sets the flag rather than restoring it"
+            );
+        });
         assert!(ctx.external);
     }
 

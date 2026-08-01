@@ -388,17 +388,28 @@ pub fn parse_other(ctx: &mut Ctx, s: Sign, text: &str) -> crate::Result<Decimal>
         limbs,
     );
 
+    // The divisor is built *before* clamping is suppressed, and the order is
+    // not incidental. `int_pow` ends by setting the flag rather than restoring
+    // it (see the note there), so computing the divisor inside the suppressed
+    // region would switch clamping back on for everything after it — and the
+    // multiplication below would then round the result to the working
+    // precision. `new Decimal('0x1.8p3')` at precision 1 came out as 20 rather
+    // than 12. Upstream builds its divisor above its own `external = false`,
+    // for what must be the same reason.
+    let divisor = (fraction_length > 0).then(|| {
+        crate::arith::int_pow(
+            ctx,
+            &Decimal::from_i32(base as i32),
+            fraction_length,
+            fraction_length * 2,
+        )
+    });
+
     let result = ctx.without_clamping(|ctx| {
-        if fraction_length > 0 {
+        if let Some(divisor) = divisor {
             // log10(16) < 1.21, so four decimal digits per input digit is
             // always enough to make the division exact.
             let total_digits = digits_text.len() as i64;
-            let divisor = crate::arith::int_pow(
-                ctx,
-                &Decimal::from_i32(base as i32),
-                fraction_length,
-                fraction_length * 2,
-            );
             let rm = ctx.cfg.rounding;
             x = crate::arith::divide(ctx, &x, &divisor, Some(total_digits * 4), rm, false, None);
         }

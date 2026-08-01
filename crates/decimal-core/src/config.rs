@@ -206,24 +206,42 @@ impl Ctx {
         core::mem::replace(&mut self.array_limit_exceeded, false)
     }
 
-    /// Run `body` with the overflow and underflow clamps suppressed, restoring
-    /// the previous setting afterwards.
+    /// Run `body` with the overflow and underflow clamps suppressed, and turn
+    /// them back **on** afterwards — set, not restored.
     ///
-    /// The original does this by hand, as `external = false; … external =
-    /// true;`, which sets rather than restores. That is safe there only
-    /// because the pattern is never nested. Restoring instead of setting makes
-    /// nesting harmless, and costs nothing.
+    /// # Why set rather than restore
     ///
-    /// Note that the original is careful to reset the flag on the *error*
-    /// path too — see `getLn10`, which restores it before throwing, precisely
-    /// so that a caught `[DecimalError] Precision limit exceeded` does not
-    /// leave the library wedged. Here that is structural rather than
-    /// remembered.
+    /// The original writes this by hand, eighteen times, always as
+    /// `external = false; … external = true;`. An earlier version of this
+    /// helper saved the previous value and put it back, on the reasoning that
+    /// restoring makes nesting harmless and costs nothing.
+    ///
+    /// It costs one behaviour, and the nesting is real. `acosh` suppresses the
+    /// clamps and then calls `sqrt`, which suppresses them again and sets them
+    /// back on — so the `plus` that follows the square root in
+    /// `x.times(x).minus(1).sqrt().plus(x)` runs *with* clamping, and
+    /// `acosh(1.5e300)` with `maxE` at 100 is Infinity rather than 691.87.
+    /// `parseOther` calls `intPow` and gets the same treatment: with restoring
+    /// semantics `new Decimal('0x1.8p3')` at precision 1 came out as 20 instead
+    /// of 12. Both were found by the differential campaign, months of reading
+    /// after the original was transcribed.
+    ///
+    /// So the sloppiness is load-bearing, and a port that tidies it up is a
+    /// port of a different library. `scripts/clamp-conformance.js` checks the
+    /// whole family against the oracle in one pass.
+    ///
+    /// # The error path
+    ///
+    /// The original is *not* careful here, and that is one of its defects: a
+    /// throw between the two assignments leaves the clamps disabled for the
+    /// life of the process (BUG-002, BUG-005). `getLn10` alone gets it right,
+    /// with a comment saying so deliberately. This helper restores on the error
+    /// path structurally, because `body` returning early cannot skip the line
+    /// below — a deliberate divergence, recorded as D-11 and D-16.
     pub fn without_clamping<T>(&mut self, body: impl FnOnce(&mut Ctx) -> T) -> T {
-        let saved = self.external;
         self.external = false;
         let result = body(self);
-        self.external = saved;
+        self.external = true;
         result
     }
 }

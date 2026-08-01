@@ -21,7 +21,7 @@ else
 endif
 
 .PHONY: all build addon verify-tests test test-original test-rust clean fmt lint \
-        unsafe-report bench fuzz fuzz-limits repro soak
+        unsafe-report bench fuzz fuzz-limits repro clamp-conformance soak
 
 # Default target: nothing is considered built until the original, unmodified
 # test suite has run against the Rust artifact.
@@ -70,6 +70,12 @@ fuzz: addon
 ## cannot referee is named individually rather than by rule.
 fuzz-limits: addon
 	$(NODE) fuzz/campaign.js --seconds 70 --bounds off --stall 2000
+
+## Every method whose upstream body re-judges its receiver against minE/maxE,
+## checked against the oracle with the limits narrowed after the operand was
+## built. The largest family of defect this port had; see DECISIONS.md D-12.
+clamp-conformance: addon
+	$(NODE) scripts/clamp-conformance.js
 
 ## Every defect found in the original, on both implementations, side by side.
 repro: addon

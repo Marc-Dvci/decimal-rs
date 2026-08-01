@@ -156,7 +156,27 @@ fn orient(greater: bool) -> Ordering {
 // ---------------------------------------------------------------------------
 
 /// `x + y`.
+///
+/// # The argument is re-judged first
+///
+/// `P.plus` opens with `y = new Ctor(y)`, and so do `P.minus` and `P.times` —
+/// a clamping copy, not a clone (D-12). There is no function form of these in
+/// the original; every internal use is a method call, so the copy happens every
+/// time. Hence [`clamped_copy`] here rather than at the call sites.
+///
+/// It is a no-op while the clamps are suppressed, which is most of the time
+/// inside this crate, and it bites exactly where the original's does:
+/// `asinh(-1.5e300)` with `maxE` at 100 is NaN, because `sqrt` turns the clamps
+/// back on (see `Ctx::without_clamping`) and the `.plus(x)` that follows it
+/// then re-judges `x` into −Infinity, against a +Infinity root.
+///
+/// `divide` is deliberately not in this list: it *is* a function in the
+/// original, called directly by a dozen routines, and it does not re-judge. The
+/// method that does is `P.dividedBy`, which the adapter reaches through
+/// `coerce`.
 pub fn add(ctx: &mut Ctx, x: &Decimal, y: &Decimal) -> Decimal {
+    let y = &crate::ops::clamped_copy(ctx, y);
+
     // Non-finite operands.
     if x.d.is_none() || y.d.is_none() {
         if x.is_nan() || y.is_nan() {
@@ -266,8 +286,11 @@ pub fn add(ctx: &mut Ctx, x: &Decimal, y: &Decimal) -> Decimal {
     result
 }
 
-/// `x − y`.
+/// `x − y`. The argument is re-judged against the exponent limits first; see
+/// [`add`].
 pub fn sub(ctx: &mut Ctx, x: &Decimal, y: &Decimal) -> Decimal {
+    let y = &crate::ops::clamped_copy(ctx, y);
+
     // Non-finite operands.
     if x.d.is_none() || y.d.is_none() {
         if x.is_nan() || y.is_nan() {
@@ -425,8 +448,10 @@ pub fn negated(x: &Decimal) -> Decimal {
 // Multiplication
 // ---------------------------------------------------------------------------
 
-/// `x × y`, by long multiplication.
+/// `x × y`, by long multiplication. The argument is re-judged against the
+/// exponent limits first; see [`add`].
 pub fn mul(ctx: &mut Ctx, x: &Decimal, y: &Decimal) -> Decimal {
+    let y = &crate::ops::clamped_copy(ctx, y);
     let sign = x.s.product(y.s);
 
     let x_zero = x.d.as_deref().map(|d| d[0] == 0).unwrap_or(false);
