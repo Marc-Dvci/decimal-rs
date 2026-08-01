@@ -37,7 +37,7 @@
  * The outcome must agree, always. The configuration left behind afterwards need
  * not: the original raises the working precision before it throws and has no
  * `finally`, so a caught `RangeError` leaves it wedged at a precision of 9e15.
- * The port deliberately does not reproduce that — D-11, reported upstream as
+ * The port deliberately does not reproduce that — D-11, documented as
  * BUG-002 — so the second channel is compared, reported, and required to
  * diverge only in the direction that decision predicts.
  *

@@ -10,9 +10,10 @@
   },
   "scripts": {
     "verify-tests": "node scripts/verify-tests.js",
-    "test": "node scripts/verify-tests.js && node test/test.js",
+    "test": "node scripts/verify-tests.js && node scripts/expect-zero-failures.js && node --expose-gc scripts/adapter-regression.js",
     "fuzz": "node fuzz/differential.js",
-    "campaign": "node fuzz/campaign.js --seconds 70",
+    "campaign": "node fuzz/campaign.js --seconds 70 --log fuzz/log.txt",
+    "fuzz-strict": "node fuzz/differential.js --strict --seconds 70 --seed 1592594996 --log fuzz/log-strict.txt",
     "clamp-conformance": "node scripts/clamp-conformance.js",
     "host-limits": "node scripts/host-limits.js",
     "repro-upstream": "node fuzz/repro-upstream.js",

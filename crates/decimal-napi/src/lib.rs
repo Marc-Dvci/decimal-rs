@@ -28,11 +28,11 @@
 //! `Decimal.clone()` produces an *independent* constructor with its own
 //! configuration, and the original's `clone` and `config` modules check that
 //! two clones do not interfere. Each constructor therefore owns a
-//! [`ConstructorState`], allocated when the class is defined and reachable
-//! from every one of its methods through the callback data pointer. Instance
-//! methods find their configuration this way rather than through the instance,
-//! which is exactly how the original does it — the config lives on the
-//! constructor function object, not on the value.
+//! [`ConstructorState`], owned and finalized by that JavaScript function.
+//! Every instance has its constructor as an own property, so methods on the
+//! one shared prototype recover the correct clone and then borrow its state
+//! only for a non-reentrant Rust operation. This mirrors the original's object
+//! model and avoids both persistent-reference leaks and forged Rust lifetimes.
 //!
 //! # Errors, and the one thing that must not happen
 //!
@@ -62,8 +62,9 @@ use decimal_core::random::Xoshiro256StarStar;
 use decimal_core::{
     format, fraction, inverse, ops, parse, roots, Config, Ctx, Decimal, Error, Sign,
 };
-use napi::{bind_symbols, define_class, Env, JsType, Value};
+use napi::{bind_symbols, define_class, Env, JsType, Value, WeakReferenceOwner};
 use napi_sys as sys;
+use std::cell::RefCell;
 use std::ffi::c_void;
 use std::ptr;
 
@@ -71,16 +72,9 @@ use std::ptr;
 // Per-constructor state
 // ---------------------------------------------------------------------------
 
-/// Everything one `Decimal` constructor owns.
-///
-/// Leaked deliberately: a constructor, once created, lives as long as the
-/// module, and the pointer to this is handed to Node as the callback data of
-/// every method on the class. Freeing it would invalidate those.
+/// The mutable state of one `Decimal` constructor.
 struct ConstructorState {
     ctx: Ctx,
-    /// A strong reference to the constructor function, so that methods can
-    /// build their results as instances of the right class.
-    ctor: sys::napi_ref,
     /// The non-cryptographic generator behind `random`, standing where the
     /// original has `Math.random()`.
     ///
@@ -91,15 +85,77 @@ struct ConstructorState {
     entropy: Xoshiro256StarStar,
 }
 
-/// Recover the state from a callback's data pointer.
+/// Native data owned by a constructor function.
+///
+/// `state` is runtime-borrowed because JavaScript is re-entrant. More
+/// importantly, every callback releases the borrow before it touches a
+/// property, coerces a value, constructs an object, or calls a function.
+/// `constructor` is weak: it supports `Decimal(x)` without preventing a cloned
+/// constructor from being collected.
+struct ConstructorData {
+    state: RefCell<ConstructorState>,
+    constructor: sys::napi_ref,
+}
+
+impl WeakReferenceOwner for ConstructorData {
+    fn set_weak_reference(&mut self, reference: sys::napi_ref) {
+        self.constructor = reference;
+    }
+
+    fn weak_reference(&self) -> sys::napi_ref {
+        self.constructor
+    }
+}
+
+/// Use constructor callback data without manufacturing a reference lifetime.
 ///
 /// # Safety
 ///
-/// `data` is the pointer given to `napi_define_class` and to every property
-/// descriptor on the class, which is a leaked `Box<ConstructorState>` that
-/// outlives every call.
-unsafe fn state<'a>(data: *mut c_void) -> &'a mut ConstructorState {
-    &mut *data.cast::<ConstructorState>()
+/// `data` must be the `ConstructorData` pointer installed on this constructor
+/// by `build_class`. The closure cannot return a borrowed reference.
+unsafe fn with_callback_data<R>(
+    data: *mut c_void,
+    body: impl for<'a> FnOnce(&'a ConstructorData) -> R,
+) -> R {
+    body(&*data.cast::<ConstructorData>())
+}
+
+fn with_state<R>(
+    env: Env,
+    class: Value,
+    body: impl for<'a> FnOnce(&'a ConstructorState) -> R,
+) -> Option<R> {
+    env.with_wrapped::<ConstructorData, _>(class, |data| {
+        let state = data.state.borrow();
+        body(&state)
+    })
+}
+
+fn with_state_mut<R>(
+    env: Env,
+    class: Value,
+    body: impl for<'a> FnOnce(&'a mut ConstructorState) -> R,
+) -> Option<R> {
+    env.with_wrapped::<ConstructorData, _>(class, |data| {
+        let mut state = data.state.borrow_mut();
+        body(&mut state)
+    })
+}
+
+/// Copy the calculation context, run pure Rust, and commit the scratch state.
+/// No Node-API call occurs while the constructor state is borrowed.
+fn calculate<R>(env: Env, class: Value, body: impl FnOnce(&mut Ctx) -> R) -> Option<(R, bool)> {
+    let mut ctx = with_state(env, class, |state| state.ctx)?;
+    let result = body(&mut ctx);
+    let exceeded = ctx.take_array_limit_exceeded();
+    with_state_mut(env, class, |state| state.ctx = ctx)?;
+    Some((result, exceeded))
+}
+
+fn class_from_instance(env: Env, instance: Value) -> Option<Value> {
+    let class = env.get_named(instance, "constructor");
+    env.with_wrapped::<ConstructorData, _>(class, |_| ())
+        .map(|()| class)
 }
 
 // ---------------------------------------------------------------------------
@@ -108,12 +164,10 @@ unsafe fn state<'a>(data: *mut c_void) -> &'a mut ConstructorState {
 
 /// The constructor's dispatch on the type of its argument.
 ///
-/// This is the original's `Decimal(v)`, minus the `bigint` branch: the
-/// original accepts one, but its test suite never supplies one, and accepting
-/// it would mean pulling in the big-integer half of the Node-API for a path
-/// nothing exercises. The omission is recorded in DECISIONS.md rather than
-/// hidden.
-fn coerce(env: Env, st: &mut ConstructorState, value: Value) -> Result<Decimal, Error> {
+/// JavaScript conversion is completed before the constructor state is
+/// borrowed. A user-defined coercion hook may therefore re-enter this addon
+/// without aliasing the outer calculation's state.
+fn coerce(env: Env, class: Value, value: Value) -> Result<Decimal, Error> {
     // An existing Decimal — of this constructor or any other clone — is
     // re-judged against the current exponent limits rather than copied. This
     // is the `new Ctor(y)` that opens every binary method upstream, and it is
@@ -121,17 +175,21 @@ fn coerce(env: Env, st: &mut ConstructorState, value: Value) -> Result<Decimal, 
     // already clamped; `ops::clamped_copy` is the same rule the core applies
     // to receivers, and it lives in one place so the two cannot drift.
     if let Some(existing) = decimal_of(env, value) {
-        return Ok(ops::clamped_copy(&st.ctx, &existing));
+        return with_state(env, class, |state| ops::clamped_copy(&state.ctx, &existing))
+            .ok_or_else(|| Error::InvalidArgument(describe(env, value)));
     }
 
     match env.type_of(value) {
         JsType::Number => {
             let n = env.as_f64(value).unwrap_or(f64::NAN);
-            Ok(from_f64(&st.ctx, n))
+            with_state(env, class, |state| from_f64(&state.ctx, n))
+                .ok_or_else(|| Error::InvalidArgument(describe(env, value)))
         }
         JsType::String => {
             let text = env.as_string(value).unwrap_or_default();
-            parse::from_str(&mut st.ctx, &text)
+            calculate(env, class, |ctx| parse::from_str(ctx, &text))
+                .map(|(result, _)| result)
+                .unwrap_or_else(|| Err(Error::InvalidArgument(text)))
         }
         // The fourth accepted type, and the one easiest to forget: the
         // original's constructor has a `t === 'bigint'` branch, and its
@@ -150,7 +208,10 @@ fn coerce(env: Env, st: &mut ConstructorState, value: Value) -> Result<Decimal, 
                     Some(rest) => (Sign::Neg, rest),
                     None => (Sign::Pos, text.as_str()),
                 };
-                Ok(parse::parse_decimal(&st.ctx, sign, digits))
+                with_state(env, class, |state| {
+                    parse::parse_decimal(&state.ctx, sign, digits)
+                })
+                .ok_or(Error::InvalidArgument(text))
             }
             None => Err(Error::InvalidArgument(describe(env, value))),
         },
@@ -216,10 +277,10 @@ fn decimal_of(env: Env, value: Value) -> Option<Decimal> {
     if env.type_of(value) != JsType::Object {
         return None;
     }
-    env.unwrap::<Decimal>(value).map(|d| d.clone())
+    env.clone_wrapped::<Decimal>(value)
 }
 
-/// Build a new JavaScript `Decimal` belonging to `st`'s constructor.
+/// Build a new JavaScript `Decimal` belonging to `class`.
 ///
 /// The instance is created by actually invoking the constructor, so that it
 /// gets the right prototype, the right `constructor` property, and satisfies
@@ -233,17 +294,10 @@ fn decimal_of(env: Env, value: Value) -> Option<Decimal> {
 /// way worth recording: it made correctness depend on two callbacks sharing
 /// one mutable cell, and when they did not, every method failed with the
 /// constructor's own "Invalid argument: undefined".
-fn make(env: Env, st: &mut ConstructorState, value: Decimal) -> Value {
-    if let Some(thrown) = abandoned(env, st) {
-        return thrown;
-    }
-
-    let ctor = env.reference_value(st.ctor);
+fn make(env: Env, class: Value, value: Decimal) -> Value {
     let placeholder = env.number(0.0);
-    let object = env.construct(ctor, &[placeholder]);
-    if let Some(slot) = env.unwrap::<Decimal>(object) {
-        *slot = value;
-    }
+    let object = env.construct(class, &[placeholder]);
+    env.replace_wrapped::<Decimal>(object, value);
     object
 }
 
@@ -266,8 +320,8 @@ fn make(env: Env, st: &mut ConstructorState, value: Decimal) -> Value {
 /// The message is JavaScript's own, thrown with `napi_throw_range_error` so that
 /// `err instanceof RangeError` is true on both implementations. See
 /// `Ctx::array_limit_exceeded` and DECISIONS.md D-10, D-19.
-fn abandoned(env: Env, st: &mut ConstructorState) -> Option<Value> {
-    if st.ctx.take_array_limit_exceeded() {
+fn abandoned(env: Env, exceeded: bool) -> Option<Value> {
+    if exceeded {
         env.throw_range_error("Invalid array length");
         return Some(env.undefined());
     }
@@ -353,12 +407,26 @@ macro_rules! guarded {
 unsafe fn construct_decimal(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
     let (args, this, data) = env.callback_info(info, 1);
-    let st = state(data);
-
     let argument = args.first().copied().unwrap_or_else(|| env.undefined());
-    match coerce(env, st, argument) {
+
+    // The callback data is used only to resolve its weak JavaScript owner. It
+    // is never exposed as mutable state, and the reference is live because the
+    // function is executing now.
+    let class = unsafe { with_callback_data(data, |owner| env.reference_value(owner.constructor)) };
+    let Some(class) = class else {
+        return env.undefined();
+    };
+
+    if env.new_target(info).is_none() {
+        return env.construct(class, &[argument]);
+    }
+
+    match coerce(env, class, argument) {
         Ok(value) => {
             env.wrap(this, Box::new(value));
+            // Upstream assigns this as an own property. It is what lets one
+            // shared prototype dispatch to the state of the actual clone.
+            env.set_named(this, "constructor", class);
             this
         }
         Err(error) => fail(env, error),
@@ -374,24 +442,17 @@ fn receiver(
     env: Env,
     info: sys::napi_callback_info,
     max_args: usize,
-) -> Option<(Vec<Value>, Decimal, &'static mut ConstructorState)> {
-    let (args, this, data) = env.callback_info(info, max_args);
-    // SAFETY: `data` is the leaked ConstructorState this method was defined
-    // with; see `state`.
-    let st = unsafe { state(data) };
-    let value = env.unwrap::<Decimal>(this)?.clone();
-    Some((args, value, st))
+) -> Option<(Vec<Value>, Decimal, Value)> {
+    let (args, this, _) = env.callback_info(info, max_args);
+    let value = decimal_of(env, this)?;
+    let class = class_from_instance(env, this)?;
+    Some((args, value, class))
 }
 
 /// An argument coerced to a decimal, or a thrown error.
-fn argument(
-    env: Env,
-    st: &mut ConstructorState,
-    args: &[Value],
-    index: usize,
-) -> Result<Decimal, Error> {
+fn argument(env: Env, class: Value, args: &[Value], index: usize) -> Result<Decimal, Error> {
     let value = args.get(index).copied().unwrap_or_else(|| env.undefined());
-    coerce(env, st, value)
+    coerce(env, class, value)
 }
 
 /// An optional numeric argument: `None` when absent or `undefined`.
@@ -408,12 +469,17 @@ macro_rules! unary {
     ($name:ident, $body:expr) => {
         unsafe fn $name(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
             let env = Env(env);
-            let Some((_, x, st)) = receiver(env, info, 0) else {
+            let Some((_, x, class)) = receiver(env, info, 0) else {
                 return env.undefined();
             };
             let f: fn(&mut Ctx, &Decimal) -> Decimal = $body;
-            let result = f(&mut st.ctx, &x);
-            make(env, st, result)
+            let Some((result, exceeded)) = calculate(env, class, |ctx| f(ctx, &x)) else {
+                return env.undefined();
+            };
+            if let Some(thrown) = abandoned(env, exceeded) {
+                return thrown;
+            }
+            make(env, class, result)
         }
     };
 }
@@ -423,16 +489,21 @@ macro_rules! binary {
     ($name:ident, $body:expr) => {
         unsafe fn $name(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
             let env = Env(env);
-            let Some((args, x, st)) = receiver(env, info, 1) else {
+            let Some((args, x, class)) = receiver(env, info, 1) else {
                 return env.undefined();
             };
-            let y = match argument(env, st, &args, 0) {
+            let y = match argument(env, class, &args, 0) {
                 Ok(y) => y,
                 Err(e) => return fail(env, e),
             };
             let f: fn(&mut Ctx, &Decimal, &Decimal) -> Decimal = $body;
-            let result = f(&mut st.ctx, &x, &y);
-            make(env, st, result)
+            let Some((result, exceeded)) = calculate(env, class, |ctx| f(ctx, &x, &y)) else {
+                return env.undefined();
+            };
+            if let Some(thrown) = abandoned(env, exceeded) {
+                return thrown;
+            }
+            make(env, class, result)
         }
     };
 }
@@ -456,10 +527,10 @@ macro_rules! comparison {
     ($name:ident, $body:expr) => {
         unsafe fn $name(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
             let env = Env(env);
-            let Some((args, x, st)) = receiver(env, info, 1) else {
+            let Some((args, x, class)) = receiver(env, info, 1) else {
                 return env.undefined();
             };
-            let y = match argument(env, st, &args, 0) {
+            let y = match argument(env, class, &args, 0) {
                 Ok(y) => y,
                 Err(e) => return fail(env, e),
             };
@@ -475,18 +546,20 @@ macro_rules! stringify {
     ($name:ident, $body:expr) => {
         unsafe fn $name(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
             let env = Env(env);
-            let Some((args, x, st)) = receiver(env, info, 2) else {
+            let Some((args, x, class)) = receiver(env, info, 2) else {
                 return env.undefined();
             };
             let a = optional_number(env, &args, 0);
             let b = optional_number(env, &args, 1);
             let f: fn(&mut Ctx, &Decimal, Option<f64>, Option<f64>) -> Result<String, Error> =
                 $body;
-            let outcome = f(&mut st.ctx, &x, a, b);
+            let Some((outcome, exceeded)) = calculate(env, class, |ctx| f(ctx, &x, a, b)) else {
+                return env.undefined();
+            };
             // Before the string, not after: a rendering that reached the host's
             // array ceiling is holding a placeholder, and `toBinary` at
             // precision 939,524,081 rendered it as `0b1`. See `abandoned`.
-            if let Some(thrown) = abandoned(env, st) {
+            if let Some(thrown) = abandoned(env, exceeded) {
                 return thrown;
             }
             match outcome {
@@ -503,15 +576,21 @@ macro_rules! rounder {
     ($name:ident, $body:expr) => {
         unsafe fn $name(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
             let env = Env(env);
-            let Some((args, x, st)) = receiver(env, info, 2) else {
+            let Some((args, x, class)) = receiver(env, info, 2) else {
                 return env.undefined();
             };
             let a = optional_number(env, &args, 0);
             let b = optional_number(env, &args, 1);
             let f: fn(&mut Ctx, &Decimal, Option<f64>, Option<f64>) -> Result<Decimal, Error> =
                 $body;
-            match f(&mut st.ctx, &x, a, b) {
-                Ok(value) => make(env, st, value),
+            let Some((outcome, exceeded)) = calculate(env, class, |ctx| f(ctx, &x, a, b)) else {
+                return env.undefined();
+            };
+            if let Some(thrown) = abandoned(env, exceeded) {
+                return thrown;
+            }
+            match outcome {
+                Ok(value) => make(env, class, value),
                 Err(e) => fail(env, e),
             }
         }
@@ -540,12 +619,18 @@ macro_rules! fallible_unary {
     ($name:ident, $body:expr) => {
         unsafe fn $name(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
             let env = Env(env);
-            let Some((_, x, st)) = receiver(env, info, 0) else {
+            let Some((_, x, class)) = receiver(env, info, 0) else {
                 return env.undefined();
             };
             let f: fn(&mut Ctx, &Decimal) -> Result<Decimal, Error> = $body;
-            match f(&mut st.ctx, &x) {
-                Ok(value) => make(env, st, value),
+            let Some((outcome, exceeded)) = calculate(env, class, |ctx| f(ctx, &x)) else {
+                return env.undefined();
+            };
+            if let Some(thrown) = abandoned(env, exceeded) {
+                return thrown;
+            }
+            match outcome {
+                Ok(value) => make(env, class, value),
                 Err(e) => fail(env, e),
             }
         }
@@ -567,11 +652,19 @@ fallible_unary!(m_atanh, |ctx, x| decimal_core::inverse::atanh(ctx, x));
 /// constant.
 unsafe fn m_ln(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
-    let Some((_, x, st)) = receiver(env, info, 0) else {
+    let Some((_, x, class)) = receiver(env, info, 0) else {
         return env.undefined();
     };
-    match decimal_core::elementary::ln(&mut st.ctx, &x) {
-        Ok(value) => make(env, st, value),
+    let Some((outcome, exceeded)) =
+        calculate(env, class, |ctx| decimal_core::elementary::ln(ctx, &x))
+    else {
+        return env.undefined();
+    };
+    if let Some(thrown) = abandoned(env, exceeded) {
+        return thrown;
+    }
+    match outcome {
+        Ok(value) => make(env, class, value),
         Err(e) => fail(env, e),
     }
 }
@@ -639,34 +732,38 @@ rounder!(m_to_sd, |ctx, x, a, b| ops::to_significant_digits(
 /// `[DecimalError] Invalid argument: null`, so the check has to come first.
 unsafe fn m_to_fraction(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
-    let Some((args, x, st)) = receiver(env, info, 1) else {
+    let Some((args, x, class)) = receiver(env, info, 1) else {
         return env.undefined();
     };
 
     let given = match args.first().copied() {
         None => None,
         Some(v) if matches!(env.type_of(v), JsType::Undefined | JsType::Null) => None,
-        Some(v) => match coerce(env, st, v) {
+        Some(v) => match coerce(env, class, v) {
             Ok(bound) => Some(bound),
             Err(e) => return fail(env, e),
         },
     };
 
-    let outcome = fraction::to_fraction(&mut st.ctx, &x, given.as_ref());
+    let Some((outcome, exceeded)) = calculate(env, class, |ctx| {
+        fraction::to_fraction(ctx, &x, given.as_ref())
+    }) else {
+        return env.undefined();
+    };
     // Checked once, here, rather than being left to the two `make` calls below:
     // the first would throw and the second would then build a Decimal with an
     // exception already pending. See `abandoned`.
-    if let Some(thrown) = abandoned(env, st) {
+    if let Some(thrown) = abandoned(env, exceeded) {
         return thrown;
     }
 
     match outcome {
         Ok(fraction::Fractional::Ratio(f)) => {
-            let numerator = make(env, st, f.numerator);
-            let denominator = make(env, st, f.denominator);
+            let numerator = make(env, class, f.numerator);
+            let denominator = make(env, class, f.denominator);
             env.array(&[numerator, denominator])
         }
-        Ok(fraction::Fractional::NonFinite(value)) => make(env, st, value),
+        Ok(fraction::Fractional::NonFinite(value)) => make(env, class, value),
         Err(e) => fail(env, e),
     }
 }
@@ -674,19 +771,27 @@ unsafe fn m_to_fraction(env: sys::napi_env, info: sys::napi_callback_info) -> sy
 /// `logarithm`, whose base argument is optional and defaults to 10.
 unsafe fn m_log(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
-    let Some((args, x, st)) = receiver(env, info, 1) else {
+    let Some((args, x, class)) = receiver(env, info, 1) else {
         return env.undefined();
     };
     let base = match args.first().copied() {
         None => None,
         Some(v) if matches!(env.type_of(v), JsType::Undefined | JsType::Null) => None,
-        Some(v) => match coerce(env, st, v) {
+        Some(v) => match coerce(env, class, v) {
             Ok(b) => Some(b),
             Err(e) => return fail(env, e),
         },
     };
-    match decimal_core::power::logarithm(&mut st.ctx, &x, base.as_ref()) {
-        Ok(value) => make(env, st, value),
+    let Some((outcome, exceeded)) = calculate(env, class, |ctx| {
+        decimal_core::power::logarithm(ctx, &x, base.as_ref())
+    }) else {
+        return env.undefined();
+    };
+    if let Some(thrown) = abandoned(env, exceeded) {
+        return thrown;
+    }
+    match outcome {
+        Ok(value) => make(env, class, value),
         Err(e) => fail(env, e),
     }
 }
@@ -694,15 +799,23 @@ unsafe fn m_log(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_
 /// `toPower`.
 unsafe fn m_pow(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
-    let Some((args, x, st)) = receiver(env, info, 1) else {
+    let Some((args, x, class)) = receiver(env, info, 1) else {
         return env.undefined();
     };
-    let y = match argument(env, st, &args, 0) {
+    let y = match argument(env, class, &args, 0) {
         Ok(y) => y,
         Err(e) => return fail(env, e),
     };
-    match decimal_core::power::to_power(&mut st.ctx, &x, &y) {
-        Ok(value) => make(env, st, value),
+    let Some((outcome, exceeded)) =
+        calculate(env, class, |ctx| decimal_core::power::to_power(ctx, &x, &y))
+    else {
+        return env.undefined();
+    };
+    if let Some(thrown) = abandoned(env, exceeded) {
+        return thrown;
+    }
+    match outcome {
+        Ok(value) => make(env, class, value),
         Err(e) => fail(env, e),
     }
 }
@@ -713,17 +826,23 @@ macro_rules! static_log_base {
     ($name:ident, $base:literal) => {
         unsafe fn $name(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
             let env = Env(env);
-            let (args, _, data) = env.callback_info(info, 1);
-            // SAFETY: `data` is the leaked ConstructorState for this class.
-            let st = unsafe { state(data) };
+            let (args, class, _) = env.callback_info(info, 1);
             let first = args.first().copied().unwrap_or_else(|| env.undefined());
-            let x = match coerce(env, st, first) {
+            let x = match coerce(env, class, first) {
                 Ok(v) => v,
                 Err(e) => return fail(env, e),
             };
             let base = Decimal::from_i32($base);
-            match decimal_core::power::logarithm(&mut st.ctx, &x, Some(&base)) {
-                Ok(value) => make(env, st, value),
+            let Some((outcome, exceeded)) = calculate(env, class, |ctx| {
+                decimal_core::power::logarithm(ctx, &x, Some(&base))
+            }) else {
+                return env.undefined();
+            };
+            if let Some(thrown) = abandoned(env, exceeded) {
+                return thrown;
+            }
+            match outcome {
+                Ok(value) => make(env, class, value),
                 Err(e) => fail(env, e),
             }
         }
@@ -736,19 +855,26 @@ static_log_base!(s_log10, 10);
 /// `clampedTo`, which takes two bounds and can reject an inverted range.
 unsafe fn m_clamp(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
-    let Some((args, x, st)) = receiver(env, info, 2) else {
+    let Some((args, x, class)) = receiver(env, info, 2) else {
         return env.undefined();
     };
-    let min = match argument(env, st, &args, 0) {
+    let min = match argument(env, class, &args, 0) {
         Ok(v) => v,
         Err(e) => return fail(env, e),
     };
-    let max = match argument(env, st, &args, 1) {
+    let max = match argument(env, class, &args, 1) {
         Ok(v) => v,
         Err(e) => return fail(env, e),
     };
-    match ops::clamp(&mut st.ctx, &x, &min, &max) {
-        Ok(value) => make(env, st, value),
+    let Some((outcome, exceeded)) = calculate(env, class, |ctx| ops::clamp(ctx, &x, &min, &max))
+    else {
+        return env.undefined();
+    };
+    if let Some(thrown) = abandoned(env, exceeded) {
+        return thrown;
+    }
+    match outcome {
+        Ok(value) => make(env, class, value),
         Err(e) => fail(env, e),
     }
 }
@@ -756,20 +882,28 @@ unsafe fn m_clamp(env: sys::napi_env, info: sys::napi_callback_info) -> sys::nap
 /// `toNearest`, whose modulus argument is optional.
 unsafe fn m_to_nearest(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
-    let Some((args, x, st)) = receiver(env, info, 2) else {
+    let Some((args, x, class)) = receiver(env, info, 2) else {
         return env.undefined();
     };
     let modulus = match args.first().copied() {
         None => None,
         Some(v) if matches!(env.type_of(v), JsType::Undefined | JsType::Null) => None,
-        Some(v) => match coerce(env, st, v) {
+        Some(v) => match coerce(env, class, v) {
             Ok(y) => Some(y),
             Err(e) => return fail(env, e),
         },
     };
     let rm = optional_number(env, &args, 1);
-    match ops::to_nearest(&mut st.ctx, &x, modulus.as_ref(), rm) {
-        Ok(value) => make(env, st, value),
+    let Some((outcome, exceeded)) = calculate(env, class, |ctx| {
+        ops::to_nearest(ctx, &x, modulus.as_ref(), rm)
+    }) else {
+        return env.undefined();
+    };
+    if let Some(thrown) = abandoned(env, exceeded) {
+        return thrown;
+    }
+    match outcome {
+        Ok(value) => make(env, class, value),
         Err(e) => fail(env, e),
     }
 }
@@ -778,10 +912,10 @@ unsafe fn m_to_nearest(env: sys::napi_env, info: sys::napi_callback_info) -> sys
 /// for an unordered pair.
 unsafe fn m_compared_to(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
-    let Some((args, x, st)) = receiver(env, info, 1) else {
+    let Some((args, x, class)) = receiver(env, info, 1) else {
         return env.undefined();
     };
-    let y = match argument(env, st, &args, 0) {
+    let y = match argument(env, class, &args, 0) {
         Ok(y) => y,
         Err(e) => return fail(env, e),
     };
@@ -795,26 +929,35 @@ unsafe fn m_compared_to(env: sys::napi_env, info: sys::napi_callback_info) -> sy
 
 unsafe fn m_to_string(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
-    let Some((_, x, st)) = receiver(env, info, 0) else {
+    let Some((_, x, class)) = receiver(env, info, 0) else {
         return env.undefined();
     };
-    env.string(&format::to_string(&x, &st.ctx.cfg))
+    let Some(cfg) = with_state(env, class, |state| state.ctx.cfg) else {
+        return env.undefined();
+    };
+    env.string(&format::to_string(&x, &cfg))
 }
 
 unsafe fn m_value_of(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
-    let Some((_, x, st)) = receiver(env, info, 0) else {
+    let Some((_, x, class)) = receiver(env, info, 0) else {
         return env.undefined();
     };
-    env.string(&format::value_of(&x, &st.ctx.cfg))
+    let Some(cfg) = with_state(env, class, |state| state.ctx.cfg) else {
+        return env.undefined();
+    };
+    env.string(&format::value_of(&x, &cfg))
 }
 
 unsafe fn m_to_number(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
-    let Some((_, x, st)) = receiver(env, info, 0) else {
+    let Some((_, x, class)) = receiver(env, info, 0) else {
         return env.undefined();
     };
-    let text = format::value_of(&x, &st.ctx.cfg);
+    let Some(cfg) = with_state(env, class, |state| state.ctx.cfg) else {
+        return env.undefined();
+    };
+    let text = format::value_of(&x, &cfg);
     env.number(text.parse::<f64>().unwrap_or(f64::NAN))
 }
 
@@ -868,11 +1011,11 @@ macro_rules! accessor {
         unsafe fn $name(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
             let env = Env(env);
             let (_, this, _) = env.callback_info(info, 0);
-            let Some(x) = env.unwrap::<Decimal>(this) else {
+            let Some(x) = decimal_of(env, this) else {
                 return env.undefined();
             };
             let f: fn(Env, &Decimal) -> Value = $body;
-            f(env, x)
+            f(env, &x)
         }
     };
 }
@@ -956,11 +1099,10 @@ fn range_of(name: &str) -> (i64, i64) {
 
 unsafe fn s_config(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
-    let (args, this, data) = env.callback_info(info, 1);
-    let st = state(data);
+    let (args, class, _) = env.callback_info(info, 1);
 
     let object = args.first().copied().unwrap_or_else(|| env.undefined());
-    if !matches!(env.type_of(object), JsType::Object | JsType::Function) {
+    if env.type_of(object) != JsType::Object {
         // A distinct message from the range errors, and the original's exact
         // wording.
         env.throw("[DecimalError] Object expected");
@@ -969,18 +1111,20 @@ unsafe fn s_config(env: sys::napi_env, info: sys::napi_callback_info) -> sys::na
 
     // `{ defaults: true }` resets every setting first; explicit settings in
     // the same object then apply on top.
-    let use_defaults = env.as_bool(env.get_named(object, "defaults")) == Some(true)
-        && env.type_of(env.get_named(object, "defaults")) == JsType::Boolean;
+    let defaults = env.get_named(object, "defaults");
+    let use_defaults =
+        env.type_of(defaults) == JsType::Boolean && env.as_bool(defaults) == Some(true);
+    let default_cfg = Config::default();
 
-    // Validate everything before applying anything, so a rejected call leaves
-    // the configuration untouched.
-    let mut proposed = if use_defaults {
-        Config::default()
-    } else {
-        st.ctx.cfg
-    };
-
-    for (name, _, set) in SETTINGS {
+    // Upstream applies settings in source order. Each property read may run a
+    // getter and re-enter us, so every borrow ends before the next read.
+    for (name, get, set) in SETTINGS {
+        if use_defaults {
+            let value = get(&default_cfg);
+            if with_state_mut(env, class, |state| set(&mut state.ctx.cfg, value)).is_none() {
+                return env.undefined();
+            }
+        }
         let raw = env.get_named(object, name);
         if env.type_of(raw) == JsType::Undefined {
             continue;
@@ -992,13 +1136,24 @@ unsafe fn s_config(env: sys::napi_env, info: sys::napi_callback_info) -> sys::na
         // `checkInt32` performs elsewhere. The difference matters: minE is
         // -9e15, which is a perfectly good integer and not a valid `i32`.
         if value.floor() == value && value >= min as f64 && value <= max as f64 {
-            set(&mut proposed, value);
+            if with_state_mut(env, class, |state| set(&mut state.ctx.cfg, value)).is_none() {
+                return env.undefined();
+            }
         } else {
             return fail(
                 env,
                 Error::InvalidArgument(format!("{name}: {}", describe(env, raw))),
             );
         }
+    }
+
+    if use_defaults
+        && with_state_mut(env, class, |state| {
+            state.ctx.cfg.crypto = default_cfg.crypto
+        })
+        .is_none()
+    {
+        return env.undefined();
     }
 
     let raw = env.get_named(object, "crypto");
@@ -1027,9 +1182,15 @@ unsafe fn s_config(env: sys::napi_env, info: sys::napi_callback_info) -> sys::na
                 if crypto_source(env).is_none() {
                     return fail(env, Error::CryptoUnavailable);
                 }
-                proposed.crypto = true;
+                if with_state_mut(env, class, |state| state.ctx.cfg.crypto = true).is_none() {
+                    return env.undefined();
+                }
             }
-            Some(false) => proposed.crypto = false,
+            Some(false) => {
+                if with_state_mut(env, class, |state| state.ctx.cfg.crypto = false).is_none() {
+                    return env.undefined();
+                }
+            }
             None => {
                 return fail(
                     env,
@@ -1039,23 +1200,24 @@ unsafe fn s_config(env: sys::napi_env, info: sys::napi_callback_info) -> sys::na
         }
     }
 
-    st.ctx.cfg = proposed;
-    this
+    class
 }
 
 macro_rules! setting_accessor {
     ($getter:ident, $setter:ident, $index:expr) => {
         unsafe fn $getter(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
             let env = Env(env);
-            let (_, _, data) = env.callback_info(info, 0);
-            let st = state(data);
-            env.number(SETTINGS[$index].1(&st.ctx.cfg))
+            let (_, class, _) = env.callback_info(info, 0);
+            let Some(value) = with_state(env, class, |state| SETTINGS[$index].1(&state.ctx.cfg))
+            else {
+                return env.undefined();
+            };
+            env.number(value)
         }
 
         unsafe fn $setter(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
             let env = Env(env);
-            let (args, _, data) = env.callback_info(info, 1);
-            let st = state(data);
+            let (args, class, _) = env.callback_info(info, 1);
             let value = args
                 .first()
                 .and_then(|&v| env.as_f64(v))
@@ -1066,7 +1228,7 @@ macro_rules! setting_accessor {
             // sets an out-of-range value directly and observes the consequence
             // would otherwise see an exception the original never raises.
             let (_, _, set) = SETTINGS[$index];
-            set(&mut st.ctx.cfg, value);
+            with_state_mut(env, class, |state| set(&mut state.ctx.cfg, value));
             env.undefined()
         }
     };
@@ -1080,18 +1242,18 @@ macro_rules! setting_accessor {
 /// property write in the original — `config` is the only validating door.
 unsafe fn get_crypto(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
-    let (_, _, data) = env.callback_info(info, 0);
-    // SAFETY: `data` is the leaked ConstructorState for this class.
-    let st = unsafe { state(data) };
-    env.boolean(st.ctx.cfg.crypto)
+    let (_, class, _) = env.callback_info(info, 0);
+    let Some(value) = with_state(env, class, |state| state.ctx.cfg.crypto) else {
+        return env.undefined();
+    };
+    env.boolean(value)
 }
 
 unsafe fn set_crypto(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
-    let (args, _, data) = env.callback_info(info, 1);
-    // SAFETY: as above.
-    let st = unsafe { state(data) };
-    st.ctx.cfg.crypto = args.first().and_then(|&v| env.as_bool(v)).unwrap_or(false);
+    let (args, class, _) = env.callback_info(info, 1);
+    let value = args.first().and_then(|&v| env.as_bool(v)).unwrap_or(false);
+    with_state_mut(env, class, |state| state.ctx.cfg.crypto = value);
     env.undefined()
 }
 
@@ -1113,13 +1275,11 @@ macro_rules! static_via_instance {
     ($name:ident, $method:literal) => {
         unsafe fn $name(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
             let env = Env(env);
-            let (args, _, data) = env.callback_info(info, 3);
-            // SAFETY: `data` is the leaked ConstructorState for this class.
-            let st = unsafe { state(data) };
+            let (args, class, _) = env.callback_info(info, 3);
 
             let first = args.first().copied().unwrap_or_else(|| env.undefined());
-            let receiver = match coerce(env, st, first) {
-                Ok(value) => make(env, st, value),
+            let receiver = match coerce(env, class, first) {
+                Ok(value) => make(env, class, value),
                 Err(e) => return fail(env, e),
             };
             let function = env.get_named(receiver, $method);
@@ -1233,27 +1393,32 @@ impl decimal_core::random::Entropy for CryptoEntropy {
 /// not a secret, and used only when `crypto` is off.
 unsafe fn s_random(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
-    let (args, _, data) = env.callback_info(info, 1);
-    // SAFETY: `data` is the leaked ConstructorState for this class.
-    let st = unsafe { state(data) };
+    let (args, class, _) = env.callback_info(info, 1);
 
     let sd = optional_number(env, &args, 0);
+    let Some((ctx, crypto, mut entropy)) = with_state(env, class, |state| {
+        (state.ctx, state.ctx.cfg.crypto, state.entropy.clone())
+    }) else {
+        return env.undefined();
+    };
 
-    let drawn = if st.ctx.cfg.crypto {
+    let drawn = if crypto {
         // Configured for crypto, so it was reachable when `config` accepted the
         // setting. If it has since been removed from the global object, the
         // original would throw a TypeError from the call itself; refusing here
         // with its own message is the closer answer.
         match crypto_source(env).and_then(|crypto| CryptoEntropy::new(env, crypto)) {
-            Some(mut source) => decimal_core::random::random(&st.ctx, sd, &mut source),
+            Some(mut source) => decimal_core::random::random(&ctx, sd, &mut source),
             None => return fail(env, Error::CryptoUnavailable),
         }
     } else {
-        decimal_core::random::random(&st.ctx, sd, &mut st.entropy)
+        let result = decimal_core::random::random(&ctx, sd, &mut entropy);
+        with_state_mut(env, class, |state| state.entropy = entropy);
+        result
     };
 
     match drawn {
-        Ok(value) => make(env, st, value),
+        Ok(value) => make(env, class, value),
         Err(e) => fail(env, e),
     }
 }
@@ -1265,21 +1430,25 @@ unsafe fn s_random(env: sys::napi_env, info: sys::napi_callback_info) -> sys::na
 /// this(x);` on two consecutive lines, ahead of every test.
 unsafe fn s_atan2(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
-    let (args, _, data) = env.callback_info(info, 2);
-    // SAFETY: `data` is the leaked ConstructorState for this class.
-    let st = unsafe { state(data) };
+    let (args, class, _) = env.callback_info(info, 2);
 
-    let y = match argument(env, st, &args, 0) {
+    let y = match argument(env, class, &args, 0) {
         Ok(v) => v,
         Err(e) => return fail(env, e),
     };
-    let x = match argument(env, st, &args, 1) {
+    let x = match argument(env, class, &args, 1) {
         Ok(v) => v,
         Err(e) => return fail(env, e),
     };
 
-    match inverse::atan2(&mut st.ctx, &y, &x) {
-        Ok(value) => make(env, st, value),
+    let Some((outcome, exceeded)) = calculate(env, class, |ctx| inverse::atan2(ctx, &y, &x)) else {
+        return env.undefined();
+    };
+    if let Some(thrown) = abandoned(env, exceeded) {
+        return thrown;
+    }
+    match outcome {
+        Ok(value) => make(env, class, value),
         Err(e) => fail(env, e),
     }
 }
@@ -1291,20 +1460,20 @@ unsafe fn s_atan2(env: sys::napi_env, info: sys::napi_callback_info) -> sys::nap
 /// later value that would fail to convert never gets the chance.
 unsafe fn s_hypot(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
-    let (args, _, data) = env.callback_info_variadic(info);
-    // SAFETY: `data` is the leaked ConstructorState for this class.
-    let st = unsafe { state(data) };
+    let (args, class, _) = env.callback_info_variadic(info);
 
     // `external = false` comes *before* the first `new this(arguments[i++])` in
     // the original, so no operand is measured against `minE`/`maxE` on the way
     // in. Coercing first and suppressing the clamps afterwards would turn an
     // operand above `maxE` into Infinity and short-circuit the whole call.
     // `roots::hypot` sets the flag back on, as the original does.
-    st.ctx.external = false;
+    if with_state_mut(env, class, |state| state.ctx.external = false).is_none() {
+        return env.undefined();
+    }
 
     let mut values = Vec::with_capacity(args.len());
     for index in 0..args.len() {
-        match argument(env, st, &args, index) {
+        match argument(env, class, &args, index) {
             Ok(v) => {
                 let infinite = v.is_infinite();
                 values.push(v);
@@ -1316,14 +1485,19 @@ unsafe fn s_hypot(env: sys::napi_env, info: sys::napi_callback_info) -> sys::nap
                 // The original throws from here with the flag still cleared and
                 // nothing to restore it, so the library stops clamping for the
                 // rest of the process. Declined, as in D-11 and D-16.
-                st.ctx.external = true;
+                with_state_mut(env, class, |state| state.ctx.external = true);
                 return fail(env, e);
             }
         }
     }
 
-    let value = roots::hypot(&mut st.ctx, &values);
-    make(env, st, value)
+    let Some((value, exceeded)) = calculate(env, class, |ctx| roots::hypot(ctx, &values)) else {
+        return env.undefined();
+    };
+    if let Some(thrown) = abandoned(env, exceeded) {
+        return thrown;
+    }
+    make(env, class, value)
 }
 
 /// `Decimal.sum(…)`.
@@ -1332,9 +1506,7 @@ unsafe fn s_hypot(env: sys::napi_env, info: sys::napi_callback_info) -> sys::nap
 /// NaN: `Decimal.sum(NaN, {})` is NaN, because the `{}` is never constructed.
 unsafe fn s_sum(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
-    let (args, _, data) = env.callback_info_variadic(info);
-    // SAFETY: `data` is the leaked ConstructorState for this class.
-    let st = unsafe { state(data) };
+    let (args, class, _) = env.callback_info_variadic(info);
 
     // With no arguments at all the original still evaluates `new this(args[0])`
     // — that is, `new Decimal(undefined)` — and raises. Deferring to `argument`
@@ -1350,9 +1522,9 @@ unsafe fn s_sum(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_
         // read as an oversight — but it is what the library does, and `hypot`
         // three functions above puts the same line on the other side.
         if index == 1 {
-            st.ctx.external = false;
+            with_state_mut(env, class, |state| state.ctx.external = false);
         }
-        match argument(env, st, &args, index) {
+        match argument(env, class, &args, index) {
             Ok(v) => {
                 let is_nan = v.is_nan();
                 values.push(v);
@@ -1361,15 +1533,20 @@ unsafe fn s_sum(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_
                 }
             }
             Err(e) => {
-                st.ctx.external = true;
+                with_state_mut(env, class, |state| state.ctx.external = true);
                 return fail(env, e);
             }
         }
     }
-    st.ctx.external = true;
+    with_state_mut(env, class, |state| state.ctx.external = true);
 
-    let value = arith::sum(&mut st.ctx, &values);
-    make(env, st, value)
+    let Some((value, exceeded)) = calculate(env, class, |ctx| arith::sum(ctx, &values)) else {
+        return env.undefined();
+    };
+    if let Some(thrown) = abandoned(env, exceeded) {
+        return thrown;
+    }
+    make(env, class, value)
 }
 
 /// `Decimal.max` and `Decimal.min`, which take any number of arguments.
@@ -1397,14 +1574,12 @@ unsafe fn s_max_or_min<const WANT_GREATER: bool>(
     info: sys::napi_callback_info,
 ) -> sys::napi_value {
     let env = Env(env);
-    let (args, _, data) = env.callback_info_variadic(info);
-    // SAFETY: `data` is the leaked ConstructorState for this class.
-    let st = unsafe { state(data) };
+    let (args, class, _) = env.callback_info_variadic(info);
 
     // With no arguments the original evaluates `new Ctor(args[0])`, i.e.
     // `new Decimal(undefined)`, and raises. Asking for index 0 regardless
     // reproduces the error and its wording.
-    let mut best = match argument(env, st, &args, 0) {
+    let mut best = match argument(env, class, &args, 0) {
         Ok(v) => v,
         Err(e) => return fail(env, e),
     };
@@ -1418,7 +1593,7 @@ unsafe fn s_max_or_min<const WANT_GREATER: bool>(
     let wrong_sign = |s: Sign| s.is_negative() == WANT_GREATER;
 
     for index in 1..args.len() {
-        let challenger = match argument(env, st, &args, index) {
+        let challenger = match argument(env, class, &args, index) {
             Ok(v) => v,
             Err(e) => return fail(env, e),
         };
@@ -1436,7 +1611,7 @@ unsafe fn s_max_or_min<const WANT_GREATER: bool>(
         }
     }
 
-    make(env, st, best)
+    make(env, class, best)
 }
 
 unsafe fn s_max(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
@@ -1451,12 +1626,10 @@ unsafe fn s_min(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_
 /// zeros.
 unsafe fn s_sign(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
-    let (args, _, data) = env.callback_info(info, 1);
-    // SAFETY: `data` is the leaked ConstructorState for this class.
-    let st = unsafe { state(data) };
+    let (args, class, _) = env.callback_info(info, 1);
 
     let first = args.first().copied().unwrap_or_else(|| env.undefined());
-    let value = match coerce(env, st, first) {
+    let value = match coerce(env, class, first) {
         Ok(v) => v,
         Err(e) => return fail(env, e),
     };
@@ -1489,12 +1662,13 @@ unsafe fn s_is_decimal(env: sys::napi_env, info: sys::napi_callback_info) -> sys
 
 unsafe fn s_clone(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
-    let (args, _, data) = env.callback_info(info, 1);
-    let parent = state(data);
+    let (args, parent, _) = env.callback_info(info, 1);
 
     // A clone starts from the parent's settings unless `{ defaults: true }`
     // asks for a fresh constructor.
-    let mut cfg = parent.ctx.cfg;
+    let Some(mut cfg) = with_state(env, parent, |state| state.ctx.cfg) else {
+        return env.undefined();
+    };
     if let Some(&object) = args.first() {
         if env.type_of(object) == JsType::Object
             && env.has_own(object, "defaults")
@@ -1504,7 +1678,8 @@ unsafe fn s_clone(env: sys::napi_env, info: sys::napi_callback_info) -> sys::nap
         }
     }
 
-    let class = build_class(env, cfg);
+    let prototype = env.get_named(parent, "prototype");
+    let class = build_class(env, cfg, Some(prototype));
 
     // The original ends with an *unconditional* `Decimal.config(obj)`, having
     // replaced an absent argument with `{}` — and only an absent one. So
@@ -1621,13 +1796,14 @@ fn static_entry(
 /// Every name below carries a NUL terminator in its literal, because
 /// `napi_property_descriptor` takes a C string and the descriptor table is
 /// built from `&'static str` rather than from allocated `CString`s.
-fn build_class(env: Env, cfg: Config) -> Value {
-    let boxed = Box::new(ConstructorState {
-        ctx: Ctx::new(cfg),
-        ctor: ptr::null_mut(),
-        entropy: Xoshiro256StarStar::from_environment(),
+fn build_class(env: Env, cfg: Config, shared_prototype: Option<Value>) -> Value {
+    let boxed = Box::new(ConstructorData {
+        state: RefCell::new(ConstructorState {
+            ctx: Ctx::new(cfg),
+            entropy: Xoshiro256StarStar::from_environment(),
+        }),
+        constructor: ptr::null_mut(),
     });
-    // Leaked on purpose: see `ConstructorState`.
     let data: *mut c_void = Box::into_raw(boxed).cast();
 
     let mut properties: Vec<sys::napi_property_descriptor> = Vec::new();
@@ -1716,19 +1892,11 @@ fn build_class(env: Env, cfg: Config) -> Value {
         (&["toOctal\0"], Some(guarded!(m_to_octal))),
         (&["toFraction\0"], Some(guarded!(m_to_fraction))),
     ];
-    for &(names, cb) in instance {
-        properties.push(method(names[0], cb, data));
-    }
-
     let accessors: &[(&'static str, sys::napi_callback)] = &[
         ("s\0", Some(guarded!(get_s))),
         ("e\0", Some(guarded!(get_e))),
         ("d\0", Some(guarded!(get_d))),
     ];
-    for &(name, cb) in accessors {
-        properties.push(getter(name, cb, data));
-    }
-
     // Statics.
     // `set` is not defined here: it is installed below as the very function
     // object `config` becomes, because `Decimal.set === Decimal.config` is one
@@ -1856,8 +2024,9 @@ fn build_class(env: Env, cfg: Config) -> Value {
         data,
     ));
 
-    // SAFETY: `properties` lives until after the call returns, and `data` is
-    // leaked, so both outlive every invocation of the methods they describe.
+    // SAFETY: `properties` lives until after the call returns. Constructor
+    // callback data is owned by `class` below and therefore has precisely the
+    // same lifetime as the callback that uses it.
     let class = unsafe {
         define_class(
             env,
@@ -1868,28 +2037,51 @@ fn build_class(env: Env, cfg: Config) -> Value {
         )
     };
 
+    // Upstream creates one plain prototype `P` and assigns it to every clone.
+    // Defining its methods with `napi_define_properties` avoids the V8 class
+    // signature that rejects a method called on an instance of another clone.
+    let owns_prototype = shared_prototype.is_none();
+    let prototype = shared_prototype.unwrap_or_else(|| env.object());
+    env.set_named(class, "prototype", prototype);
+
+    if owns_prototype {
+        let mut primary: Vec<sys::napi_property_descriptor> = instance
+            .iter()
+            .map(|&(names, cb)| method(names[0], cb, ptr::null_mut()))
+            .collect();
+        primary.extend(
+            accessors
+                .iter()
+                .map(|&(name, cb)| getter(name, cb, ptr::null_mut())),
+        );
+        // SAFETY: descriptors and their NUL-terminated names live through the
+        // call. Their callbacks recover state from each instance instead of
+        // holding constructor-specific callback data.
+        unsafe { env.define_properties(prototype, &primary) };
+    }
+
     // Install every alias as the function object already defined, rather than
     // as a second function over the same callback. `Decimal.set` must *be*
     // `Decimal.config`, and `toDP` must *be* `toDecimalPlaces`; the original
     // gets that for free from `P.toDP = P.toDecimalPlaces = …`, and a
     // descriptor table does not — it would mint one function per row.
-    let prototype = env.get_named(class, "prototype");
-    let mut aliases: Vec<sys::napi_property_descriptor> = Vec::new();
-    for &(names, _) in instance {
-        let function = env.get_named(prototype, names[0].trim_end_matches('\0'));
-        for &alias in &names[1..] {
-            aliases.push(same_function(alias, function));
+    if owns_prototype {
+        let mut aliases: Vec<sys::napi_property_descriptor> = Vec::new();
+        for &(names, _) in instance {
+            let function = env.get_named(prototype, names[0].trim_end_matches('\0'));
+            for &alias in &names[1..] {
+                aliases.push(same_function(alias, function));
+            }
         }
+        // SAFETY: `aliases` outlives the call and every name is NUL-terminated.
+        unsafe { env.define_properties(prototype, &aliases) };
     }
-    // SAFETY: `aliases` outlives the call and every name is NUL-terminated.
-    unsafe { env.define_properties(prototype, &aliases) };
 
     let config_fn = env.get_named(class, "config");
     // SAFETY: as above.
     unsafe { env.define_properties(class, &[same_function("set\0", config_fn)]) };
 
-    // The rounding-mode constants, and the reference the methods use to build
-    // their results.
+    // The rounding-mode constants.
     for (index, name) in [
         "ROUND_UP",
         "ROUND_DOWN",
@@ -1910,10 +2102,11 @@ fn build_class(env: Env, cfg: Config) -> Value {
     let euclid = env.number(9.0);
     env.set_named(class, "EUCLID", euclid);
 
-    // SAFETY: `data` is the state just leaked for this class.
-    unsafe {
-        state(data).ctor = env.create_reference(class);
-    }
+    // SAFETY: `data` came from `Box::into_raw` above and has not been
+    // reconstructed. `wrap_with_weak_reference` transfers it to `class` and
+    // deletes its weak self-reference when the class is collected.
+    let owner = unsafe { Box::from_raw(data.cast::<ConstructorData>()) };
+    env.wrap_with_weak_reference(class, owner);
 
     class
 }
@@ -1937,5 +2130,5 @@ pub unsafe extern "C" fn napi_register_module_v1(
     _exports: sys::napi_value,
 ) -> sys::napi_value {
     bind_symbols();
-    build_class(Env(env), Config::default())
+    build_class(Env(env), Config::default(), None)
 }

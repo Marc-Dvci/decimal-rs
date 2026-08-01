@@ -20,9 +20,9 @@ else
   ARTIFACT := target/release/libdecimal.so
 endif
 
-.PHONY: all build addon verify-tests test test-original test-rust clean fmt lint \
-        unsafe-report bench fuzz fuzz-limits repro clamp-conformance host-limits \
-        conformance soak
+.PHONY: all build addon verify-tests test test-original test-adapter test-rust clean fmt lint \
+        unsafe-report bench fuzz fuzz-strict fuzz-limits repro clamp-conformance \
+        host-limits conformance soak
 
 # Default target: nothing is considered built until the original, unmodified
 # test suite has run against the Rust artifact.
@@ -40,17 +40,20 @@ verify-tests:
 
 ## The original decimal.js suite, unmodified, against the Rust artifact.
 ##
-## Through `expect-one-failure.js`, because upstream's runner exits 0 whatever
+## Through `expect-zero-failures.js`, because upstream's runner exits 0 whatever
 ## happens: gating on its exit code would gate on nothing. The wrapper reads the
-## summary line and fails on any failure beyond the one D-08 documents.
+## summary line and requires every assertion to pass.
 test-original: addon verify-tests
-	$(NODE) scripts/expect-one-failure.js
+	$(NODE) scripts/expect-zero-failures.js
+
+test-adapter: addon
+	$(NODE) --expose-gc scripts/adapter-regression.js
 
 ## The port's own Rust unit tests (kept out of test/ by design).
 test-rust:
 	$(CARGO) test --release
 
-test: test-rust test-original
+test: test-rust test-original test-adapter
 
 fmt:
 	$(CARGO) fmt --all
@@ -69,12 +72,16 @@ bench: addon
 ## The published differential campaign: 70 continuous seconds, slices watched by
 ## a parent that kills and records anything that stops making progress.
 fuzz: addon
-	$(NODE) fuzz/campaign.js --seconds 70
+	$(NODE) fuzz/campaign.js --seconds 70 --log fuzz/log.txt
+
+## Strict shared-API parity: no known waivers and no unrefereeable inputs.
+fuzz-strict: addon
+	$(NODE) fuzz/differential.js --strict --seconds 70 --seed 1592594996 --log fuzz/log-strict.txt
 
 ## The same, with the family bounds removed, so that every input the oracle
 ## cannot referee is named individually rather than by rule.
 fuzz-limits: addon
-	$(NODE) fuzz/campaign.js --seconds 70 --bounds off --stall 2000
+	$(NODE) fuzz/campaign.js --seconds 70 --bounds off --stall 2000 --log fuzz/log-limits.txt
 
 ## Every method whose upstream body re-judges an operand against minE/maxE —
 ## receiver or argument, across all nine rounding modes where one is taken —

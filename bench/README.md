@@ -119,7 +119,7 @@ instrument.
 
 ## Memory
 
-200 000 mixed operations at precision 200, in a fresh process each time.
+200 000 chained add/multiply steps at precision 200, in a fresh process each time.
 
 | | synchronous burst | yielding |
 |---|---:|---:|
@@ -151,7 +151,8 @@ distinguishing test is whether growth survives a turn of the loop.
 
 ## Startup
 
-Nine fresh processes each, `require()` plus one construction, timed externally.
+Nine fresh processes each, `require()` plus one construction. Timing starts
+inside each child immediately before `require()`, so process creation is excluded.
 
 | | median | IQR |
 |---|---:|---:|
@@ -160,8 +161,7 @@ Nine fresh processes each, `require()` plus one construction, timed externally.
 
 **0.91 ms faster.** Loading a 4 952-line JavaScript file costs more than loading
 a 609 KiB DLL: V8 must parse and compile the source, while the addon is mapped
-and its relocations resolved. Both figures include process creation, which is
-common to both — the difference is the number to read, not the totals.
+and its relocations resolved. These figures exclude child-process creation.
 
 ## Artifact size
 

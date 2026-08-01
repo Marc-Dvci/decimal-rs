@@ -58,7 +58,7 @@ const PLAN: Array<{id: string; command: string; args: string[]; cwd?: string; op
   {id: "verify", command: "node", args: ["scripts/verify-tests.js"]},
   {id: "suite", command: "node", args: ["test/test.js"]},
   {id: "cargo", command: "cargo", args: ["test", "--release"]},
-  {id: "campaign", command: "node", args: ["fuzz/campaign.js", "--seconds", "70"]},
+  {id: "campaign", command: "node", args: ["fuzz/campaign.js", "--seconds", "70", "--log", "fuzz/log.txt"]},
   {id: "clamp", command: "node", args: ["scripts/clamp-conformance.js"]},
   {id: "unsafe", command: "node", args: ["scripts/unsafe-report.js"]},
   {id: "repro", command: "node", args: ["fuzz/repro-upstream.js"]},
@@ -80,7 +80,7 @@ function run(entry: (typeof PLAN)[number]): Promise<Recorded> {
   const lines: Recorded["lines"] = [];
 
   return new Promise((settle, fail) => {
-    const child = spawn(entry.command, entry.args, {cwd, shell: process.platform === "win32"});
+    const child = spawn(entry.command, entry.args, {cwd});
     const partial = {out: "", err: ""};
 
     const consume = (stream: "out" | "err") => (chunk: Buffer) => {
@@ -113,7 +113,7 @@ function run(entry: (typeof PLAN)[number]): Promise<Recorded> {
 
 function git(args: string[]): Promise<string> {
   return new Promise((settle) => {
-    const child = spawn("git", args, {cwd: REPO, shell: process.platform === "win32"});
+    const child = spawn("git", args, {cwd: REPO});
     let text = "";
     child.stdout.on("data", (chunk: Buffer) => (text += chunk.toString("utf8")));
     child.on("close", () => settle(text.trim()));

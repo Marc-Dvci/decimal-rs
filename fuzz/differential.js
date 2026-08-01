@@ -58,8 +58,24 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const Reference = require('./reference/decimal.js');
+const REFERENCE_MODULE = require.resolve('./reference/decimal.js');
+let Reference = require(REFERENCE_MODULE);
 const Port = require('../decimal.node');
+
+/*
+ * decimal.js keeps one internal flag outside its public configuration object.
+ * Some of the upstream defects exercised by the hostile campaign can leave
+ * that flag changed.  A later sequence would then compare the port with a
+ * damaged oracle even though both public configurations had been reset.
+ *
+ * Reload after every observed divergence.  Divergences are rare, so this
+ * gives each following sequence a pristine referee without imposing a module
+ * reload on the strict campaign's tens of thousands of clean sequences.
+ */
+function resetReference() {
+  delete require.cache[REFERENCE_MODULE];
+  Reference = require(REFERENCE_MODULE);
+}
 
 // ---------------------------------------------------------------------------
 // Randomness
@@ -150,10 +166,28 @@ const CORPUS = [
   '0.123456789012345678901234567890123456789012345678901234567890',
 ];
 
+// The strict-parity domain contains no known upstream defect and no input with
+// output/work proportional to an extreme exponent. It is deliberately broad
+// in representation and rounding boundaries, but every generated case has a
+// usable oracle, so *any* difference is a failure rather than a waiver.
+const STRICT_CORPUS = [
+  '0', '-0', '0.0', '-0.0', '1', '-1', '2', '-2', '0.5', '-0.5',
+  'NaN', 'Infinity', '-Infinity',
+  '1e21', '1e-7', '0.0000001', '1e20', '999999999999999999999',
+  '0.05', '0.15', '0.25', '1.05', '1.15', '2.5', '-2.5',
+  '9.9999999999999999999', '0.99999999999999999999',
+  '1.00000000000000000005', '0.999999999999999999949999',
+  '1234567', '12345678', '0.1234567', '0.12345678',
+  '5e-324', '0xff', '0b1011', '0o777', '0x1.8p3',
+  '+1', '  1  ', '1.', '.1', '1_000', '1e+2', '1E2', '',
+  '123456789012345678901234567890',
+  '0.1234567890123456789012345678901234567890',
+];
+
 /** A random decimal literal, structured rather than uniform. */
-function randomLiteral(rng) {
+function randomLiteral(rng, strict) {
   // Log-uniform digit count, so tiny and huge are both common.
-  const digits = 1 + Math.floor(Math.pow(500, rng.unit()));
+  const digits = 1 + Math.floor(Math.pow(strict ? 40 : 500, rng.unit()));
   let mantissa = String(1 + rng.below(9));
   for (let i = 1; i < digits; i++) mantissa += String(rng.below(10));
 
@@ -162,7 +196,7 @@ function randomLiteral(rng) {
   if (rng.chance(0.15)) mantissa += '0'.repeat(1 + rng.below(8));
 
   let exponent;
-  const where = rng.below(10);
+  const where = strict ? 0 : rng.below(10);
   if (where < 5) {
     exponent = rng.below(41) - 20;              // near zero
   } else if (where < 8) {
@@ -186,8 +220,9 @@ function randomLiteral(rng) {
  * path in particular goes through `Number.prototype.toString`, which is where
  * this port had to reimplement ECMAScript's shortest-round-trip tie-break.
  */
-function randomInput(rng) {
-  const literal = rng.chance(0.45) ? rng.pick(CORPUS) : randomLiteral(rng);
+function randomInput(rng, strict) {
+  const corpus = strict ? STRICT_CORPUS : CORPUS;
+  const literal = rng.chance(0.45) ? rng.pick(corpus) : randomLiteral(rng, strict);
 
   if (rng.chance(0.25)) {
     const n = Number(literal);
@@ -236,8 +271,19 @@ function literalSource(value) {
  */
 const SETTINGS = ['precision', 'rounding', 'toExpNeg', 'toExpPos', 'minE', 'maxE', 'modulo'];
 
-function randomConfig(rng, sweepRounding) {
+function randomConfig(rng, sweepRounding, strict) {
   const precisionChoices = [1, 2, 3, 5, 7, 8, 15, 20, 20, 20, 34, 40, 100, 300];
+  if (strict) {
+    return {
+      precision: rng.pick(precisionChoices.slice(0, 12)),
+      rounding: sweepRounding % 9,
+      toExpNeg: rng.chance(0.7) ? -7 : -(1 + rng.below(30)),
+      toExpPos: rng.chance(0.7) ? 21 : 1 + rng.below(30),
+      minE: -9e15,
+      maxE: 9e15,
+      modulo: rng.below(10),
+    };
+  }
   return {
     precision: rng.chance(0.85) ? rng.pick(precisionChoices) : 1 + rng.below(1000),
     rounding: sweepRounding % 9,
@@ -529,6 +575,11 @@ const STATICS = [
   { name: 'sign', apply: (D, xs) => D.sign(xs[0]) },
 ];
 
+// `toFraction` under ROUND_FLOOR is an upstream infinite loop for every
+// finite receiver (BUG-004). The strict artifact excludes that one entry point
+// rather than counting a known mismatch; the hostile campaign retains it.
+const STRICT_OPERATIONS = OPERATIONS.filter((operation) => operation.name !== 'toFraction');
+
 /*
  * `Decimal.random` is deliberately not fuzzed, and this is the only exclusion.
  *
@@ -680,7 +731,7 @@ function runSequence(steps, seed, options) {
   };
 
   // Both sides start from the same fresh configuration.
-  const config = randomConfig(rng, options.sweep);
+  const config = randomConfig(rng, options.sweep, options.strict);
   let R = Reference;
   let P = Port;
   if (useReference) R.config(config);
@@ -691,7 +742,7 @@ function runSequence(steps, seed, options) {
   const pool = [];
   const seedCount = 2 + rng.below(3);
   for (let i = 0; i < seedCount; i++) {
-    const input = randomInput(rng);
+    const input = randomInput(rng, options.strict);
     const literal = input.value;
     let r, p;
 
@@ -743,7 +794,7 @@ function runSequence(steps, seed, options) {
     // in the pool were built under the old one, which is exactly the situation
     // a cached constant gets wrong.
     if (rng.chance(0.12)) {
-      const next = randomConfig(rng, options.sweep + step);
+      const next = randomConfig(rng, options.sweep + step, options.strict);
       if (useReference) R.config(next);
       if (usePort) P.config(next);
       log.push('Decimal.set(' + JSON.stringify(next) + ')');
@@ -764,7 +815,8 @@ function runSequence(steps, seed, options) {
     const configBefore = comparing ? [readConfig(R), readConfig(P)] : null;
 
     // How many operands, and which.
-    const op = useStatic ? rng.pick(STATICS) : rng.pick(OPERATIONS);
+    const operations = options.strict ? STRICT_OPERATIONS : OPERATIONS;
+    const op = useStatic ? rng.pick(STATICS) : rng.pick(operations);
     let count;
     if (!useStatic) count = op.arity;
     else if (op.name === 'sign') count = 1;
@@ -919,6 +971,7 @@ function minimise(seed, steps, options) {
   let current = steps;
   while (current > 1) {
     const candidate = Math.floor(current / 2);
+    resetReference();
     if (runSequence(candidate, seed, options)) {
       best = candidate;
       current = candidate;
@@ -926,6 +979,7 @@ function minimise(seed, steps, options) {
       break;
     }
   }
+  resetReference();
   return best;
 }
 
@@ -1000,6 +1054,9 @@ function runSlice(options) {
 
     if (!divergence) continue;
 
+    // A hostile operation may have changed decimal.js's private `external`
+    // flag.  Never let that state referee the next sequence or minimisation.
+    resetReference();
     const documented = classify(divergence);
     if (documented) {
       known[documented.tag] = (known[documented.tag] || 0) + 1;
@@ -1043,6 +1100,7 @@ function runSelfCheck(options) {
     if (runSequence(6, rng.next(), { sweep: i, trace: false })) { detectedAt = i; break; }
   }
   faultArmed = false;
+  resetReference();
   process.stdout.write(JSON.stringify({ detectedAt }) + '\n');
   process.exitCode = detectedAt ? 0 : 1;
 }
@@ -1051,7 +1109,7 @@ function parseArguments(argv) {
   const options = {
     seconds: 63, seed: null, iterations: Infinity, quiet: false, log: null, trace: false,
     slice: null, sequences: 200, resume: 0, status: null, traceFile: null,
-    side: 'both', selfCheck: false, bounds: true,
+    side: 'both', selfCheck: false, bounds: true, strict: false,
   };
   for (let i = 0; i < argv.length; i++) {
     const flag = argv[i];
@@ -1070,6 +1128,7 @@ function parseArguments(argv) {
     else if (flag === '--side') options.side = argv[++i];
     else if (flag === '--self-check') options.selfCheck = true;
     else if (flag === '--bounds') options.bounds = argv[++i] !== 'off';
+    else if (flag === '--strict') options.strict = true;
   }
   if (options.seed === null) options.seed = (Date.now() ^ (Math.random() * 0xffffffff)) >>> 0;
   return options;
@@ -1103,24 +1162,37 @@ function main() {
   emit('started ' + new Date().toISOString() + '   seed 0x' +
        options.seed.toString(16).toUpperCase().padStart(8, '0'));
   emit('budget:  ' + options.seconds + 's continuous');
+  if (options.strict) {
+    emit('mode:    STRICT PARITY — moderate finite exponent domain; no known/waived');
+    emit('         divergence and no input on which the oracle cannot answer.');
+  }
   emit('');
   emit('comparing, per operation: sign, exponent, digit array, toString, valueOf,');
   emit('  toExponential, isFinite, isNaN, isInteger, precision, precision(true),');
   emit('  decimalPlaces, negative-zero, thrown message, and the constructor');
   emit('  configuration before and after.');
-  emit('excluded: ' + EXCLUDED.join('; '));
-  emit('bounded: operations whose cost is proportional to the operand exponent are');
-  emit('  fuzzed for |e| < ' + EXPONENT_BOUND + ' — the transcendentals (they raise their working');
-  emit('  precision to pr + max(|e|, sd) + k), mod/divToInt/toNearest/toFraction (they');
-  emit('  form an integer quotient of that many digits), and toFixed/toBinary/toHex/');
-  emit('  toOctal (their output is one character per digit before the point). sinh,');
-  emit('  cosh and tanh take a tighter |x| < ' + HYPERBOLIC_BOUND + ' because upstream folds by digit');
-  emit('  count and not by magnitude. At the limits the *oracle* cannot answer — it');
-  emit('  exhausts the heap, or runs for hours, or throws and wrecks its own config');
-  emit('  (D-09, D-11) — so these are bounds on what can be refereed, not on what the');
-  emit('  port can do. Everything else, arithmetic and comparison and the default');
-  emit('  renderings, is fuzzed across the whole exponent range, 1e9000000000000000');
-  emit('  included.');
+  emit('excluded: ' + EXCLUDED.join('; ') +
+       (options.strict ? '; toFraction (upstream BUG-004 infinite loop under ROUND_FLOOR)' : ''));
+  if (options.strict) {
+    emit('strict domain: constructor forms, stateful config/clone transitions, precision 1..40,');
+    emit('  all 9 rounding modes, all modulo modes, |generated exponent| <= 20, up to 40');
+    emit('  generated digits, plus a structural representation and rounding-boundary corpus.');
+    emit('  minE/maxE remain at documented defaults; clamp-defect and hostile-limit inputs');
+    emit('  remain in the broader bounded and watchdog campaigns.');
+  } else {
+    emit('bounded: operations whose cost is proportional to the operand exponent are');
+    emit('  fuzzed for |e| < ' + EXPONENT_BOUND + ' — the transcendentals (they raise their working');
+    emit('  precision to pr + max(|e|, sd) + k), mod/divToInt/toNearest/toFraction (they');
+    emit('  form an integer quotient of that many digits), and toFixed/toBinary/toHex/');
+    emit('  toOctal (their output is one character per digit before the point). sinh,');
+    emit('  cosh and tanh take a tighter |x| < ' + HYPERBOLIC_BOUND + ' because upstream folds by digit');
+    emit('  count and not by magnitude. At the limits the *oracle* cannot answer — it');
+    emit('  exhausts the heap, or runs for hours, or throws and wrecks its own config');
+    emit('  (D-09, D-11) — so these are bounds on what can be refereed, not on what the');
+    emit('  port can do. Everything else, arithmetic and comparison and the default');
+    emit('  renderings, is fuzzed across the whole exponent range, 1e9000000000000000');
+    emit('  included.');
+  }
 
   emit('');
 
@@ -1131,7 +1203,9 @@ function main() {
   let detectedAt = 0;
   const selfCheckRng = new Rng(options.seed ^ 0xa5a5a5a5);
   for (let i = 1; i <= 20000; i++) {
-    const divergence = runSequence(6, selfCheckRng.next(), { sweep: i, trace: false });
+    const divergence = runSequence(6, selfCheckRng.next(), {
+      sweep: i, trace: false, strict: options.strict,
+    });
     if (divergence) { detectedAt = i; break; }
   }
   faultArmed = false;
@@ -1168,12 +1242,17 @@ function main() {
       process.stderr.write('== sequence ' + sequences + ' (' + steps +
         ' steps, seed 0x' + seed.toString(16) + ')\n');
     }
-    const divergence = runSequence(steps, seed, { sweep: sequences, trace: options.trace });
+    const divergence = runSequence(steps, seed, {
+      sweep: sequences, trace: options.trace, strict: options.strict,
+    });
     sequences++;
     operations += steps;
 
     if (divergence) {
-      const documented = classify(divergence);
+      // Classification only reads the captured record.  Restore the oracle
+      // first so a known upstream leak cannot contaminate later evidence.
+      resetReference();
+      const documented = options.strict ? null : classify(divergence);
       if (documented) {
         const seen = known.get(documented.tag) || { entry: documented, count: 0, first: null };
         seen.count++;
@@ -1182,7 +1261,9 @@ function main() {
         continue;
       }
       divergences++;
-      const shrunk = minimise(seed, steps, { sweep: sequences - 1, trace: false });
+      const shrunk = minimise(seed, steps, {
+        sweep: sequences - 1, trace: false, strict: options.strict,
+      });
       failures.push({ divergence, seed, steps: shrunk });
       emit('');
       emit('DIVERGENCE #' + divergences + '  seed 0x' + seed.toString(16) +
@@ -1210,27 +1291,34 @@ function main() {
        '  operations ' + operations + '  divergences ' + divergences);
   emit('');
   if (known.size) {
-    emit('known divergences encountered (deliberate, documented, reported upstream):');
+    emit('known divergences encountered (deliberate and documented for upstream):');
     for (const [tag, seen] of known) {
       emit('  ' + tag + '  x' + seen.count + '  ' + seen.entry.what);
     }
     emit('');
   }
+  const apiCount = (options.strict ? STRICT_OPERATIONS : OPERATIONS).length + STATICS.length;
   emit('SUMMARY: ' + operations.toLocaleString('en-US') + ' operations over ' +
        sequences.toLocaleString('en-US') + ' stateful sequences,');
-  emit('         across ' + (OPERATIONS.length + STATICS.length) +
+  emit('         across ' + apiCount +
        ' API entry points and all 9 rounding modes.');
   emit('         ' + (divergences === 0
     ? 'Zero undocumented divergences over ' + elapsed.toFixed(1) + ' continuous seconds.'
     : divergences + ' divergence(s); see above.'));
+  if (options.strict) {
+    emit('         actual divergences:      ' + divergences);
+    emit('         known/waived divergences: 0');
+    emit('         port defects:             ' + divergences);
+  }
 
   finish(lines, options, divergences === 0 ? 0 : 1);
 }
 
 function finish(lines, options, code) {
-  const target = options.log || path.join(__dirname, 'log.txt');
-  fs.writeFileSync(target, lines.join('\n') + '\n');
-  if (!options.quiet) process.stdout.write('\nlog written to ' + target + '\n');
+  if (options.log) {
+    fs.writeFileSync(options.log, lines.join('\n') + '\n');
+    if (!options.quiet) process.stdout.write('\nlog written to ' + options.log + '\n');
+  }
   process.exitCode = code;
 }
 

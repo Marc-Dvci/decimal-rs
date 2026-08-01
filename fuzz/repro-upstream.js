@@ -1,15 +1,15 @@
 'use strict';
 
 /*
- * Every upstream defect this port's differential campaign found, run against
- * both implementations, side by side.
+ * Six upstream defects found by the differential campaign, plus two cost
+ * findings, run against both implementations side by side.
  *
  * ---------------------------------------------------------------------------
  *
- * Seven of the eight cases are things the original does that a caller cannot
- * recover from: four null dereferences, one non-terminating loop, one
- * non-terminating iteration, and one configuration leak that leaves the library
- * permanently unusable. The eighth is a cost, not a defect.
+ * The six tagged cases are things the original does that a caller cannot
+ * recover from. The two untagged cases are costs rather than correctness
+ * defects. BUG-001 needs a high-precision mpmath oracle; BUG-007 has its own
+ * host-limits probe.
  *
  * Each runs in its own process with a timeout, because three of them do not
  * return and two of the rest wreck the state of anything measured afterwards.

@@ -45,12 +45,12 @@
  * The watchdog measures *progress*, not elapsed time, so a legitimately slow
  * sequence is never killed for being slow. Only one that has stopped moving is.
  *
- * Then each recorded input is diagnosed, after the timed run so that it does not
- * eat the budget. Three more children per input: one traced, to name the
- * operation that did not return; one running the oracle alone; one running the
- * port alone. That turns a line of the log from "something at seed 0x4b1 hung"
- * into "`x0.toFraction()` — oracle did not return in 5.0 s, port answered in
- * 0.4 ms", which is a sentence a maintainer can act on.
+ * After the timed run, diagnose up to `--diagnose N` recorded inputs so the
+ * rechecks do not eat the comparison budget or make a full-range run
+ * unbounded in wall-clock time. Three more children per selected input: one
+ * traced, to name the operation that did not return; one running the oracle
+ * alone; one running the port alone. Every excluded sequence remains in the
+ * total; the selected records become replayable, attributed examples.
  *
  * ---------------------------------------------------------------------------
  * Usage
@@ -58,10 +58,11 @@
  *
  *   node fuzz/campaign.js [--seconds 63] [--workers N] [--sequences N]
  *                         [--stall MS] [--bounds on|off] [--seed 0xHEX]
- *                         [--log PATH] [--quiet]
+ *                         [--diagnose N] [--log PATH] [--quiet]
  *
  * `--bounds off` removes the family bounds entirely and lets the watchdog do
- * the work. That is the honest pass, and it is the one whose log names inputs.
+ * the work. That is the honest pass; its log counts every excluded sequence
+ * and names the first `--diagnose N` of them individually.
  */
 
 const { spawn } = require('child_process');
@@ -112,9 +113,6 @@ function parseArguments(argv) {
     else if (flag === '--diagnose-timeout') options.diagnoseTimeout = Number(argv[++i]);
   }
   if (options.seed === null) options.seed = (Date.now() ^ (Math.random() * 0xffffffff)) >>> 0;
-  if (options.log === null) {
-    options.log = path.join(__dirname, options.bounds ? 'log.txt' : 'log-limits.txt');
-  }
   return options;
 }
 
@@ -372,7 +370,7 @@ async function main() {
     ? 'ON — operations whose cost is proportional to the operand exponent are ' +
       'fuzzed for |e| < 10000 (see differential.js).'
     : 'OFF — the whole legal input space, 1e9000000000000000 included. Inputs ' +
-      'the oracle cannot referee are named individually below.'));
+      'the oracle cannot referee are counted below; the diagnosed subset is named individually.'));
   emit('');
   emit('comparing, per operation: sign, exponent, digit array, toString, valueOf,');
   emit('  toExponential, isFinite, isNaN, isInteger, precision, precision(true),');
@@ -400,7 +398,7 @@ async function main() {
 
   // -- replay check -------------------------------------------------------
   //
-  // Every unrefereeable input below is published as a `--slice S --resume N`
+  // Every diagnosed input below is published as a `--slice S --resume N`
   // command, and every divergence is published as a seed. Both are worthless
   // if a slice does not reproduce, so this checks that it does before printing
   // any of them: one slice run twice must give byte-identical output, and a
@@ -515,7 +513,7 @@ async function main() {
 
   if (state.known.size) {
     emit('');
-    emit('known divergences encountered (deliberate, documented, reported upstream):');
+    emit('known divergences encountered (deliberate and documented for upstream):');
     for (const [tag, count] of state.known) emit('  ' + tag + '  x' + count);
   }
 
@@ -530,10 +528,10 @@ async function main() {
     emit('');
     emit('These are inputs on which the *oracle* did not produce an answer, so there');
     emit('was nothing to compare the port against. Each was killed by the watchdog,');
-    emit('recorded by seed, and re-run afterwards one side at a time to attribute the');
-    emit('failure. Nothing here is filtered out of the counts above: the sequences');
-    emit('they belong to are excluded from `sequences`, and they are listed');
-    emit('individually so that the exclusion can be checked.');
+    emit('recorded by seed, and up to the configured diagnosis cap are re-run');
+    emit('afterwards one side at a time. Nothing is filtered out of the totals:');
+    emit('every such sequence is excluded from `sequences`; the diagnosed subset');
+    emit('is listed individually with a replay command and attributed verdict.');
     emit('');
 
     const toDiagnose = state.unrefereeable.slice(0, options.diagnose);
@@ -588,7 +586,7 @@ async function main() {
   emit('');
   emit('SUMMARY: ' + refereed.toLocaleString('en-US') + ' refereed operations over ' +
        state.sequences.toLocaleString('en-US') + ' stateful sequences,');
-  emit('         across 61 API entry points and all 9 rounding modes,');
+  emit('         across 66 API entry points and all 9 rounding modes,');
   emit('         in ' + elapsed.toFixed(1) + ' continuous seconds on ' +
        options.workers + ' worker process' + (options.workers === 1 ? '' : 'es') + '.');
   emit('         ' + (state.divergences.length === 0
@@ -597,8 +595,8 @@ async function main() {
   if (state.unrefereeable.length) {
     const v = state.verdicts || { upstream: 0, intractable: 0, port: 0, neither: 0 };
     const diagnosed = v.upstream + v.intractable + v.port + v.neither;
-    emit('         ' + state.unrefereeable.length + ' input(s) could not be refereed,' +
-         ' named above. Of the ' + diagnosed + ' diagnosed:');
+    emit('         ' + state.unrefereeable.length + ' input(s) could not be refereed. Of the ' +
+         diagnosed + ' diagnosed:');
     emit('           ' + String(v.upstream).padStart(4) +
          '  the port answered and the oracle did not  (upstream defects)');
     emit('           ' + String(v.intractable).padStart(4) +
@@ -615,8 +613,10 @@ async function main() {
 }
 
 function finish(lines, options, code) {
-  fs.writeFileSync(options.log, lines.join('\n') + '\n');
-  if (!options.quiet) process.stdout.write('\nlog written to ' + options.log + '\n');
+  if (options.log) {
+    fs.writeFileSync(options.log, lines.join('\n') + '\n');
+    if (!options.quiet) process.stdout.write('\nlog written to ' + options.log + '\n');
+  }
   process.exitCode = code;
 }
 

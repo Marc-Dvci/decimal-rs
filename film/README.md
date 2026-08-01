@@ -49,7 +49,7 @@ src/components.tsx              the terminal replay, panels, captions
 
 ## Specification
 
-- 4 minutes 4.5 seconds · 24.6 MiB
+- 4 minutes 1.8 seconds · 24.3 MiB
 - 1920×1080, 30 fps, H.264 High, `yuv420p`, faststart
 - AAC 256 kbit/s, 48 kHz, mastered to −16 LUFS / −1.5 dBTP
 - burned-in captions, one neural voice (`en-GB-RyanNeural`)

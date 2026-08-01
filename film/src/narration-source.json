@@ -22,12 +22,12 @@
   {
     "id": "suite",
     "file": "audio/03-suite.mp3",
-    "script": "Twenty-two thousand six hundred and twenty-eight assertions, and one failure. It is the same failure every time — an assertion about prototype identity that the Node-API's signature check will not let me satisfy, written up as decision eight. Zero test files were modified. Read the failure count, not the ratio: six thousand of these assertions are generated randomly, so the denominator moves between runs.",
+    "script": "Twenty-two thousand six hundred and twenty-eight assertions, and every one passes. The former prototype-identity failure is resolved by one shared plain prototype and per-instance constructor ownership. Zero test files were modified. Six thousand assertions are generated randomly, so automation parses each run's total and requires passed to equal asserted.",
     "captions": [
-      "22,628 assertions. One failure.",
-      "The same one every time: prototype identity, blocked by the Node-API signature check.",
+      "22,628 assertions. Every one passed.",
+      "The former prototype-identity failure is resolved by a shared plain prototype.",
       "Zero test files modified.",
-      "Read the failure count, not the ratio — 6,000 assertions are randomly generated."
+      "The random total moves — automation requires passed to equal asserted."
     ]
   },
   {
@@ -117,10 +117,10 @@
   {
     "id": "close",
     "file": "audio/12-close.mp3",
-    "script": "Twenty-two decisions, each written when it was made. Three and a half thousand conformance calls, a hash-pinned suite, and a public repository where every number here is a row in an artifact you can regenerate.",
+    "script": "Every decision, written down with its consequence. Three and a half thousand conformance cases, a hash-pinned suite, and a public repository where every number here is a row in an artifact you can regenerate.",
     "captions": [
-      "22 decisions, each written when it was made.",
-      "3,528 conformance calls. A hash-pinned suite.",
+      "Every decision is written with its consequence.",
+      "3,528 conformance cases. A hash-pinned suite.",
       "Every number here is a row in an artifact you can regenerate."
     ]
   }

@@ -23,15 +23,17 @@ Every one is reproducible in two to five lines with no unusual operand.
 | [notes](NOTES-cbrt-and-hyperbolic-cost.md) | `cbrt` does not return near the exponent floor | non-termination | 3 lines | differential campaign |
 | [notes](NOTES-cbrt-and-hyperbolic-cost.md) | the hyperbolic argument fold ignores magnitude | 1.1 s for `cosh(1e6)` | 2 lines | benchmarking |
 
-## Run them all
+## Run the six timeout-safe differential cases
 
 ```
 node fuzz/repro-upstream.js
 ```
 
-Each case runs in its own process, on both implementations, with a timeout —
-three of them do not return, and two more corrupt the state of anything measured
-after them. Individual cases:
+This command covers BUG-002 through BUG-006 and BUG-008, plus the two cost
+findings. Each runs in its own process, on both implementations, with a timeout.
+BUG-007 is covered by `node scripts/host-limits.js`; BUG-001 requires the
+high-precision mpmath analysis documented in its write-up. Individual campaign
+cases:
 
 ```
 node fuzz/repro-case.js <case> <reference|port>
@@ -104,6 +106,8 @@ repository for reporting the category rather than only the count.
 
 ## Filing status
 
-BUG-001 is written up for filing by the author of this port. The remaining seven
-are written here in filable form; each has a runnable reproduction and a
-suggested patch, and none has been submitted upstream at the time of writing.
+All eight bugs were found and documented during the competition. GitHub issue
+creation is restricted in the upstream repository, so the author could not file
+them there; that restriction is why no upstream issue links appear here. The
+reports remain filing-ready, with minimal reproductions, analysis, and suggested
+repairs.

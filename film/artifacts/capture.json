@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "capturedAt": "2026-08-01T15:32:10.019Z",
+  "capturedAt": "2026-08-01T18:45:37.031Z",
   "host": {
     "hostname": "DESKTOP-BUS8UQQ",
     "platform": "win32",
@@ -10,9 +10,9 @@
     "memGiB": 31
   },
   "git": {
-    "commit": "4a5c047e8648cd049e4ac4ae7cca218f405b65a6",
+    "commit": "19b4d1c5992085e366fd75d6f34dded2fa429004",
     "branch": "main",
-    "dirty": false
+    "dirty": true
   },
   "commands": [
     {
@@ -40,356 +40,336 @@
       "command": "node test/test.js",
       "cwd": "D:\\pm\\decimal-rs",
       "exitCode": 0,
-      "durationMs": 326,
-      "startedAt": "2026-08-01T15:06:30.624Z",
+      "durationMs": 316,
+      "startedAt": "2026-08-01T17:30:46.113Z",
       "lines": [
         {
-          "t": 73,
+          "t": 45,
           "text": "",
           "stream": "out"
         },
         {
-          "t": 73,
+          "t": 45,
           "text": " Testing decimal.js",
           "stream": "out"
         },
         {
-          "t": 73,
+          "t": 45,
           "text": "",
           "stream": "out"
         },
         {
-          "t": 76,
+          "t": 47,
           "text": " Testing absoluteValue... 100 of 100 tests passed in 1 ms",
           "stream": "out"
         },
         {
-          "t": 82,
+          "t": 54,
           "text": " Testing acos... 54 of 54 tests passed in 6 ms",
           "stream": "out"
         },
         {
-          "t": 85,
+          "t": 57,
           "text": " Testing acosh... 50 of 50 tests passed in 3 ms",
           "stream": "out"
         },
         {
-          "t": 91,
-          "text": " Testing asin... 54 of 54 tests passed in 5 ms",
+          "t": 64,
+          "text": " Testing asin... 54 of 54 tests passed in 6 ms",
           "stream": "out"
         },
         {
-          "t": 94,
+          "t": 67,
           "text": " Testing asinh... 50 of 50 tests passed in 2 ms",
           "stream": "out"
         },
         {
-          "t": 98,
+          "t": 72,
           "text": " Testing atan... 50 of 50 tests passed in 4 ms",
           "stream": "out"
         },
         {
-          "t": 102,
+          "t": 76,
           "text": " Testing atan2... 100 of 100 tests passed in 3 ms",
           "stream": "out"
         },
         {
-          "t": 105,
-          "text": " Testing atanh... 50 of 50 tests passed in 2 ms",
+          "t": 80,
+          "text": " Testing atanh... 50 of 50 tests passed in 3 ms",
           "stream": "out"
         },
         {
-          "t": 107,
+          "t": 82,
           "text": " Testing cubeRoot... 50 of 50 tests passed in 1 ms",
           "stream": "out"
         },
         {
-          "t": 107,
-          "text": " Testing ceil... 50 of 50 tests passed in 0 ms",
+          "t": 82,
+          "text": " Testing ceil... 50 of 50 tests passed in 1 ms",
           "stream": "out"
         },
         {
-          "t": 108,
+          "t": 83,
           "text": " Testing clamp... 29 of 29 tests passed in 0 ms",
           "stream": "out"
         },
         {
-          "t": 109,
-          "text": " Testing clone...",
+          "t": 84,
+          "text": " Testing clone... 65 of 65 tests passed in 1 ms",
           "stream": "out"
         },
         {
-          "t": 109,
-          "text": "  Test number 1 failed: assert",
+          "t": 88,
+          "text": " Testing comparedTo... 1000 of 1000 tests passed in 3 ms",
           "stream": "out"
         },
         {
-          "t": 109,
-          "text": "  Expected: true",
+          "t": 90,
+          "text": " Testing config... 206 of 206 tests passed in 1 ms",
           "stream": "out"
         },
         {
-          "t": 110,
-          "text": "  Actual:   false",
-          "stream": "out"
-        },
-        {
-          "t": 110,
-          "text": " 64 of 65 tests passed in 2 ms",
-          "stream": "out"
-        },
-        {
-          "t": 112,
-          "text": " Testing comparedTo... 1000 of 1000 tests passed in 2 ms",
-          "stream": "out"
-        },
-        {
-          "t": 115,
-          "text": " Testing config... 206 of 206 tests passed in 2 ms",
-          "stream": "out"
-        },
-        {
-          "t": 117,
+          "t": 93,
           "text": " Testing cos... 101 of 101 tests passed in 2 ms",
           "stream": "out"
         },
         {
+          "t": 95,
+          "text": " Testing cosh... 100 of 100 tests passed in 2 ms",
+          "stream": "out"
+        },
+        {
+          "t": 100,
+          "text": " Testing Decimal... 987 of 987 tests passed in 5 ms",
+          "stream": "out"
+        },
+        {
+          "t": 108,
+          "text": " Testing dividedBy... 1000 of 1000 tests passed in 7 ms",
+          "stream": "out"
+        },
+        {
+          "t": 116,
+          "text": " Testing dividedToIntegerBy... 1000 of 1000 tests passed in 7 ms",
+          "stream": "out"
+        },
+        {
+          "t": 116,
+          "text": " Testing decimalPlaces and precision... 133 of 133 tests passed in 1 ms",
+          "stream": "out"
+        },
+        {
           "t": 119,
-          "text": " Testing cosh... 100 of 100 tests passed in 3 ms",
-          "stream": "out"
-        },
-        {
-          "t": 123,
-          "text": " Testing Decimal... 987 of 987 tests passed in 4 ms",
-          "stream": "out"
-        },
-        {
-          "t": 130,
-          "text": " Testing dividedBy... 1000 of 1000 tests passed in 5 ms",
-          "stream": "out"
-        },
-        {
-          "t": 136,
-          "text": " Testing dividedToIntegerBy... 1000 of 1000 tests passed in 6 ms",
-          "stream": "out"
-        },
-        {
-          "t": 137,
-          "text": " Testing decimalPlaces and precision... 133 of 133 tests passed in 0 ms",
-          "stream": "out"
-        },
-        {
-          "t": 139,
           "text": " Testing exp... 100 of 100 tests passed in 2 ms",
           "stream": "out"
         },
         {
-          "t": 140,
+          "t": 120,
           "text": " Testing floor... 100 of 100 tests passed in 0 ms",
           "stream": "out"
         },
         {
+          "t": 122,
+          "text": " Testing hypot... 100 of 100 tests passed in 2 ms",
+          "stream": "out"
+        },
+        {
+          "t": 138,
+          "text": " Testing immutability... 3311 of 3311 tests passed in 16 ms",
+          "stream": "out"
+        },
+        {
           "t": 142,
-          "text": " Testing hypot... 100 of 100 tests passed in 1 ms",
+          "text": " Testing integer pow... 500 of 500 tests passed in 3 ms",
+          "stream": "out"
+        },
+        {
+          "t": 143,
+          "text": " Testing isFinite, isInteger, isNaN, isNegative, isZero, isDecimal... 214 of 214 tests passed in 1 ms",
           "stream": "out"
         },
         {
           "t": 156,
-          "text": " Testing immutability... 3341 of 3341 tests passed in 15 ms",
-          "stream": "out"
-        },
-        {
-          "t": 161,
-          "text": " Testing integer pow... 500 of 500 tests passed in 4 ms",
-          "stream": "out"
-        },
-        {
-          "t": 162,
-          "text": " Testing isFinite, isInteger, isNaN, isNegative, isZero, isDecimal... 214 of 214 tests passed in 0 ms",
-          "stream": "out"
-        },
-        {
-          "t": 175,
           "text": " Testing ln... 499 of 499 tests passed in 14 ms",
           "stream": "out"
         },
         {
-          "t": 185,
-          "text": " Testing log... 200 of 200 tests passed in 10 ms",
+          "t": 166,
+          "text": " Testing log... 200 of 200 tests passed in 9 ms",
           "stream": "out"
         },
         {
-          "t": 201,
+          "t": 181,
           "text": " Testing log10... 500 of 500 tests passed in 15 ms",
           "stream": "out"
         },
         {
-          "t": 212,
-          "text": " Testing log2... 200 of 200 tests passed in 12 ms",
+          "t": 193,
+          "text": " Testing log2... 200 of 200 tests passed in 11 ms",
           "stream": "out"
         },
         {
-          "t": 213,
+          "t": 194,
           "text": " Testing min and max... 110 of 110 tests passed in 1 ms",
           "stream": "out"
         },
         {
-          "t": 218,
-          "text": " Testing minus... 1000 of 1000 tests passed in 4 ms",
+          "t": 202,
+          "text": " Testing minus... 1000 of 1000 tests passed in 7 ms",
           "stream": "out"
         },
         {
-          "t": 225,
-          "text": " Testing modulo... 1000 of 1000 tests passed in 7 ms",
+          "t": 212,
+          "text": " Testing modulo... 1000 of 1000 tests passed in 9 ms",
           "stream": "out"
         },
         {
-          "t": 226,
+          "t": 213,
           "text": " Testing negated... 200 of 200 tests passed in 1 ms",
           "stream": "out"
         },
         {
-          "t": 232,
-          "text": " Testing plus... 1000 of 1000 tests passed in 5 ms",
+          "t": 220,
+          "text": " Testing plus... 1000 of 1000 tests passed in 6 ms",
           "stream": "out"
         },
         {
-          "t": 237,
+          "t": 226,
           "text": " Testing pow... 108 of 108 tests passed in 6 ms",
           "stream": "out"
         },
         {
-          "t": 242,
-          "text": " Testing random... 1000 of 1000 tests passed in 4 ms",
+          "t": 232,
+          "text": " Testing random... 1000 of 1000 tests passed in 5 ms",
           "stream": "out"
         },
         {
-          "t": 244,
-          "text": " Testing round... 500 of 500 tests passed in 1 ms",
+          "t": 235,
+          "text": " Testing round... 500 of 500 tests passed in 2 ms",
           "stream": "out"
         },
         {
-          "t": 244,
-          "text": " Testing sign... 16 of 16 tests passed in 0 ms",
+          "t": 235,
+          "text": " Testing sign... 16 of 16 tests passed in 1 ms",
           "stream": "out"
         },
         {
-          "t": 247,
+          "t": 239,
           "text": " Testing sin... 100 of 100 tests passed in 3 ms",
           "stream": "out"
         },
         {
-          "t": 249,
+          "t": 241,
           "text": " Testing sinh... 100 of 100 tests passed in 2 ms",
           "stream": "out"
         },
         {
-          "t": 259,
+          "t": 251,
           "text": " Testing sqrt... 1000 of 1000 tests passed in 9 ms",
           "stream": "out"
         },
         {
-          "t": 260,
-          "text": " Testing sum... 37 of 37 tests passed in 0 ms",
+          "t": 251,
+          "text": " Testing sum... 37 of 37 tests passed in 1 ms",
           "stream": "out"
         },
         {
-          "t": 264,
+          "t": 256,
           "text": " Testing tan... 100 of 100 tests passed in 4 ms",
           "stream": "out"
         },
         {
-          "t": 268,
-          "text": " Testing tanh... 100 of 100 tests passed in 3 ms",
+          "t": 260,
+          "text": " Testing tanh... 100 of 100 tests passed in 4 ms",
           "stream": "out"
         },
         {
-          "t": 274,
+          "t": 265,
           "text": " Testing times... 1000 of 1000 tests passed in 5 ms",
           "stream": "out"
         },
         {
-          "t": 278,
-          "text": " Testing toBinary... 327 of 327 tests passed in 4 ms",
+          "t": 269,
+          "text": " Testing toBinary... 327 of 327 tests passed in 3 ms",
           "stream": "out"
         },
         {
-          "t": 281,
+          "t": 272,
           "text": " Testing toDecimalPlaces... 500 of 500 tests passed in 3 ms",
           "stream": "out"
         },
         {
-          "t": 284,
+          "t": 274,
           "text": " Testing toExponential... 500 of 500 tests passed in 2 ms",
           "stream": "out"
         },
         {
-          "t": 286,
+          "t": 276,
           "text": " Testing toFixed... 500 of 500 tests passed in 2 ms",
           "stream": "out"
         },
         {
-          "t": 292,
+          "t": 281,
           "text": " Testing toFraction... 200 of 200 tests passed in 5 ms",
           "stream": "out"
         },
         {
-          "t": 298,
-          "text": " Testing toHex... 309 of 309 tests passed in 6 ms",
+          "t": 283,
+          "text": " Testing toHex... 309 of 309 tests passed in 2 ms",
           "stream": "out"
         },
         {
-          "t": 299,
+          "t": 284,
           "text": " Testing toNearest... 157 of 157 tests passed in 1 ms",
           "stream": "out"
         },
         {
-          "t": 300,
+          "t": 285,
           "text": " Testing toNumber... 40 of 40 tests passed in 0 ms",
           "stream": "out"
         },
         {
-          "t": 302,
+          "t": 287,
           "text": " Testing toOctal... 293 of 293 tests passed in 1 ms",
           "stream": "out"
         },
         {
-          "t": 304,
-          "text": " Testing toPrecision... 500 of 500 tests passed in 1 ms",
+          "t": 289,
+          "text": " Testing toPrecision... 500 of 500 tests passed in 2 ms",
           "stream": "out"
         },
         {
-          "t": 306,
-          "text": " Testing toSignificantDigits... 500 of 500 tests passed in 2 ms",
+          "t": 295,
+          "text": " Testing toSignificantDigits... 500 of 500 tests passed in 6 ms",
           "stream": "out"
         },
         {
-          "t": 307,
+          "t": 297,
           "text": " Testing toString... 338 of 338 tests passed in 1 ms",
           "stream": "out"
         },
         {
-          "t": 308,
-          "text": " Testing trunc... 100 of 100 tests passed in 0 ms",
+          "t": 297,
+          "text": " Testing trunc... 100 of 100 tests passed in 1 ms",
           "stream": "out"
         },
         {
-          "t": 308,
+          "t": 298,
           "text": " Testing valueOf... 40 of 40 tests passed in 0 ms",
           "stream": "out"
         },
         {
-          "t": 308,
+          "t": 298,
           "text": "",
           "stream": "out"
         },
         {
-          "t": 308,
-          "text": " In total, 22657 of 22658 tests passed in 0.238 secs.",
+          "t": 298,
+          "text": " In total, 22628 of 22628 tests passed in 0.255 secs.",
           "stream": "out"
         },
         {
-          "t": 308,
+          "t": 298,
           "text": "",
           "stream": "out"
         }
@@ -1437,2155 +1417,1935 @@
     },
     {
       "id": "campaign",
-      "command": "node fuzz/campaign.js --seconds 70",
+      "command": "node fuzz/campaign.js --seconds 70 --log fuzz/log.txt",
       "cwd": "D:\\pm\\decimal-rs",
       "exitCode": 0,
-      "durationMs": 425660,
-      "startedAt": "2026-08-01T15:06:44.931Z",
+      "durationMs": 385821,
+      "startedAt": "2026-08-01T18:37:46.634Z",
       "lines": [
         {
-          "t": 44,
+          "t": 51,
           "text": "port-mortem differential fuzz campaign — decimal.js vs decimal-rs",
           "stream": "out"
         },
         {
-          "t": 44,
+          "t": 52,
           "text": "oracle:  fuzz/reference/decimal.js  v10.6.0 @ cd73a7f  [vendored; not linked into the port]",
           "stream": "out"
         },
         {
-          "t": 44,
+          "t": 52,
           "text": "subject: decimal.node  (crates/decimal-core + crates/decimal-napi, release)",
           "stream": "out"
         },
         {
-          "t": 44,
+          "t": 52,
           "text": "host:    AMD Ryzen 5 7600 6-Core Processor / win32 10.0.26200 / node v24.13.1",
           "stream": "out"
         },
         {
-          "t": 44,
-          "text": "started 2026-08-01T15:06:44.974Z   seed 0x5DD0BB14",
+          "t": 52,
+          "text": "started 2026-08-01T18:37:46.686Z   seed 0x0877F0D0",
           "stream": "out"
         },
         {
-          "t": 44,
+          "t": 52,
           "text": "budget:  70s continuous, 4 worker processes, slices of 150 sequences",
           "stream": "out"
         },
         {
-          "t": 44,
+          "t": 52,
           "text": "watchdog: a slice whose sequence index has not advanced in 4.0s is killed, its input recorded by",
           "stream": "out"
         },
         {
-          "t": 44,
+          "t": 52,
           "text": "         seed, and the slice resumed at the next sequence. Children are",
           "stream": "out"
         },
         {
-          "t": 44,
+          "t": 52,
           "text": "         capped at 1024 MB of heap.",
           "stream": "out"
         },
         {
-          "t": 44,
+          "t": 52,
           "text": "bounds:  ON — operations whose cost is proportional to the operand exponent are fuzzed for |e| < 10000 (see differential.js).",
           "stream": "out"
         },
         {
-          "t": 44,
+          "t": 52,
           "text": "",
           "stream": "out"
         },
         {
-          "t": 44,
+          "t": 52,
           "text": "comparing, per operation: sign, exponent, digit array, toString, valueOf,",
           "stream": "out"
         },
         {
-          "t": 44,
+          "t": 52,
           "text": "  toExponential, isFinite, isNaN, isInteger, precision, precision(true),",
           "stream": "out"
         },
         {
-          "t": 44,
+          "t": 52,
           "text": "  decimalPlaces, negative-zero, thrown message, and the constructor",
           "stream": "out"
         },
         {
-          "t": 44,
+          "t": 52,
           "text": "  configuration before and after.",
           "stream": "out"
         },
         {
-          "t": 44,
+          "t": 52,
           "text": "excluded by rule: Decimal.random (no fixed answer — the two sides draw from",
           "stream": "out"
         },
         {
-          "t": 44,
+          "t": 52,
           "text": "  different generators by design; covered by scripted-entropy unit tests in",
           "stream": "out"
         },
         {
-          "t": 44,
+          "t": 52,
           "text": "  crates/decimal-core/src/random.rs).",
           "stream": "out"
         },
         {
-          "t": 44,
+          "t": 52,
           "text": "",
           "stream": "out"
         },
         {
-          "t": 87,
+          "t": 100,
           "text": "[harness self-check] injected a one-ulp fault into the port's results",
           "stream": "out"
         },
         {
-          "t": 87,
+          "t": 100,
           "text": "[harness self-check]   -> DETECTED at sequence 1 (comparator is live)",
           "stream": "out"
         },
         {
-          "t": 87,
+          "t": 100,
           "text": "[harness self-check] fault reverted",
           "stream": "out"
         },
         {
-          "t": 322,
+          "t": 427,
           "text": "[replay check] one slice run twice: identical",
           "stream": "out"
         },
         {
-          "t": 322,
-          "text": "[replay check] the same slice in two halves: accounts for the whole (51 + 63 = 114 operations)",
+          "t": 427,
+          "text": "[replay check] the same slice in two halves: accounts for the whole (67 + 46 = 113 operations)",
           "stream": "out"
         },
         {
-          "t": 322,
+          "t": 427,
           "text": "",
           "stream": "out"
         },
         {
-          "t": 322,
+          "t": 427,
           "text": "starting clean run",
           "stream": "out"
         },
         {
-          "t": 322,
+          "t": 427,
           "text": "",
           "stream": "out"
         },
         {
-          "t": 10334,
-          "text": "seq       473  ops       4048  elapsed   10.0s  divergences 0  unrefereeable 5",
+          "t": 10435,
+          "text": "seq       495  ops       4290  elapsed   10.0s  divergences 0  unrefereeable 6",
           "stream": "out"
         },
         {
-          "t": 20334,
-          "text": "seq       861  ops       7267  elapsed   20.0s  divergences 0  unrefereeable 13",
+          "t": 20443,
+          "text": "seq       966  ops       8270  elapsed   20.0s  divergences 0  unrefereeable 14",
           "stream": "out"
         },
         {
-          "t": 30334,
-          "text": "seq      1353  ops      11414  elapsed   30.0s  divergences 0  unrefereeable 21",
+          "t": 30451,
+          "text": "seq      1453  ops      12454  elapsed   30.0s  divergences 0  unrefereeable 22",
           "stream": "out"
         },
         {
-          "t": 40334,
-          "text": "seq      1779  ops      15044  elapsed   40.0s  divergences 0  unrefereeable 30",
+          "t": 40462,
+          "text": "seq      2120  ops      18125  elapsed   40.0s  divergences 0  unrefereeable 30",
           "stream": "out"
         },
         {
-          "t": 50341,
-          "text": "seq      2059  ops      17398  elapsed   50.0s  divergences 0  unrefereeable 39",
+          "t": 50462,
+          "text": "seq      2813  ops      24140  elapsed   50.0s  divergences 0  unrefereeable 37",
           "stream": "out"
         },
         {
-          "t": 60355,
-          "text": "seq      2392  ops      20160  elapsed   60.0s  divergences 0  unrefereeable 47",
+          "t": 60475,
+          "text": "seq      3555  ops      30382  elapsed   60.0s  divergences 0  unrefereeable 42",
           "stream": "out"
         },
         {
-          "t": 70370,
-          "text": "seq      2867  ops      24281  elapsed   70.0s  divergences 0  unrefereeable 57",
+          "t": 70478,
+          "text": "seq      4015  ops      34299  elapsed   70.1s  divergences 0  unrefereeable 49",
           "stream": "out"
         },
         {
-          "t": 74365,
+          "t": 73051,
           "text": "",
           "stream": "out"
         },
         {
-          "t": 74365,
-          "text": "STOP  elapsed 74.0s  sequences 2989  operations 25269  divergences 0  unrefereeable 61",
+          "t": 73051,
+          "text": "STOP  elapsed 72.6s  sequences 4297  operations 36606  divergences 0  unrefereeable 53",
           "stream": "out"
         },
         {
-          "t": 74365,
+          "t": 73051,
           "text": "",
           "stream": "out"
         },
         {
-          "t": 74365,
-          "text": "known divergences encountered (deliberate, documented, reported upstream):",
+          "t": 73051,
+          "text": "known divergences encountered (deliberate and documented for upstream):",
           "stream": "out"
         },
         {
-          "t": 74365,
-          "text": "  BUG-002 (wider) — shared configuration leak  x4",
+          "t": 73051,
+          "text": "  BUG-002 (wider) — shared configuration leak  x2",
           "stream": "out"
         },
         {
-          "t": 74365,
+          "t": 73051,
+          "text": "  D-13, D-17 / BUG-003, BUG-006  x2",
+          "stream": "out"
+        },
+        {
+          "t": 73051,
           "text": "",
           "stream": "out"
         },
         {
-          "t": 74365,
-          "text": "UNREFEREEABLE INPUTS — 61 of 3050 sequences",
+          "t": 73051,
+          "text": "UNREFEREEABLE INPUTS — 53 of 4350 sequences",
           "stream": "out"
         },
         {
-          "t": 74365,
+          "t": 73051,
           "text": "",
           "stream": "out"
         },
         {
-          "t": 74365,
+          "t": 73051,
           "text": "These are inputs on which the *oracle* did not produce an answer, so there",
           "stream": "out"
         },
         {
-          "t": 74365,
+          "t": 73051,
           "text": "was nothing to compare the port against. Each was killed by the watchdog,",
           "stream": "out"
         },
         {
-          "t": 74365,
+          "t": 73051,
           "text": "recorded by seed, and re-run afterwards one side at a time to attribute the",
           "stream": "out"
         },
         {
-          "t": 74365,
+          "t": 73051,
           "text": "failure. Nothing here is filtered out of the counts above: the sequences",
           "stream": "out"
         },
         {
-          "t": 74365,
+          "t": 73051,
           "text": "they belong to are excluded from `sequences`, and they are listed",
           "stream": "out"
         },
         {
-          "t": 74365,
+          "t": 73051,
           "text": "individually so that the exclusion can be checked.",
           "stream": "out"
         },
         {
-          "t": 74365,
+          "t": 73051,
           "text": "",
           "stream": "out"
         },
         {
-          "t": 82009,
-          "text": "  slice 0x4a7f92b8  sequence   15  (stalled)",
+          "t": 78154,
+          "text": "  slice 0x1fd8d97c  sequence    3  (stalled)",
           "stream": "out"
         },
         {
-          "t": 82009,
-          "text": "    step:      Decimal.atan2(x0, x2)",
-          "stream": "out"
-        },
-        {
-          "t": 82009,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 82009,
-          "text": "    port:      did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 82009,
-          "text": "    verdict:   intractable for both — they agree in not returning",
-          "stream": "out"
-        },
-        {
-          "t": 82009,
-          "text": "    replay:    node fuzz/differential.js --slice 1249874616 --resume 15 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 89612,
-          "text": "  slice 0xcc13e455  sequence   46  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 89612,
-          "text": "    step:      Decimal.atan2(x2, x3)",
-          "stream": "out"
-        },
-        {
-          "t": 89612,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 89612,
-          "text": "    port:      did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 89612,
-          "text": "    verdict:   intractable for both — they agree in not returning",
-          "stream": "out"
-        },
-        {
-          "t": 89612,
-          "text": "    replay:    node fuzz/differential.js --slice 3423855701 --resume 46 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 97235,
-          "text": "  slice 0x56072fc2  sequence   19  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 97235,
-          "text": "    step:      x3.atan()",
-          "stream": "out"
-        },
-        {
-          "t": 97235,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 97235,
-          "text": "    port:      did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 97235,
-          "text": "    verdict:   intractable for both — they agree in not returning",
-          "stream": "out"
-        },
-        {
-          "t": 97235,
-          "text": "    replay:    node fuzz/differential.js --slice 1443311554 --resume 19 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 102332,
-          "text": "  slice 0xd83b717f  sequence   12  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 102332,
-          "text": "    step:      x1.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 102332,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 102332,
-          "text": "    port:      returned in 47 ms",
-          "stream": "out"
-        },
-        {
-          "t": 102332,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 102332,
-          "text": "    replay:    node fuzz/differential.js --slice 3627774335 --resume 12 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 107443,
-          "text": "  slice 0x7e560596  sequence   14  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 107443,
-          "text": "    step:      x1.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 107443,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 107443,
-          "text": "    port:      returned in 71 ms",
-          "stream": "out"
-        },
-        {
-          "t": 107443,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 107443,
-          "text": "    replay:    node fuzz/differential.js --slice 2119566742 --resume 14 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 112539,
-          "text": "  slice 0xf4a233f9  sequence    3  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 112539,
-          "text": "    step:      x1.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 112539,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 112539,
-          "text": "    port:      returned in 38 ms",
-          "stream": "out"
-        },
-        {
-          "t": 112539,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 112539,
-          "text": "    replay:    node fuzz/differential.js --slice 4104270841 --resume 3 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 117630,
-          "text": "  slice 0xd83b717f  sequence   84  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 117630,
+          "t": 78154,
           "text": "    step:      x2.toFraction()",
           "stream": "out"
         },
         {
-          "t": 117630,
+          "t": 78154,
           "text": "    oracle:    did NOT return within 2.5 s",
           "stream": "out"
         },
         {
-          "t": 117630,
-          "text": "    port:      returned in 36 ms",
-          "stream": "out"
-        },
-        {
-          "t": 117630,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 117630,
-          "text": "    replay:    node fuzz/differential.js --slice 3627774335 --resume 84 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 122733,
-          "text": "  slice 0xc04a4f03  sequence   84  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 122733,
-          "text": "    step:      x0.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 122733,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 122733,
-          "text": "    port:      returned in 38 ms",
-          "stream": "out"
-        },
-        {
-          "t": 122733,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 122733,
-          "text": "    replay:    node fuzz/differential.js --slice 3226095363 --resume 84 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 127852,
-          "text": "  slice 0x7e560596  sequence   35  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 127852,
-          "text": "    step:      x2.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 127852,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 127852,
-          "text": "    port:      returned in 38 ms",
-          "stream": "out"
-        },
-        {
-          "t": 127852,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 127852,
-          "text": "    replay:    node fuzz/differential.js --slice 2119566742 --resume 35 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 132945,
-          "text": "  slice 0x728ee84c  sequence   57  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 132945,
-          "text": "    step:      x2.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 132945,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 132945,
-          "text": "    port:      returned in 38 ms",
-          "stream": "out"
-        },
-        {
-          "t": 132945,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 132945,
-          "text": "    replay:    node fuzz/differential.js --slice 1921968204 --resume 57 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 140563,
-          "text": "  slice 0xf4a233f9  sequence   16  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 140563,
-          "text": "    step:      Decimal.atan2(x1, x0)",
-          "stream": "out"
-        },
-        {
-          "t": 140563,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 140563,
-          "text": "    port:      did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 140563,
-          "text": "    verdict:   intractable for both — they agree in not returning",
-          "stream": "out"
-        },
-        {
-          "t": 140563,
-          "text": "    replay:    node fuzz/differential.js --slice 4104270841 --resume 16 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 145672,
-          "text": "  slice 0xe89aa6d7  sequence    3  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 145672,
-          "text": "    step:      x1.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 145672,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 145672,
-          "text": "    port:      returned in 40 ms",
-          "stream": "out"
-        },
-        {
-          "t": 145672,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 145672,
-          "text": "    replay:    node fuzz/differential.js --slice 3902449367 --resume 3 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 150786,
-          "text": "  slice 0x728ee84c  sequence   66  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 150786,
-          "text": "    step:      x1.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 150786,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 150786,
-          "text": "    port:      returned in 40 ms",
-          "stream": "out"
-        },
-        {
-          "t": 150786,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 150786,
-          "text": "    replay:    node fuzz/differential.js --slice 1921968204 --resume 66 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 155893,
-          "text": "  slice 0x7e560596  sequence   48  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 155893,
-          "text": "    step:      x0.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 155893,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 155893,
-          "text": "    port:      returned in 37 ms",
-          "stream": "out"
-        },
-        {
-          "t": 155893,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 155893,
-          "text": "    replay:    node fuzz/differential.js --slice 2119566742 --resume 48 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 160979,
-          "text": "  slice 0xf4a233f9  sequence   90  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 160979,
-          "text": "    step:      x3.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 160979,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 160979,
-          "text": "    port:      returned in 40 ms",
-          "stream": "out"
-        },
-        {
-          "t": 160979,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 160979,
-          "text": "    replay:    node fuzz/differential.js --slice 4104270841 --resume 90 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 166073,
-          "text": "  slice 0xe89aa6d7  sequence   21  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 166073,
-          "text": "    step:      x1.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 166073,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 166073,
-          "text": "    port:      returned in 37 ms",
-          "stream": "out"
-        },
-        {
-          "t": 166073,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 166073,
-          "text": "    replay:    node fuzz/differential.js --slice 3902449367 --resume 21 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 171177,
-          "text": "  slice 0x66e5533a  sequence    3  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 171177,
-          "text": "    step:      x1.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 171177,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 171177,
-          "text": "    port:      returned in 40 ms",
-          "stream": "out"
-        },
-        {
-          "t": 171177,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 171177,
-          "text": "    replay:    node fuzz/differential.js --slice 1726305082 --resume 3 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 178797,
-          "text": "  slice 0x9cf1098d  sequence   52  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 178797,
-          "text": "    step:      Decimal.atan2(x1, x0)",
-          "stream": "out"
-        },
-        {
-          "t": 178797,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 178797,
-          "text": "    port:      did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 178797,
-          "text": "    verdict:   intractable for both — they agree in not returning",
-          "stream": "out"
-        },
-        {
-          "t": 178797,
-          "text": "    replay:    node fuzz/differential.js --slice 2633042317 --resume 52 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 183898,
-          "text": "  slice 0x7e560596  sequence  120  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 183898,
-          "text": "    step:      x0.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 183898,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 183898,
-          "text": "    port:      returned in 38 ms",
-          "stream": "out"
-        },
-        {
-          "t": 183898,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 183898,
-          "text": "    replay:    node fuzz/differential.js --slice 2119566742 --resume 120 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 188996,
-          "text": "  slice 0xe89aa6d7  sequence  108  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 188996,
-          "text": "    step:      x2.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 188996,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 188996,
-          "text": "    port:      returned in 42 ms",
-          "stream": "out"
-        },
-        {
-          "t": 188996,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 188996,
-          "text": "    replay:    node fuzz/differential.js --slice 3902449367 --resume 108 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 196604,
-          "text": "  slice 0x66e5533a  sequence   11  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 196604,
-          "text": "    step:      Decimal.atan2(x0, x1)",
-          "stream": "out"
-        },
-        {
-          "t": 196604,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 196604,
-          "text": "    port:      did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 196604,
-          "text": "    verdict:   intractable for both — they agree in not returning",
-          "stream": "out"
-        },
-        {
-          "t": 196604,
-          "text": "    replay:    node fuzz/differential.js --slice 1726305082 --resume 11 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 204194,
-          "text": "  slice 0x9cf1098d  sequence   80  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 204194,
-          "text": "    step:      Decimal.atan2(x2, x1)",
-          "stream": "out"
-        },
-        {
-          "t": 204194,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 204194,
-          "text": "    port:      did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 204194,
-          "text": "    verdict:   intractable for both — they agree in not returning",
-          "stream": "out"
-        },
-        {
-          "t": 204195,
-          "text": "    replay:    node fuzz/differential.js --slice 2633042317 --resume 80 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 211786,
-          "text": "  slice 0xe89aa6d7  sequence  126  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 211786,
-          "text": "    step:      x0.atan()",
-          "stream": "out"
-        },
-        {
-          "t": 211786,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 211786,
-          "text": "    port:      did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 211786,
-          "text": "    verdict:   intractable for both — they agree in not returning",
-          "stream": "out"
-        },
-        {
-          "t": 211786,
-          "text": "    replay:    node fuzz/differential.js --slice 3902449367 --resume 126 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 216875,
-          "text": "  slice 0x66e5533a  sequence   30  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 216875,
-          "text": "    step:      x0.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 216875,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 216875,
-          "text": "    port:      returned in 37 ms",
-          "stream": "out"
-        },
-        {
-          "t": 216875,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 216875,
-          "text": "    replay:    node fuzz/differential.js --slice 1726305082 --resume 30 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 221968,
-          "text": "  slice 0x9cf1098d  sequence  115  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 221968,
-          "text": "    step:      x0.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 221968,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 221968,
-          "text": "    port:      returned in 39 ms",
-          "stream": "out"
-        },
-        {
-          "t": 221968,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 221968,
-          "text": "    replay:    node fuzz/differential.js --slice 2633042317 --resume 115 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 227123,
-          "text": "  slice 0x1addc610  sequence  109  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 227123,
-          "text": "    step:      x1.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 227123,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 227123,
-          "text": "    port:      returned in 68 ms",
-          "stream": "out"
-        },
-        {
-          "t": 227123,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 227123,
-          "text": "    replay:    node fuzz/differential.js --slice 450741776 --resume 109 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 232257,
-          "text": "  slice 0x9129fc7b  sequence    8  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 232258,
-          "text": "    step:      x2.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 232258,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 232258,
-          "text": "    port:      returned in 75 ms",
-          "stream": "out"
-        },
-        {
-          "t": 232258,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 232258,
-          "text": "    replay:    node fuzz/differential.js --slice 2435447931 --resume 8 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 239857,
-          "text": "  slice 0x66e5533a  sequence   35  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 239857,
-          "text": "    step:      x0.cosh()",
-          "stream": "out"
-        },
-        {
-          "t": 239857,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 239857,
-          "text": "    port:      did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 239858,
-          "text": "    verdict:   intractable for both — they agree in not returning",
-          "stream": "out"
-        },
-        {
-          "t": 239858,
-          "text": "    replay:    node fuzz/differential.js --slice 1726305082 --resume 35 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 244929,
-          "text": "  slice 0x9cf1098d  sequence  128  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 244929,
-          "text": "    step:      x2.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 244929,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 244929,
-          "text": "    port:      returned in 37 ms",
-          "stream": "out"
-        },
-        {
-          "t": 244930,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 244930,
-          "text": "    replay:    node fuzz/differential.js --slice 2633042317 --resume 128 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 250028,
-          "text": "  slice 0x1addc610  sequence  129  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 250028,
-          "text": "    step:      x0.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 250028,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 250028,
-          "text": "    port:      returned in 37 ms",
-          "stream": "out"
-        },
-        {
-          "t": 250028,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 250028,
-          "text": "    replay:    node fuzz/differential.js --slice 450741776 --resume 129 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 255124,
-          "text": "  slice 0x9129fc7b  sequence   30  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 255124,
-          "text": "    step:      x2.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 255124,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 255124,
-          "text": "    port:      returned in 38 ms",
-          "stream": "out"
-        },
-        {
-          "t": 255124,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 255124,
-          "text": "    replay:    node fuzz/differential.js --slice 2435447931 --resume 30 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 260202,
-          "text": "  slice 0x0f35aace  sequence   21  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 260202,
-          "text": "    step:      x0.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 260202,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 260202,
-          "text": "    port:      returned in 37 ms",
-          "stream": "out"
-        },
-        {
-          "t": 260202,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 260202,
-          "text": "    replay:    node fuzz/differential.js --slice 255175374 --resume 21 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 265295,
-          "text": "  slice 0x036c1da4  sequence   12  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 265295,
-          "text": "    step:      x3.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 265295,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 265295,
-          "text": "    port:      returned in 37 ms",
-          "stream": "out"
-        },
-        {
-          "t": 265295,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 265295,
-          "text": "    replay:    node fuzz/differential.js --slice 57417124 --resume 12 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 270403,
-          "text": "  slice 0x85006751  sequence   39  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 270403,
-          "text": "    step:      x0.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 270403,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 270403,
-          "text": "    port:      returned in 36 ms",
-          "stream": "out"
-        },
-        {
-          "t": 270403,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 270403,
-          "text": "    replay:    node fuzz/differential.js --slice 2231396177 --resume 39 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 275506,
-          "text": "  slice 0x9129fc7b  sequence   52  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 275506,
-          "text": "    step:      x0.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 275506,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 275506,
-          "text": "    port:      returned in 37 ms",
-          "stream": "out"
-        },
-        {
-          "t": 275506,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 275506,
-          "text": "    replay:    node fuzz/differential.js --slice 2435447931 --resume 52 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 283136,
-          "text": "  slice 0x0f35aace  sequence   42  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 283136,
-          "text": "    step:      Decimal.atan2(x0, x1)",
-          "stream": "out"
-        },
-        {
-          "t": 283136,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 283136,
-          "text": "    port:      did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 283136,
-          "text": "    verdict:   intractable for both — they agree in not returning",
-          "stream": "out"
-        },
-        {
-          "t": 283136,
-          "text": "    replay:    node fuzz/differential.js --slice 255175374 --resume 42 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 288228,
-          "text": "  slice 0x036c1da4  sequence   66  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 288228,
-          "text": "    step:      x1.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 288228,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 288228,
-          "text": "    port:      returned in 37 ms",
-          "stream": "out"
-        },
-        {
-          "t": 288228,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 288228,
-          "text": "    replay:    node fuzz/differential.js --slice 57417124 --resume 66 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 295840,
-          "text": "  slice 0x85006751  sequence   77  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 295840,
-          "text": "    step:      Decimal.atan2(x0, x1)",
-          "stream": "out"
-        },
-        {
-          "t": 295840,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 295840,
-          "text": "    port:      did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 295840,
-          "text": "    verdict:   intractable for both — they agree in not returning",
-          "stream": "out"
-        },
-        {
-          "t": 295840,
-          "text": "    replay:    node fuzz/differential.js --slice 2231396177 --resume 77 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 303452,
-          "text": "  slice 0x9129fc7b  sequence  109  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 303452,
-          "text": "    step:      x0.atan()",
-          "stream": "out"
-        },
-        {
-          "t": 303452,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 303452,
-          "text": "    port:      did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 303452,
-          "text": "    verdict:   intractable for both — they agree in not returning",
-          "stream": "out"
-        },
-        {
-          "t": 303452,
-          "text": "    replay:    node fuzz/differential.js --slice 2435447931 --resume 109 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 308574,
-          "text": "  slice 0x0f35aace  sequence   93  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 308574,
-          "text": "    step:      x2.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 308574,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 308574,
-          "text": "    port:      returned in 38 ms",
-          "stream": "out"
-        },
-        {
-          "t": 308574,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 308574,
-          "text": "    replay:    node fuzz/differential.js --slice 255175374 --resume 93 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 313672,
-          "text": "  slice 0x036c1da4  sequence   75  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 313672,
-          "text": "    step:      x1.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 313672,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 313672,
-          "text": "    port:      returned in 38 ms",
-          "stream": "out"
-        },
-        {
-          "t": 313672,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 313672,
-          "text": "    replay:    node fuzz/differential.js --slice 57417124 --resume 75 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 318778,
-          "text": "  slice 0x85006751  sequence  135  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 318778,
-          "text": "    step:      x1.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 318778,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 318778,
-          "text": "    port:      returned in 38 ms",
-          "stream": "out"
-        },
-        {
-          "t": 318778,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 318778,
-          "text": "    replay:    node fuzz/differential.js --slice 2231396177 --resume 135 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 326387,
-          "text": "  slice 0x0f35aace  sequence  143  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 326387,
-          "text": "    step:      x0.atan()",
-          "stream": "out"
-        },
-        {
-          "t": 326387,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 326387,
-          "text": "    port:      did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 326387,
-          "text": "    verdict:   intractable for both — they agree in not returning",
-          "stream": "out"
-        },
-        {
-          "t": 326387,
-          "text": "    replay:    node fuzz/differential.js --slice 255175374 --resume 143 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 334004,
-          "text": "  slice 0xb978ca0f  sequence   30  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 334004,
-          "text": "    step:      Decimal.atan2(x3, x0)",
-          "stream": "out"
-        },
-        {
-          "t": 334004,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 334004,
-          "text": "    port:      did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 334004,
-          "text": "    verdict:   intractable for both — they agree in not returning",
-          "stream": "out"
-        },
-        {
-          "t": 334005,
-          "text": "    replay:    node fuzz/differential.js --slice 3111701007 --resume 30 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 339105,
-          "text": "  slice 0x036c1da4  sequence  147  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 339105,
-          "text": "    step:      x1.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 339105,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 339105,
-          "text": "    port:      returned in 39 ms",
-          "stream": "out"
-        },
-        {
-          "t": 339105,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 339105,
-          "text": "    replay:    node fuzz/differential.js --slice 57417124 --resume 147 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 344208,
-          "text": "  slice 0x37448092  sequence    3  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 344208,
-          "text": "    step:      x1.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 344208,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 344208,
-          "text": "    port:      returned in 38 ms",
-          "stream": "out"
-        },
-        {
-          "t": 344208,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 344208,
-          "text": "    replay:    node fuzz/differential.js --slice 927236242 --resume 3 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 349296,
-          "text": "  slice 0xad50bee5  sequence    3  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 349296,
-          "text": "    step:      x3.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 349296,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 349296,
-          "text": "    port:      returned in 38 ms",
-          "stream": "out"
-        },
-        {
-          "t": 349296,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 349296,
-          "text": "    replay:    node fuzz/differential.js --slice 2907750117 --resume 3 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 354391,
-          "text": "  slice 0xb978ca0f  sequence   93  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 354391,
-          "text": "    step:      x3.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 354391,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 354391,
-          "text": "    port:      returned in 36 ms",
-          "stream": "out"
-        },
-        {
-          "t": 354391,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 354391,
-          "text": "    replay:    node fuzz/differential.js --slice 3111701007 --resume 93 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 359523,
-          "text": "  slice 0x2bbb6b48  sequence    3  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 359523,
-          "text": "    step:      x1.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 359523,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 359523,
+          "t": 78154,
           "text": "    port:      returned in 43 ms",
           "stream": "out"
         },
         {
-          "t": 359523,
+          "t": 78154,
           "text": "    verdict:   upstream defect — the port answers, the oracle does not",
           "stream": "out"
         },
         {
-          "t": 359523,
-          "text": "    replay:    node fuzz/differential.js --slice 733702984 --resume 3 --sequences 1",
+          "t": 78154,
+          "text": "    replay:    node fuzz/differential.js --slice 534305148 --resume 3 --sequences 1",
           "stream": "out"
         },
         {
-          "t": 364616,
-          "text": "  slice 0x37448092  sequence   84  (stalled)",
+          "t": 85734,
+          "text": "  slice 0x03a06406  sequence   35  (stalled)",
           "stream": "out"
         },
         {
-          "t": 364616,
-          "text": "    step:      x2.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 364616,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 364616,
-          "text": "    port:      returned in 37 ms",
-          "stream": "out"
-        },
-        {
-          "t": 364616,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 364616,
-          "text": "    replay:    node fuzz/differential.js --slice 927236242 --resume 84 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 372214,
-          "text": "  slice 0xa18721d3  sequence    0  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 372214,
-          "text": "    step:      x0.tanh()",
-          "stream": "out"
-        },
-        {
-          "t": 372214,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 372214,
-          "text": "    port:      did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 372214,
-          "text": "    verdict:   intractable for both — they agree in not returning",
-          "stream": "out"
-        },
-        {
-          "t": 372214,
-          "text": "    replay:    node fuzz/differential.js --slice 2709987795 --resume 0 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 377343,
-          "text": "  slice 0xad50bee5  sequence   66  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 377343,
-          "text": "    step:      x3.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 377343,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 377343,
-          "text": "    port:      returned in 67 ms",
-          "stream": "out"
-        },
-        {
-          "t": 377343,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 377343,
-          "text": "    replay:    node fuzz/differential.js --slice 2907750117 --resume 66 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 384933,
-          "text": "  slice 0x2bbb6b48  sequence   49  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 384933,
-          "text": "    step:      Decimal.atan2(x3, x2)",
-          "stream": "out"
-        },
-        {
-          "t": 384933,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 384933,
-          "text": "    port:      did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 384933,
-          "text": "    verdict:   intractable for both — they agree in not returning",
-          "stream": "out"
-        },
-        {
-          "t": 384933,
-          "text": "    replay:    node fuzz/differential.js --slice 733702984 --resume 49 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 390036,
-          "text": "  slice 0x37448092  sequence   93  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 390036,
-          "text": "    step:      x0.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 390036,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 390036,
-          "text": "    port:      returned in 38 ms",
-          "stream": "out"
-        },
-        {
-          "t": 390036,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 390036,
-          "text": "    replay:    node fuzz/differential.js --slice 927236242 --resume 93 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 397645,
-          "text": "  slice 0xa18721d3  sequence   17  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 397645,
+          "t": 85734,
           "text": "    step:      Decimal.atan2(x0, x2)",
           "stream": "out"
         },
         {
-          "t": 397645,
+          "t": 85734,
           "text": "    oracle:    did NOT return within 2.5 s",
           "stream": "out"
         },
         {
-          "t": 397645,
+          "t": 85734,
           "text": "    port:      did NOT return within 2.5 s",
           "stream": "out"
         },
         {
-          "t": 397645,
+          "t": 85734,
           "text": "    verdict:   intractable for both — they agree in not returning",
           "stream": "out"
         },
         {
-          "t": 397645,
-          "text": "    replay:    node fuzz/differential.js --slice 2709987795 --resume 17 --sequences 1",
+          "t": 85734,
+          "text": "    replay:    node fuzz/differential.js --slice 60843014 --resume 35 --sequences 1",
           "stream": "out"
         },
         {
-          "t": 402750,
-          "text": "  slice 0xad50bee5  sequence  111  (stalled)",
+          "t": 90842,
+          "text": "  slice 0x99b4af91  sequence   48  (stalled)",
           "stream": "out"
         },
         {
-          "t": 402750,
+          "t": 90842,
           "text": "    step:      x3.toFraction()",
           "stream": "out"
         },
         {
-          "t": 402750,
+          "t": 90842,
           "text": "    oracle:    did NOT return within 2.5 s",
           "stream": "out"
         },
         {
-          "t": 402750,
-          "text": "    port:      returned in 37 ms",
+          "t": 90842,
+          "text": "    port:      returned in 48 ms",
           "stream": "out"
         },
         {
-          "t": 402750,
+          "t": 90842,
           "text": "    verdict:   upstream defect — the port answers, the oracle does not",
           "stream": "out"
         },
         {
-          "t": 402750,
-          "text": "    replay:    node fuzz/differential.js --slice 2907750117 --resume 111 --sequences 1",
+          "t": 90842,
+          "text": "    replay:    node fuzz/differential.js --slice 2578755473 --resume 48 --sequences 1",
           "stream": "out"
         },
         {
-          "t": 407836,
-          "text": "  slice 0x2bbb6b48  sequence  147  (stalled)",
+          "t": 95968,
+          "text": "  slice 0x8d9c3abb  sequence   66  (stalled)",
           "stream": "out"
         },
         {
-          "t": 407836,
+          "t": 95968,
+          "text": "    step:      x3.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 95968,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 95968,
+          "text": "    port:      returned in 45 ms",
+          "stream": "out"
+        },
+        {
+          "t": 95968,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 95968,
+          "text": "    replay:    node fuzz/differential.js --slice 2375826107 --resume 66 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 101058,
+          "text": "  slice 0x99b4af91  sequence   84  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 101058,
           "text": "    step:      x2.toFraction()",
           "stream": "out"
         },
         {
-          "t": 407836,
+          "t": 101058,
           "text": "    oracle:    did NOT return within 2.5 s",
           "stream": "out"
         },
         {
-          "t": 407836,
-          "text": "    port:      returned in 38 ms",
+          "t": 101058,
+          "text": "    port:      returned in 44 ms",
           "stream": "out"
         },
         {
-          "t": 407836,
+          "t": 101058,
           "text": "    verdict:   upstream defect — the port answers, the oracle does not",
           "stream": "out"
         },
         {
-          "t": 407836,
-          "text": "    replay:    node fuzz/differential.js --slice 733702984 --resume 147 --sequences 1",
+          "t": 101058,
+          "text": "    replay:    node fuzz/differential.js --slice 2578755473 --resume 84 --sequences 1",
           "stream": "out"
         },
         {
-          "t": 412996,
-          "text": "  slice 0x37448092  sequence  111  (stalled)",
+          "t": 106132,
+          "text": "  slice 0x1fd8d97c  sequence   48  (stalled)",
           "stream": "out"
         },
         {
-          "t": 412996,
-          "text": "    step:      x0.toFraction()",
-          "stream": "out"
-        },
-        {
-          "t": 412996,
-          "text": "    oracle:    did NOT return within 2.5 s",
-          "stream": "out"
-        },
-        {
-          "t": 412996,
-          "text": "    port:      returned in 38 ms",
-          "stream": "out"
-        },
-        {
-          "t": 412996,
-          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
-          "stream": "out"
-        },
-        {
-          "t": 412996,
-          "text": "    replay:    node fuzz/differential.js --slice 927236242 --resume 111 --sequences 1",
-          "stream": "out"
-        },
-        {
-          "t": 418081,
-          "text": "  slice 0xa18721d3  sequence   75  (stalled)",
-          "stream": "out"
-        },
-        {
-          "t": 418081,
+          "t": 106132,
           "text": "    step:      x1.toFraction()",
           "stream": "out"
         },
         {
-          "t": 418081,
+          "t": 106132,
           "text": "    oracle:    did NOT return within 2.5 s",
           "stream": "out"
         },
         {
-          "t": 418081,
-          "text": "    port:      returned in 38 ms",
+          "t": 106132,
+          "text": "    port:      returned in 45 ms",
           "stream": "out"
         },
         {
-          "t": 418081,
+          "t": 106133,
           "text": "    verdict:   upstream defect — the port answers, the oracle does not",
           "stream": "out"
         },
         {
-          "t": 418081,
-          "text": "    replay:    node fuzz/differential.js --slice 2709987795 --resume 75 --sequences 1",
+          "t": 106133,
+          "text": "    replay:    node fuzz/differential.js --slice 534305148 --resume 48 --sequences 1",
           "stream": "out"
         },
         {
-          "t": 425639,
-          "text": "  slice 0xdf93de26  sequence   12  (stalled)",
+          "t": 113708,
+          "text": "  slice 0x8d9c3abb  sequence  108  (stalled)",
           "stream": "out"
         },
         {
-          "t": 425639,
-          "text": "    step:      x1.toFraction()",
+          "t": 113708,
+          "text": "    step:      Decimal.atan2(x1, x3)",
           "stream": "out"
         },
         {
-          "t": 425639,
+          "t": 113708,
           "text": "    oracle:    did NOT return within 2.5 s",
           "stream": "out"
         },
         {
-          "t": 425639,
+          "t": 113708,
           "text": "    port:      did NOT return within 2.5 s",
           "stream": "out"
         },
         {
-          "t": 425639,
+          "t": 113708,
           "text": "    verdict:   intractable for both — they agree in not returning",
           "stream": "out"
         },
         {
-          "t": 425639,
-          "text": "    replay:    node fuzz/differential.js --slice 3751009830 --resume 12 --sequences 1",
+          "t": 113708,
+          "text": "    replay:    node fuzz/differential.js --slice 2375826107 --resume 108 --sequences 1",
           "stream": "out"
         },
         {
-          "t": 425639,
-          "text": "  … and 1 more, not diagnosed (--diagnose 60)",
+          "t": 121299,
+          "text": "  slice 0x2bf14e52  sequence    3  (stalled)",
           "stream": "out"
         },
         {
-          "t": 425639,
+          "t": 121299,
+          "text": "    step:      Decimal.atan2(x3, x0)",
+          "stream": "out"
+        },
+        {
+          "t": 121299,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 121299,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 121299,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 121299,
+          "text": "    replay:    node fuzz/differential.js --slice 737234514 --resume 3 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 126394,
+          "text": "  slice 0x99b4af91  sequence  134  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 126394,
+          "text": "    step:      x0.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 126394,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 126394,
+          "text": "    port:      returned in 45 ms",
+          "stream": "out"
+        },
+        {
+          "t": 126394,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 126394,
+          "text": "    replay:    node fuzz/differential.js --slice 2578755473 --resume 134 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 131485,
+          "text": "  slice 0x2bf14e52  sequence   66  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 131485,
+          "text": "    step:      x0.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 131485,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 131485,
+          "text": "    port:      returned in 43 ms",
+          "stream": "out"
+        },
+        {
+          "t": 131485,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 131485,
+          "text": "    replay:    node fuzz/differential.js --slice 737234514 --resume 66 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 136907,
+          "text": "  slice 0x1fd8d97c  sequence  149  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 136907,
+          "text": "    step:      x1.atan()",
+          "stream": "out"
+        },
+        {
+          "t": 136908,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 136908,
+          "text": "    port:      returned in 384 ms",
+          "stream": "out"
+        },
+        {
+          "t": 136908,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 136908,
+          "text": "    replay:    node fuzz/differential.js --slice 534305148 --resume 149 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 141981,
+          "text": "  slice 0xa105783d  sequence   66  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 141981,
+          "text": "    step:      x1.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 141981,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 141981,
+          "text": "    port:      returned in 42 ms",
+          "stream": "out"
+        },
+        {
+          "t": 141981,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 141981,
+          "text": "    replay:    node fuzz/differential.js --slice 2701490237 --resume 66 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 147062,
+          "text": "  slice 0x2729a388  sequence   12  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 147062,
+          "text": "    step:      x1.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 147062,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 147062,
+          "text": "    port:      returned in 45 ms",
+          "stream": "out"
+        },
+        {
+          "t": 147062,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 147062,
+          "text": "    replay:    node fuzz/differential.js --slice 657040264 --resume 12 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 154634,
+          "text": "  slice 0x2bf14e52  sequence   79  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 154634,
+          "text": "    step:      Decimal.atan2(x3, x1)",
+          "stream": "out"
+        },
+        {
+          "t": 154634,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 154634,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 154634,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 154634,
+          "text": "    replay:    node fuzz/differential.js --slice 737234514 --resume 79 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 162227,
+          "text": "  slice 0xbd3ded13  sequence   41  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 162227,
+          "text": "    step:      Decimal.atan2(x1, x0)",
+          "stream": "out"
+        },
+        {
+          "t": 162227,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 162227,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 162227,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 162227,
+          "text": "    replay:    node fuzz/differential.js --slice 3174952211 --resume 41 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 167372,
+          "text": "  slice 0xa105783d  sequence   75  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 167372,
+          "text": "    step:      x0.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 167372,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 167372,
+          "text": "    port:      returned in 47 ms",
+          "stream": "out"
+        },
+        {
+          "t": 167372,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 167372,
+          "text": "    replay:    node fuzz/differential.js --slice 2701490237 --resume 75 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 172466,
+          "text": "  slice 0x2729a388  sequence   75  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 172466,
+          "text": "    step:      x0.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 172466,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 172466,
+          "text": "    port:      returned in 42 ms",
+          "stream": "out"
+        },
+        {
+          "t": 172466,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 172466,
+          "text": "    replay:    node fuzz/differential.js --slice 657040264 --resume 75 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 177561,
+          "text": "  slice 0x334218fe  sequence   12  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 177561,
+          "text": "    step:      x2.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 177561,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 177561,
+          "text": "    port:      returned in 43 ms",
+          "stream": "out"
+        },
+        {
+          "t": 177561,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 177561,
+          "text": "    replay:    node fuzz/differential.js --slice 859969790 --resume 12 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 182664,
+          "text": "  slice 0xa105783d  sequence  138  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 182664,
+          "text": "    step:      x3.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 182664,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 182664,
+          "text": "    port:      returned in 57 ms",
+          "stream": "out"
+        },
+        {
+          "t": 182664,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 182664,
+          "text": "    replay:    node fuzz/differential.js --slice 2701490237 --resume 138 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 187763,
+          "text": "  slice 0xc9564249  sequence    9  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 187763,
+          "text": "    step:      x2.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 187763,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 187763,
+          "text": "    port:      returned in 47 ms",
+          "stream": "out"
+        },
+        {
+          "t": 187763,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 187763,
+          "text": "    replay:    node fuzz/differential.js --slice 3377873481 --resume 9 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 195363,
+          "text": "  slice 0x2729a388  sequence   84  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 195363,
+          "text": "    step:      Decimal.atan2(x0, x1)",
+          "stream": "out"
+        },
+        {
+          "t": 195363,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 195363,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 195363,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 195363,
+          "text": "    replay:    node fuzz/differential.js --slice 657040264 --resume 84 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 200464,
+          "text": "  slice 0x334218fe  sequence   39  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 200464,
+          "text": "    step:      x0.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 200464,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 200464,
+          "text": "    port:      returned in 40 ms",
+          "stream": "out"
+        },
+        {
+          "t": 200464,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 200464,
+          "text": "    replay:    node fuzz/differential.js --slice 859969790 --resume 39 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 205561,
+          "text": "  slice 0xc48eb7bf  sequence   43  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 205561,
+          "text": "    step:      x0.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 205561,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 205561,
+          "text": "    port:      returned in 44 ms",
+          "stream": "out"
+        },
+        {
+          "t": 205561,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 205561,
+          "text": "    replay:    node fuzz/differential.js --slice 3297687487 --resume 43 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 210642,
+          "text": "  slice 0x2729a388  sequence  138  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 210642,
+          "text": "    step:      x0.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 210642,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 210642,
+          "text": "    port:      returned in 44 ms",
+          "stream": "out"
+        },
+        {
+          "t": 210642,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 210642,
+          "text": "    replay:    node fuzz/differential.js --slice 657040264 --resume 138 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 218222,
+          "text": "  slice 0x4f7a8dd4  sequence  127  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 218222,
+          "text": "    step:      Decimal.atan2(x2, x1)",
+          "stream": "out"
+        },
+        {
+          "t": 218222,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 218222,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 218222,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 218222,
+          "text": "    replay:    node fuzz/differential.js --slice 1333431764 --resume 127 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 223308,
+          "text": "  slice 0x5a92e10a  sequence   30  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 223308,
+          "text": "    step:      x2.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 223308,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 223308,
+          "text": "    port:      returned in 45 ms",
+          "stream": "out"
+        },
+        {
+          "t": 223308,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 223308,
+          "text": "    replay:    node fuzz/differential.js --slice 1519575306 --resume 30 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 230902,
+          "text": "  slice 0xd0a72c95  sequence    4  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 230902,
+          "text": "    step:      x0.atan()",
+          "stream": "out"
+        },
+        {
+          "t": 230902,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 230902,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 230902,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 230902,
+          "text": "    replay:    node fuzz/differential.js --slice 3500616853 --resume 4 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 236004,
+          "text": "  slice 0x56cb5660  sequence  102  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 236004,
+          "text": "    step:      x2.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 236004,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 236004,
+          "text": "    port:      returned in 44 ms",
+          "stream": "out"
+        },
+        {
+          "t": 236004,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 236004,
+          "text": "    replay:    node fuzz/differential.js --slice 1456166496 --resume 102 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 241101,
+          "text": "  slice 0x4f7a8dd4  sequence  129  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 241101,
+          "text": "    step:      x1.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 241101,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 241101,
+          "text": "    port:      returned in 42 ms",
+          "stream": "out"
+        },
+        {
+          "t": 241101,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 241101,
+          "text": "    replay:    node fuzz/differential.js --slice 1333431764 --resume 129 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 248678,
+          "text": "  slice 0x5a92e10a  sequence   44  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 248678,
+          "text": "    step:      Decimal.atan2(x2, x3)",
+          "stream": "out"
+        },
+        {
+          "t": 248678,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 248678,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 248679,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 248679,
+          "text": "    replay:    node fuzz/differential.js --slice 1519575306 --resume 44 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 253762,
+          "text": "  slice 0xd0a72c95  sequence   21  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 253762,
+          "text": "    step:      x0.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 253762,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 253762,
+          "text": "    port:      returned in 42 ms",
+          "stream": "out"
+        },
+        {
+          "t": 253762,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 253762,
+          "text": "    replay:    node fuzz/differential.js --slice 3500616853 --resume 21 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 258856,
+          "text": "  slice 0xecdf81cb  sequence   57  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 258856,
+          "text": "    step:      x0.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 258856,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 258856,
+          "text": "    port:      returned in 47 ms",
+          "stream": "out"
+        },
+        {
+          "t": 258856,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 258856,
+          "text": "    replay:    node fuzz/differential.js --slice 3974070731 --resume 57 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 266443,
+          "text": "  slice 0x62e3cb56  sequence   70  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 266443,
+          "text": "    step:      x0.atan()",
+          "stream": "out"
+        },
+        {
+          "t": 266443,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 266443,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 266443,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 266443,
+          "text": "    replay:    node fuzz/differential.js --slice 1659095894 --resume 70 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 271528,
+          "text": "  slice 0xd0a72c95  sequence   48  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 271528,
+          "text": "    step:      x0.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 271528,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 271528,
+          "text": "    port:      returned in 45 ms",
+          "stream": "out"
+        },
+        {
+          "t": 271528,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 271528,
+          "text": "    replay:    node fuzz/differential.js --slice 3500616853 --resume 48 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 276616,
+          "text": "  slice 0x5a92e10a  sequence  120  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 276616,
+          "text": "    step:      x1.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 276616,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 276616,
+          "text": "    port:      returned in 43 ms",
+          "stream": "out"
+        },
+        {
+          "t": 276616,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 276616,
+          "text": "    replay:    node fuzz/differential.js --slice 1519575306 --resume 120 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 281693,
+          "text": "  slice 0xf8f7f521  sequence  129  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 281693,
+          "text": "    step:      x1.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 281693,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 281693,
+          "text": "    port:      returned in 47 ms",
+          "stream": "out"
+        },
+        {
+          "t": 281693,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 281693,
+          "text": "    replay:    node fuzz/differential.js --slice 4176999713 --resume 129 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 289282,
+          "text": "  slice 0x62e3cb56  sequence   95  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 289282,
+          "text": "    step:      Decimal.atan2(x2, x1)",
+          "stream": "out"
+        },
+        {
+          "t": 289282,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 289282,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 289282,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 289282,
+          "text": "    replay:    node fuzz/differential.js --slice 1659095894 --resume 95 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 294375,
+          "text": "  slice 0x7e1c208c  sequence   59  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 294375,
+          "text": "    step:      x1.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 294375,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 294375,
+          "text": "    port:      returned in 43 ms",
+          "stream": "out"
+        },
+        {
+          "t": 294375,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 294376,
+          "text": "    replay:    node fuzz/differential.js --slice 2115772556 --resume 59 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 301962,
+          "text": "  slice 0xf4206a17  sequence   58  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 301962,
+          "text": "    step:      Decimal.atan2(x1, x2)",
+          "stream": "out"
+        },
+        {
+          "t": 301962,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 301962,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 301962,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 301962,
+          "text": "    replay:    node fuzz/differential.js --slice 4095765015 --resume 58 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 307053,
+          "text": "  slice 0x8a3495e2  sequence   43  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 307053,
+          "text": "    step:      x0.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 307053,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 307053,
+          "text": "    port:      returned in 44 ms",
+          "stream": "out"
+        },
+        {
+          "t": 307053,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 307053,
+          "text": "    replay:    node fuzz/differential.js --slice 2318702050 --resume 43 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 312145,
+          "text": "  slice 0x0058df4d  sequence   64  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 312145,
+          "text": "    step:      x2.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 312145,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 312145,
+          "text": "    port:      returned in 43 ms",
+          "stream": "out"
+        },
+        {
+          "t": 312145,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 312145,
+          "text": "    replay:    node fuzz/differential.js --slice 5824333 --resume 64 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 317254,
+          "text": "  slice 0x0058df4d  sequence  102  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 317254,
+          "text": "    step:      x2.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 317254,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 317254,
+          "text": "    port:      returned in 43 ms",
+          "stream": "out"
+        },
+        {
+          "t": 317254,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 317254,
+          "text": "    replay:    node fuzz/differential.js --slice 5824333 --resume 102 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 322345,
+          "text": "  slice 0x91857e0e  sequence  120  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 322345,
+          "text": "    step:      x0.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 322345,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 322345,
+          "text": "    port:      returned in 43 ms",
+          "stream": "out"
+        },
+        {
+          "t": 322345,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 322345,
+          "text": "    replay:    node fuzz/differential.js --slice 2441444878 --resume 120 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 329945,
+          "text": "  slice 0x17a9a999  sequence   20  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 329945,
+          "text": "    step:      Decimal.atan2(x3, x2)",
+          "stream": "out"
+        },
+        {
+          "t": 329945,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 329945,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 329945,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 329945,
+          "text": "    replay:    node fuzz/differential.js --slice 396994969 --resume 20 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 337536,
+          "text": "  slice 0x8a3495e2  sequence  148  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 337536,
+          "text": "    step:      x1.atan()",
+          "stream": "out"
+        },
+        {
+          "t": 337536,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 337536,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 337536,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 337537,
+          "text": "    replay:    node fuzz/differential.js --slice 2318702050 --resume 148 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 342633,
+          "text": "  slice 0x0058df4d  sequence  120  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 342633,
+          "text": "    step:      x3.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 342633,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 342633,
+          "text": "    port:      returned in 42 ms",
+          "stream": "out"
+        },
+        {
+          "t": 342633,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 342633,
+          "text": "    replay:    node fuzz/differential.js --slice 5824333 --resume 120 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 350215,
+          "text": "  slice 0xadbdd364  sequence   69  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 350215,
+          "text": "    step:      Decimal.atan2(x0, x1)",
+          "stream": "out"
+        },
+        {
+          "t": 350215,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 350215,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 350215,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 350215,
+          "text": "    replay:    node fuzz/differential.js --slice 2914898788 --resume 69 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 357806,
+          "text": "  slice 0x17a9a999  sequence   27  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 357806,
+          "text": "    step:      Decimal.atan2(x2, x0)",
+          "stream": "out"
+        },
+        {
+          "t": 357806,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 357806,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 357806,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 357806,
+          "text": "    replay:    node fuzz/differential.js --slice 396994969 --resume 27 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 362899,
+          "text": "  slice 0x23c21ecf  sequence   65  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 362899,
+          "text": "    step:      x1.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 362899,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 362899,
+          "text": "    port:      returned in 45 ms",
+          "stream": "out"
+        },
+        {
+          "t": 362899,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 362900,
+          "text": "    replay:    node fuzz/differential.js --slice 599924431 --resume 65 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 368001,
+          "text": "  slice 0xadbdd364  sequence  147  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 368001,
+          "text": "    step:      x0.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 368001,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 368001,
+          "text": "    port:      returned in 53 ms",
+          "stream": "out"
+        },
+        {
+          "t": 368001,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 368001,
+          "text": "    replay:    node fuzz/differential.js --slice 2914898788 --resume 147 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 373128,
+          "text": "  slice 0xb9d6485a  sequence  111  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 373128,
+          "text": "    step:      x0.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 373128,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 373128,
+          "text": "    port:      returned in 44 ms",
+          "stream": "out"
+        },
+        {
+          "t": 373128,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 373128,
+          "text": "    replay:    node fuzz/differential.js --slice 3117828186 --resume 111 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 378214,
+          "text": "  slice 0x23c21ecf  sequence   84  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 378214,
+          "text": "    step:      x1.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 378214,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 378214,
+          "text": "    port:      returned in 43 ms",
+          "stream": "out"
+        },
+        {
+          "t": 378214,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 378214,
+          "text": "    replay:    node fuzz/differential.js --slice 599924431 --resume 84 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 385797,
+          "text": "  slice 0x17a9a999  sequence  104  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 385797,
+          "text": "    step:      Decimal.atan2(x0, x1)",
+          "stream": "out"
+        },
+        {
+          "t": 385797,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 385797,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 385797,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 385797,
+          "text": "    replay:    node fuzz/differential.js --slice 396994969 --resume 104 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 385797,
           "text": "",
           "stream": "out"
         },
         {
-          "t": 425639,
+          "t": 385797,
           "text": "  by operation                      upstream  intractable   PORT DEFECT",
           "stream": "out"
         },
         {
-          "t": 425639,
-          "text": "    toFraction            43            42            1             0",
+          "t": 385797,
+          "text": "    toFraction            35            35            0             0",
           "stream": "out"
         },
         {
-          "t": 425639,
-          "text": "    atan2                 11             0           11             0",
+          "t": 385797,
+          "text": "    atan2                 14             0           14             0",
           "stream": "out"
         },
         {
-          "t": 425639,
-          "text": "    atan                   4             0            4             0",
+          "t": 385797,
+          "text": "    atan                   4             1            3             0",
           "stream": "out"
         },
         {
-          "t": 425639,
-          "text": "    cosh                   1             0            1             0",
-          "stream": "out"
-        },
-        {
-          "t": 425639,
-          "text": "    tanh                   1             0            1             0",
-          "stream": "out"
-        },
-        {
-          "t": 425639,
+          "t": 385797,
           "text": "",
           "stream": "out"
         },
         {
-          "t": 425650,
-          "text": "SUMMARY: 25,269 refereed operations over 2,989 stateful sequences,",
+          "t": 385810,
+          "text": "SUMMARY: 36,606 refereed operations over 4,297 stateful sequences,",
           "stream": "out"
         },
         {
-          "t": 425650,
-          "text": "         across 61 API entry points and all 9 rounding modes,",
+          "t": 385810,
+          "text": "         across 66 API entry points and all 9 rounding modes,",
           "stream": "out"
         },
         {
-          "t": 425650,
-          "text": "         in 74.0 continuous seconds on 4 worker processes.",
+          "t": 385810,
+          "text": "         in 72.6 continuous seconds on 4 worker processes.",
           "stream": "out"
         },
         {
-          "t": 425650,
+          "t": 385810,
           "text": "         Zero undocumented divergences.",
           "stream": "out"
         },
         {
-          "t": 425650,
-          "text": "         61 input(s) could not be refereed, named above. Of the 60 diagnosed:",
+          "t": 385810,
+          "text": "         53 input(s) could not be refereed, named above. Of the 53 diagnosed:",
           "stream": "out"
         },
         {
-          "t": 425650,
-          "text": "             42  the port answered and the oracle did not  (upstream defects)",
+          "t": 385810,
+          "text": "             36  the port answered and the oracle did not  (upstream defects)",
           "stream": "out"
         },
         {
-          "t": 425650,
-          "text": "             18  neither returned                          (agreement, no answer available)",
+          "t": 385810,
+          "text": "             17  neither returned                          (agreement, no answer available)",
           "stream": "out"
         },
         {
-          "t": 425650,
+          "t": 385810,
           "text": "              0  neither reproduced it in isolation        (inconclusive)",
           "stream": "out"
         },
         {
-          "t": 425650,
+          "t": 385810,
           "text": "              0  the oracle answered and the port did not  (none — the claim that matters)",
           "stream": "out"
         },
         {
-          "t": 425650,
+          "t": 385810,
           "text": "",
           "stream": "out"
         },
         {
-          "t": 425650,
-          "text": "log written to D:\\pm\\decimal-rs\\fuzz\\log.txt",
+          "t": 385810,
+          "text": "log written to fuzz/log.txt",
           "stream": "out"
         }
       ]
@@ -4835,11 +4595,11 @@
       "command": "target\\release\\decimal-calc.exe 2 sqrt --precision 40",
       "cwd": "D:\\pm\\decimal-rs",
       "exitCode": 0,
-      "durationMs": 77,
-      "startedAt": "2026-08-01T15:22:28.837Z",
+      "durationMs": 56,
+      "startedAt": "2026-08-01T18:45:36.974Z",
       "lines": [
         {
-          "t": 73,
+          "t": 54,
           "text": "1.41421356237309504880168872420969807857",
           "stream": "out"
         }

@@ -192,7 +192,10 @@ pub fn sqrt(ctx: &mut Ctx, x: &Decimal) -> Decimal {
                 // are further non-zero digits, which is what `is_truncated`
                 // tells `finalise`.
                 let numeric: i64 = window.parse().unwrap_or(0);
-                let tail_zero = window.len() > 1 && window[1..].parse::<i64>().unwrap_or(0) == 0;
+                // JavaScript's `+n.slice(1)` is zero for the empty string as
+                // well as for a run of zeroes. A one-character window "5"
+                // therefore enters the exactness check too.
+                let tail_zero = window.get(1..).unwrap_or("").parse::<i64>().unwrap_or(0) == 0;
                 if numeric == 0 || (tail_zero && window.starts_with('5')) {
                     finalise(ctx, &mut r, Some(precision + 1), rounding::DOWN, false);
                     let squared = mul(ctx, &r, &r);
@@ -330,7 +333,7 @@ pub fn cbrt(ctx: &mut Ctx, x: &Decimal) -> Decimal {
                 repeated = true;
             } else {
                 let numeric: i64 = window.parse().unwrap_or(0);
-                let tail_zero = window.len() > 1 && window[1..].parse::<i64>().unwrap_or(0) == 0;
+                let tail_zero = window.get(1..).unwrap_or("").parse::<i64>().unwrap_or(0) == 0;
                 if numeric == 0 || (tail_zero && window.starts_with('5')) {
                     finalise(ctx, &mut r, Some(precision + 1), rounding::DOWN, false);
                     let cubed = {
@@ -526,6 +529,21 @@ mod tests {
         );
         ctx.cfg.precision = 5;
         assert_eq!(run(&mut ctx, sqrt, &d("2")), "1.4142");
+    }
+
+    #[test]
+    fn half_floor_uses_digits_beyond_a_one_character_rounding_window() {
+        let mut ctx = Ctx::default();
+        ctx.cfg.precision = 34;
+        ctx.cfg.rounding = rounding::HALF_FLOOR;
+
+        // The 35th digit is 5 and the four-digit probe reaches the end of the
+        // current coefficient. Its omitted tail is non-zero, so this is above
+        // the half-way point and must round up even under HALF_FLOOR.
+        assert_eq!(
+            run(&mut ctx, sqrt, &d("4.00000000000003")),
+            "2.000000000000007499999999999985938"
+        );
     }
 
     #[test]

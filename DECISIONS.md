@@ -286,7 +286,7 @@ different hat.
 
 ---
 
-### D-08 · One assertion is left failing, and it is a Node-API signature
+### D-08 · Shared prototype identity (original decision superseded)
 
 **Context.** `test/modules/clone.js` opens with
 
@@ -294,7 +294,8 @@ different hat.
 t(Decimal.prototype === D9.prototype);
 ```
 
-and it is the single assertion of 22,628 that this port does not satisfy.
+and it was the single assertion of 22,628 that the first adapter design did not
+satisfy.
 
 The original earns it structurally. `clone()` builds a fresh `Decimal`
 function but assigns it the *same* prototype object every constructor shares —
@@ -320,7 +321,7 @@ reached through a different constructor's instance fails the signature check
 before its body runs. So the prototype can be shared, but nothing on it can
 then be called.
 
-**Decision.** Leave the assertion failing.
+**Original decision.** Leave the assertion failing.
 
 Satisfying it means abandoning `napi_define_class` for instance methods:
 create the prototype as a plain object, define all fifty-odd methods on it
@@ -332,12 +333,17 @@ assertion out of 22,628, and it trades away the signature check that currently
 makes `Decimal.prototype.abs.call({})` impossible rather than merely
 undefined.
 
-**Consequence.** 22,627 of 22,628. The deviation is confined to the *binding*:
-`decimal-core`, which is the deliverable under the stricter reading of rule 5,
-has no notion of prototypes and is unaffected. Recorded here rather than left
-as an unexplained red line in the output, because the distinction between "not
-implemented" and "implemented, and blocked by a documented property of the
-host API" is exactly what a reader of this file is entitled to know.
+**Resolution.** The lifecycle and re-entry defects later made that rewrite
+necessary on safety grounds, not merely for one assertion. Instance methods are
+now defined once on a plain shared object; each Decimal stores its actual clone
+constructor as an own property, and methods resolve state through it. Static
+methods resolve dynamic `this`, as upstream does. The former signature check is
+replaced by explicit payload validation, so a forged receiver returns
+`undefined` without touching native state.
+
+**Consequence.** Every upstream assertion passes, including prototype identity.
+The more invasive design also removed a permanent cloned-constructor reference
+cycle; its ownership proof and regression are recorded in D-23.
 
 ---
 
@@ -506,9 +512,8 @@ decimal-rs  (this port)
 
 `fuzz/repro-upstream-config-leak.js` produces exactly that output.
 
-**Decision.** Do not reproduce the leak. This is, with D-08, one of only two
-places where the port knowingly behaves differently from the original, and the
-only one that is a choice rather than a constraint.
+**Decision.** Do not reproduce the leak. At the time this was the first chosen
+fidelity exception; D-08 was a binding constraint and has since been resolved.
 
 The standing rule is fidelity, and it is not set aside lightly. Three things
 justify it here:
@@ -636,8 +641,8 @@ the same TypeError. Reported as BUG-003.
 *own first line* uses for a base that was already non-finite —
 `Math.pow(+x, yn)` — which is the same question reached by a different road.
 
-This is the third deliberate divergence, alongside D-08 (a constraint, not a
-choice) and D-11; D-14 is the fourth. The test for setting fidelity aside has
+This joins D-11 as a deliberate fidelity exception; the former D-08 binding
+constraint has since been resolved. The test for setting fidelity aside has
 been the same each time: reproducing the original would give a caller a way to
 break the library rather than a way to compute a number. A `TypeError` from an unguarded
 null dereference is exactly that, and matching it would mean the port throwing
@@ -1255,3 +1260,113 @@ is a claim, not a mechanism. This one was tested exactly the way the fuzz
 harness tests its own comparator — inject the fault, require the machinery to
 catch it, then revert — and the first attempt failed that test. Two of this
 port's instruments have now been wrong in the direction that reads as green.
+
+---
+
+### D-23 · Constructor ownership and JavaScript re-entry are one boundary problem
+
+**Context.** The original adapter leaked every cloned constructor: its native
+state was a permanently leaked `Box`, and a strong `napi_ref` kept the JavaScript
+function alive. Five thousand discarded clones retained hundreds of megabytes.
+At the same time, `state<'a>() -> &'a mut ConstructorState` invented an
+unconstrained lifetime and the safe `Env::unwrap(&self) -> &mut T` manufactured
+mutable references from shared access. A JavaScript getter re-entering `config`
+proved two addon frames could overlap those references. Single-threaded is not
+non-reentrant.
+
+**Decision.** Make the JavaScript constructor own `ConstructorData` through
+`napi_wrap`, and let its finalizer drop the box and delete a **weak** self
+reference. Store mutable configuration and entropy in `RefCell`, but never hold
+a borrow across a property read, coercion, construction, or function call. A
+calculation copies `Ctx`, runs pure Rust on the scratch value, commits it in one
+short borrow, releases that borrow, and only then creates JavaScript output.
+Wrapped Decimal values can be cloned or replaced through closure-scoped helpers;
+no public wrapper returns a native reference.
+
+The same redesign resolves D-08. One plain prototype carries signature-free
+instance methods; each instance's own `constructor` selects the correct clone
+state. Static callbacks use their JavaScript `this`, preserving upstream's
+dynamic dispatch. `config` applies fields sequentially with each borrow ending
+before the next getter, matching both re-entry safety and upstream's partial
+application when a later setting is invalid.
+
+**Executable invariants.** `scripts/adapter-regression.js` checks calls without
+`new`, instance and constructor identity, the shared prototype, nested config
+and coercion hooks, rejected clones, and forced collection of discarded clones.
+The untouched upstream suite supplies the full object-protocol check and now
+passes every assertion.
+
+**Consequence.** Constructor lifetime is owned rather than asserted in prose;
+no strong reference cycle remains; no callback-wide Rust reference exists; and
+prototype parity is exact. V8 may retain heap pages after finalization, so the
+regression measures `FinalizationRegistry` delivery rather than a brittle RSS
+threshold.
+
+---
+
+### D-24 · A strict artifact is allowed to discover a defect
+
+**Context.** The first five-second run of the predefined strict-parity domain
+found a one-ulp difference in `hypot`, reduced to
+`sqrt(4.00000000000003)` at precision 34 under `ROUND_HALF_FLOOR`. The exact
+root lies just above a half-way boundary. The four-digit convergence window had
+only one stored character, `"5"`.
+
+Upstream tests `!+n.slice(1)`. In JavaScript both the empty suffix `""` and a
+run of zeroes coerce to numeric zero. The Rust transcription required the suffix
+to be non-empty before treating it as zero, skipped the exactness probe, and
+therefore told final rounding that no farther digit existed.
+
+**Decision.** Transcribe the coercion literally: a missing/empty suffix is zero,
+then square or cube the truncated candidate to decide whether more digits exist.
+Apply the repair to both `sqrt` and its structurally identical `cbrt` path, and
+pin the reduced square-root case as a unit regression.
+
+**Consequence.** The fixed-seed strict campaign then completed 807,231 exact
+operations over 70 continuous seconds and 65 shared API entry points with zero
+actual divergences, zero known/waived divergences, and zero port defects. The
+failed smoke log is not published as evidence; the regression and this decision
+preserve what it taught.
+
+---
+
+### D-25 · A referee that leaks state must be replaced, not merely reconfigured
+
+**Context.** An unbounded campaign appeared to find two constructor-clamping
+differences after it had already exercised BUG-005/D-16. They did not reproduce
+from a fresh process. The reason was upstream's private `external` flag: unlike
+the public precision, rounding, and exponent settings, `Decimal.config` cannot
+restore it. A documented upstream divergence in one sequence could therefore
+leave the oracle damaged for the next sequence and turn a correct port result
+into an apparent defect.
+
+**Decision.** Whenever the comparator observes any divergence, capture its
+complete record and immediately evict and reload the vendored oracle module.
+Minimisation also starts every candidate with a fresh oracle. Clean sequences
+do not pay the reload cost, while no classified or unclassified failure can
+influence a later case.
+
+**Consequence.** Campaign cases remain stateful *within* a sequence, where
+state transitions are part of the contract, but are independent *between*
+sequences. A stale referee can no longer create false port defects or silently
+weaken subsequent comparisons. The misleading campaign was discarded and the
+published bounded and hostile artifacts were regenerated after this repair.
+
+---
+
+### D-26 · Evidence commands are argument vectors, not shell text
+
+**Context.** The film capture originally used Node's `shell: true` on Windows.
+Node 24 correctly warns that a command plus an unescaped argument array is then
+flattened back into shell text. None of the fixed capture-plan executables needs
+a command interpreter: they are `.exe` programs or are resolved to one by
+Windows. The setting bought nothing and weakened the provenance path.
+
+**Decision.** Spawn every evidence command and Git metadata query directly,
+with the executable and argument array kept separate. Relative Windows
+executables retain backslashes, which works both directly and in the displayed
+command record.
+
+**Consequence.** Capture output has no shell-mediation warning, arguments are
+not re-parsed as command syntax, and the recording still contains the exact
+human-readable command and every timed output line.

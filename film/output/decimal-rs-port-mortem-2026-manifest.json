@@ -1,27 +1,27 @@
 {
   "schemaVersion": 1,
-  "createdAt": "2026-08-01T15:37:04.687Z",
+  "createdAt": "2026-08-01T18:50:46.248Z",
   "output": "decimal-rs-port-mortem-2026.mp4",
-  "durationSeconds": 244.5,
+  "durationSeconds": 241.8,
   "resolution": "1920x1080",
   "fps": 30,
   "videoCodec": "h264",
   "audioCodec": "aac",
-  "sizeBytes": 25816356,
-  "captureSha256": "6b0e8923701a352885df4e57553ea40fe3a3b54e26c0552cda13fb414bad9991",
+  "sizeBytes": 25439319,
+  "captureSha256": "90aa491cf52d250fffee71cdb87fab01f063ddaec4d494a147977a5b3f01e495",
   "narration": {
-    "audio/01-open.mp3": "187e9997cb4f42bdd659fb9a0b2ea35c7fe23076afe51b8ef2bc8736ef43d911",
-    "audio/02-one-command.mp3": "d0048c4e012f729e4ff3bf34324d58c30922d8663624e4a707a86b853e7c289d",
-    "audio/03-suite.mp3": "0f8db70621543fb44b34b82bbfa7e3bcd982bb0660d65d15c597cacbd44f3d0c",
-    "audio/04-fuzz.mp3": "fb2cc4e26a76b842c4aa02e44446f0c06a8164854e49d521248c4eebbd86f64d",
+    "audio/01-open.mp3": "a0c185a2b47bf5cd97b6bdac8298165e752b91a17f049d3f5123b015a895f6a6",
+    "audio/02-one-command.mp3": "103cfc27bf5535f26a1c38c8002c1f1153f43885a61bbe91056f0433a97ca6a2",
+    "audio/03-suite.mp3": "662366336f33914b7bb688abf927162e3802fa24f8fa1de03c15dfa63542337e",
+    "audio/04-fuzz.mp3": "b9a01da4c84e7224e08e4ab93bde6f4fb44138cb027b283882a2cb44b940bae8",
     "audio/05-selftest.mp3": "710f66ca552212ad3495a742cb6d61af122b913df556bb57e53932c57dbec078",
     "audio/06-port-defect.mp3": "99b09b9827df1be69ba6668c8e95e797c6fb2c831d5512e009a8363cf7498eab",
-    "audio/07-todp.mp3": "a4f08efb06d24c99c91a791456bbace86469b8b8dd2373ece2c2d6c956b6595a",
-    "audio/08-axis.mp3": "41b2195c93ec2f9b4b6c11f7d4f5a649e274eae3802923e82d3899e009f00173",
-    "audio/09-upstream.mp3": "d68a4a78e3727bbc97f50d38f793be03d5f4d8fcb5074a3c9393059fe95185ac",
+    "audio/07-todp.mp3": "0568f4de1a6464f54f3b49b05fad8ab2f2910fc9f897231ceda95484e4e4e54d",
+    "audio/08-axis.mp3": "a0c91f9dab7f215f5a5aff32e06118eb5da4a09e570102e2ab04bc8fc54403b5",
+    "audio/09-upstream.mp3": "dc0eea52269e78c61e1b65ce378394558ad9e6fbb1ad99e382840d4b8825f959",
     "audio/10-safety.mp3": "4edb17c03d7bbbf26618727ad28ad835de2a0aec62a33c9991fbfef775237a92",
     "audio/11-bench.mp3": "8fd9078e332a713bfa7fe4eb5ad428558bc22e702fb49a4f64f07982825cd2ae",
-    "audio/12-close.mp3": "0877262b6839f426fd6cc83a58f809945f2adbb0ee2730206657202cd35c8670"
+    "audio/12-close.mp3": "096765f5d64bf7007301021effd5146cf237c454f9a43527d780ea2327c32a00"
   },
-  "outputSha256": "d25fd997437ac698911ba4a84ba0e684460faf0687f992e2046a477a824e6522"
+  "outputSha256": "f89058f8b84743b2063835ed80ab2ed759fefd1a5d7b4b022cd103c5550363c6"
 }

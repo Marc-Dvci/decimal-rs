@@ -14,10 +14,9 @@
 #                 on the runner; if this job passes, the command in the README
 #                 is the whole of what a judge needs.
 #
-#   toolchain     the things a container cannot show — the port's own tests,
-#                 rustfmt, and clippy at `-D warnings` — plus the two
-#                 conformance checks, which need the vendored oracle and a
-#                 Node the image does not run them under by default.
+#   toolchain     Rust tests/lints, strict upstream and adapter gates, both
+#                 conformance checks, upstream reproducers, and the strict
+#                 60+ second differential campaign.
 #
 # Neither job is allowed to be advisory. A red badge here means the submission
 # does not do what it says.
@@ -55,7 +54,7 @@ jobs:
         run: docker run --rm decimal-rs ./bin/decimal-calc 2 sqrt --precision 40
 
   toolchain:
-    name: cargo test · fmt · clippy · conformance
+    name: Rust quality · parity · conformance · strict fuzz
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -82,22 +81,31 @@ jobs:
           cargo build --release
           cp target/release/libdecimal.so ./decimal.node
 
-      # `expect-one-failure.js` and not `test/test.js` directly: upstream's
+      # `expect-zero-failures.js` and not `test/test.js` directly: upstream's
       # runner exits 0 whatever happens, so gating on its exit code would gate
       # on nothing. This reads the summary line and fails on any failure beyond
-      # the one D-08 documents.
+      # every assertion.
       - name: the original test suite, unmodified
         run: |
           node scripts/verify-tests.js
-          node scripts/expect-one-failure.js
+          node scripts/expect-zero-failures.js
+
+      - name: Node-API constructor, re-entry, prototype, and lifecycle regression
+        run: node --expose-gc scripts/adapter-regression.js
 
       # 3,528 calls, and the axis that found two defects on day 3. Slower than
       # the suite by two orders of magnitude and still under four minutes.
       - name: the exponent-clamp conformance check
         run: node scripts/clamp-conformance.js
 
-      - name: every defect found in the original, on both implementations
+      - name: the host array-limit conformance check
+        run: node scripts/host-limits.js
+
+      - name: six differential defects plus two cost findings, both implementations
         run: node fuzz/repro-upstream.js
+
+      - name: strict shared-API differential fuzz (70 continuous seconds)
+        run: node fuzz/differential.js --strict --seconds 70 --seed 1592594996
 
       - name: the unsafe report
         run: node scripts/unsafe-report.js

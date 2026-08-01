@@ -1,0 +1,39 @@
+port-mortem differential fuzz — decimal.js vs decimal-rs
+oracle:  fuzz/reference/decimal.js  v10.6.0 @ cd73a7f  [vendored; not linked into the port]
+subject: decimal.node  (crates/decimal-core + crates/decimal-napi, release)
+host:    AMD Ryzen 5 7600 6-Core Processor / win32 10.0.26200 / node v24.13.1
+started 2026-08-01T17:15:54.886Z   seed 0x5EED1234
+budget:  70s continuous
+mode:    STRICT PARITY — moderate finite exponent domain; no known/waived
+         divergence and no input on which the oracle cannot answer.
+
+comparing, per operation: sign, exponent, digit array, toString, valueOf,
+  toExponential, isFinite, isNaN, isInteger, precision, precision(true),
+  decimalPlaces, negative-zero, thrown message, and the constructor
+  configuration before and after.
+excluded: random (no fixed answer; covered by scripted-entropy unit tests in random.rs); toFraction (upstream BUG-004 infinite loop under ROUND_FLOOR)
+strict domain: constructor forms, stateful config/clone transitions, precision 1..40,
+  all 9 rounding modes, all modulo modes, |generated exponent| <= 20, up to 40
+  generated digits, plus a structural representation and rounding-boundary corpus.
+  minE/maxE remain at documented defaults; clamp-defect and hostile-limit inputs
+  remain in the broader bounded and watchdog campaigns.
+
+[harness self-check] injected one-ulp fault in the port's results
+[harness self-check]   -> DETECTED at sequence 1 (comparator is live)
+[harness self-check] fault reverted; starting clean run
+
+seq     14427  ops     123373  elapsed   10.0s  divergences 0
+seq     28773  ops     245367  elapsed   20.0s  divergences 0
+seq     43467  ops     370531  elapsed   30.0s  divergences 0
+seq     56241  ops     478969  elapsed   40.0s  divergences 0
+seq     68076  ops     579061  elapsed   50.0s  divergences 0
+seq     80723  ops     686833  elapsed   60.0s  divergences 0
+
+STOP  elapsed 70.0s  sequences 94887  operations 807231  divergences 0
+
+SUMMARY: 807,231 operations over 94,887 stateful sequences,
+         across 65 API entry points and all 9 rounding modes.
+         Zero undocumented divergences over 70.0 continuous seconds.
+         actual divergences:      0
+         known/waived divergences: 0
+         port defects:             0

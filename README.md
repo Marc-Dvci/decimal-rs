@@ -3,28 +3,55 @@
 **Track F (JavaScript → Rust)** · Port Mortem 2026 · solo entry
 Upstream: [MikeMcl/decimal.js](https://github.com/MikeMcl/decimal.js) @ [`cd73a7f`](https://github.com/MikeMcl/decimal.js/commit/cd73a7f830f07bc98e906d2ebe76e8c02cc20c8f) (v10.6.0, MIT)
 
+## Judge path — one page
+
+1. **Standalone port, no JavaScript runtime required:** `decimal-core` has zero
+   dependencies and zero unsafe; `cargo run --release -p decimal-cli -- 2 sqrt
+   --precision 40` exercises it through the standalone `decimal-calc` consumer.
+2. **One-command compatibility proof:** `docker build -t decimal-rs . && docker
+   run --rm decimal-rs` builds from source, verifies all 69 upstream test files
+   byte-for-byte, requires every one of roughly 22,650 assertions to pass, then
+   runs the Node-API lifecycle/re-entry regression and unsafe report.
+3. **Literal strict fuzz bonus:** [`fuzz/log-strict.txt`](fuzz/log-strict.txt)
+   records 807,231 exact comparisons over 70 continuous seconds and 65 shared
+   API entry points: **0 actual divergences, 0 known/waived divergences, 0 port
+   defects**, with all nine rounding modes and a fixed replay seed.
+4. **Hostile-domain evidence:** [`fuzz/log.txt`](fuzz/log.txt) and
+   [`fuzz/log-limits.txt`](fuzz/log-limits.txt) retain extreme exponents, known
+   upstream failures, watchdog attribution, and explicit unrefereeable accounting.
+5. **Audited boundary:** [`scripts/adapter-regression.js`](scripts/adapter-regression.js)
+   proves calls without `new`, shared clone prototypes, re-entry safety, rejected
+   clone handling, and collection of discarded constructors.
+6. **Balanced benchmark:** the port wins by 2.9× at 100 digits and 8.6× at
+   10,000, but loses on tiny per-call latency; protocol and raw results are in
+   [`bench/`](bench/README.md).
+7. **Bug bounty status:** eight upstream bugs were found and documented in
+   [`docs/upstream/`](docs/upstream/README.md). GitHub issue creation is
+   restricted in the upstream repository, which is why they were not filed.
+
 [![verify](https://github.com/Marc-Dvci/decimal-rs/actions/workflows/verify.yml/badge.svg)](https://github.com/Marc-Dvci/decimal-rs/actions/workflows/verify.yml)
 — the documented command, on a machine that has never seen this code, on every
 push. [`.github/workflows/verify.yml`](.github/workflows/verify.yml) runs
 `docker build && docker run` with nothing installed on the runner, and
-separately the port's own tests, `rustfmt`, `clippy -D warnings`, the 3,528-call
-conformance check, and every upstream reproduction.
+separately runs Rust tests and lints, strict upstream and adapter gates, both
+conformance checks, six differential defect reproducers plus two cost findings,
+the unsafe report, and a 70-second strict differential campaign.
 
 | | |
 |---|---|
-| **Original test suite** | **exactly one failure**, documented ([D-08](DECISIONS.md)) — of about 22,650 assertions |
+| **Original test suite** | **all assertions pass** — about 22,650 per run; the random denominator is parsed and strictly gated |
 | **Test files modified** | **0 of 69** — SHA-256 manifest enforced by the build, and the fuzzing oracle is pinned the same way |
-| **Differential fuzzing** | **zero undocumented divergences**, and **zero port defects**, over 70 continuous seconds on 4 worker processes — in both the bounded and the unbounded pass |
+| **Strict differential fuzzing** | **0 actual · 0 known/waived · 0 port defects** — 807,231 operations, 70 seconds, 65 shared API entries |
 | **Unsafe in `decimal-core`** | **0**, compiler-enforced (`unsafe_code = "forbid"`) |
 | **Dependencies of `decimal-core`** | **0** |
 | **JavaScript in the port** | **none** — Node's own resolver loads the Rust binary |
 | **Defects found in the original** | **8**, four of them crashes, two of them hangs |
-| **Decisions documented** | **22**, each written at the moment it was made |
+| **Decisions documented** | architectural and fidelity decisions are recorded with consequences in [`DECISIONS.md`](DECISIONS.md) |
 
 ## The demo film
 
 **[film/output/decimal-rs-port-mortem-2026.mp4](film/output/decimal-rs-port-mortem-2026.mp4)**
-— 4 minutes 4 seconds, 1080p, in the repository rather than behind a link.
+— 4 minutes 2 seconds, 1080p, in the repository rather than behind a link.
 
 **No terminal in it was typed.** Every command shown was run by
 [`film/scripts/capture.ts`](film/scripts/capture.ts), which records each line of
@@ -47,8 +74,9 @@ docker build -t decimal-rs . && docker run --rm decimal-rs
 ```
 
 That builds the Rust port from source, verifies that all 69 files of the
-original test suite are byte-identical to upstream, and runs that **unmodified**
-suite against the compiled Rust artifact.
+original test suite are byte-identical to upstream, runs that **unmodified**
+suite against the compiled Rust artifact, and runs the adapter lifecycle and
+re-entry regression. The strict wrapper fails if even one assertion fails.
 
 Without Docker: `make` (requires Rust 1.97.1 — pinned in `rust-toolchain.toml` —
 and Node 24).
@@ -62,18 +90,16 @@ docker run --rm decimal-rs node scripts/host-limits.js
 docker run --rm decimal-rs ./bin/decimal-calc 2 sqrt --precision 40
 ```
 
-**Read the failure count, not the ratio.** About 6,000 of the suite's assertions
-are generated with `Math.random()`, so the denominator moves from run to run —
-22,628 and 22,688 in two consecutive runs here. The number that does not move is
-the failures: **one**, always the same one, explained in [D-08](DECISIONS.md).
+**Read the count, not a hard-coded denominator.** About 6,000 assertions are
+generated with `Math.random()`, so the total moves from run to run. The required
+relation does not: passed must equal asserted.
 
 That is also why the suite is run through
-[`scripts/expect-one-failure.js`](scripts/expect-one-failure.js) rather than
+[`scripts/expect-zero-failures.js`](scripts/expect-zero-failures.js) rather than
 directly. Upstream's runner **exits 0 whatever happens** — it prints its
 failures and returns success — so a container or a CI job that gated on its exit
 code would gate on nothing, and would stay green through a five-thousand-failure
-regression. The wrapper reads the summary line, subtracts, and fails on anything
-beyond the documented one.
+regression. The wrapper parses the summary and fails on any difference.
 
 ## How the original tests reach the Rust code
 
@@ -119,11 +145,27 @@ original's source. Full table, methodology and the losses in
 
 ## Behavioural equivalence
 
-Four instruments, answering different questions.
+Five instruments, answering different questions.
 
 **The original suite** — some 22,650 assertions, unmodified, hash-pinned. It is
 the strongest single piece of evidence and it is also fixed: it can only check
 what its author thought of, from one starting configuration.
+
+**The strict differential artifact** — a predefined shared-API domain with
+moderate generated exponents, default wide `minE`/`maxE`, all nine rounding
+modes, all constructor representations, stateful configuration and cloning,
+and 65 API entry points. `toFraction` is excluded because upstream BUG-004
+loops for every finite input under `ROUND_FLOOR`; `random` has no shared answer
+because the implementations intentionally use different generators. Nothing is
+compared and then waived. The published fixed-seed run is literal:
+
+```
+node fuzz/differential.js --strict --seconds 70 --seed 1592594996 --log fuzz/log-strict.txt
+```
+
+Result: 807,231 operations, **0 actual divergences, 0 known/waived divergences,
+0 port defects**. The comparator first proves itself by detecting an injected
+one-ulp fault. Full artifact: [`fuzz/log-strict.txt`](fuzz/log-strict.txt).
 
 **A differential campaign** — [`fuzz/campaign.js`](fuzz/campaign.js) — which
 checks the other thing: that the two implementations agree on inputs nobody
@@ -141,10 +183,11 @@ saying "zero divergences" from a harness with no demonstrated ability to see one
 proves nothing.
 
 ```
-node fuzz/campaign.js --seconds 70
+node fuzz/campaign.js --seconds 70 --log fuzz/log.txt
 ```
 
-Log: [`fuzz/log.txt`](fuzz/log.txt). The unbounded pass, which fuzzes the entire
+An omitted `--log` now writes only to stdout, so an exploratory run cannot
+overwrite published evidence. Log: [`fuzz/log.txt`](fuzz/log.txt). The unbounded pass, which fuzzes the entire
 legal input space including `1e9000000000000000`, is
 [`fuzz/log-limits.txt`](fuzz/log-limits.txt).
 
@@ -162,9 +205,11 @@ the offending families one at a time, and another family kept appearing — a
 losing game that also produces a weak artifact, because a bound names a *family*
 and the family is far larger than the set of inputs that actually defeat it.
 
-So instead each such input is named individually and then diagnosed, after the
-clock has stopped, by re-running it one implementation at a time. That turns a
-line of the log from "something hung" into a verdict:
+So instead every such sequence is counted and recorded. After the clock has
+stopped, up to the explicit `--diagnose` cap are named and re-run one
+implementation at a time; larger full-range runs print the remaining count
+rather than extending wall-clock time without limit. A diagnosed record turns
+"something did not finish" into a verdict:
 
 | | meaning |
 |---|---|
@@ -196,8 +241,10 @@ call**. That is the only arrangement in which the original's pervasive
 `x = new Ctor(x)` — thirty places, a re-judgement and not a copy — is observable
 at all, and it is why some 22,650 assertions have nothing to say about the whole
 family: the suite never narrows the limits after building an operand. This was
-the largest single family of defect in the port ([D-18](DECISIONS.md)). All
-3,528 calls agree; the documented divergences are counted, not hidden.
+the largest single family of defect in the port ([D-18](DECISIONS.md)). The
+check attempts 3,528 cases: zero unexpected mismatches, 18 named intentional
+exceptions, and five methods with a case on which neither implementation
+returns; those timeouts are reported rather than counted as agreement.
 
 It varies four axes — 67 methods × 6 operands × 4 exponent-limit pairs, the ten
 methods that take a rounding mode across all nine of them, and each binary
@@ -255,14 +302,16 @@ Decimal.set({ rounding: Decimal.ROUND_FLOOR });
 new Decimal(1).toFraction();     // never returns
 ```
 
-Run all of them, on both implementations, each in its own process with a
-timeout:
+Run the six timeout-safe campaign defects (BUG-002 through BUG-006 and BUG-008),
+plus two cost findings, on both implementations:
 
 ```
 node fuzz/repro-upstream.js
 ```
 
-Five of the eight are one mistake wearing different hats, and two are one
+BUG-007 has its dedicated `node scripts/host-limits.js` probe; BUG-001 requires
+the high-precision mpmath analysis in its write-up. Five of the eight are one
+mistake wearing different hats, and two are one
 missing `finally`; both families, and the suggested sweeps, are in
 [`docs/upstream/README.md`](docs/upstream/README.md). BUG-007 is in neither
 family and is the only one that is not a mistake in the arithmetic — it is a
@@ -286,11 +335,16 @@ original would hand a caller a way to break the library rather than a way to
 compute a number.** A `TypeError` from an unguarded null dereference is that. A
 loop with no exit is that. A precision left at nine quadrillion is that.
 
-Every one of the six is *reported*, not quietly corrected: each has a write-up
+Every one of the six is *documented*, not quietly corrected: each has a write-up
 in [`docs/upstream/`](docs/upstream/README.md), and the differential harness
-knows each by name so that a run counts them rather than hiding them. A seventh
-divergence, [D-08](DECISIONS.md), is a constraint of the Node-API rather than a
-choice, and is the single failing assertion.
+knows each by name so that a hostile run counts them rather than hiding them.
+The former prototype-identity divergence [D-08](DECISIONS.md) is now resolved by
+the shared plain-prototype adapter design, so the upstream suite has no failing
+assertion.
+
+All eight upstream bugs were found during the competition, but GitHub issue
+creation is restricted in the upstream repository. That restriction is why no
+issues were filed; the reports are preserved in filing-ready form.
 
 ## Safety
 
@@ -300,9 +354,9 @@ node scripts/unsafe-report.js
 
 | crate | lines | unsafe | |
 |---|---:|---:|---|
-| `decimal-core` | 9,913 | **0** | `unsafe_code = "forbid"`, compiler-enforced |
+| `decimal-core` | 9,931 | **0** | `unsafe_code = "forbid"`, compiler-enforced |
 | `decimal-cli` | 296 | **0** | same |
-| `decimal-napi` | 2,581 | 93 | the Node-API boundary; no arithmetic |
+| `decimal-napi` | 2,853 | 92 | the Node-API boundary; no arithmetic |
 
 `forbid` is not a lint level an inner `allow` can turn off, so `decimal-core`
 does not compile if an unsafe block appears anywhere in it, including one
@@ -313,6 +367,14 @@ literals are stripped.
 `decimal-core` has **no dependencies at all** — the limb arithmetic is written
 here rather than taken from a bignum crate, for reasons in
 [D-02](DECISIONS.md).
+
+The adapter's ownership proof is short enough to audit: each constructor owns
+one native `ConstructorData` box through `napi_wrap`; its finalizer deletes the
+constructor's weak self-reference and drops the box. Decimal instances own their
+payloads the same way. Native references never escape the closure-scoped unwrap
+helpers, and no configuration borrow spans a property read, conversion,
+construction, or function call—every operation that can invoke JavaScript.
+[D-23](DECISIONS.md) records the failure mode, design, and executable tests.
 
 A panic cannot take the host down either. Every callback is a plain Rust
 function wrapped in one `extern "C"` shim that catches unwinds and throws a
@@ -361,6 +423,11 @@ every Decimal alive for ever — and half an artefact of the measurement. Both a
 worth knowing and neither is visible from a test suite that runs in a quarter of
 a second.
 
+Constructor churn is tested separately because the arithmetic soak does not
+create clones. The adapter regression discards 1,000 cloned constructors,
+forces collection across event-loop turns, and requires at least half to reach a
+`FinalizationRegistry`; the previous strong-reference cycle finalized none.
+
 ## Layout
 
 ```
@@ -392,6 +459,7 @@ docs/upstream/        one filable report per defect found in the original.
 - [bench/methodology.md](bench/methodology.md) — how those numbers were produced
 - [docs/upstream/README.md](docs/upstream/README.md) — the eight defects
 - [fuzz/log.txt](fuzz/log.txt) — the published campaign log
+- [fuzz/log-strict.txt](fuzz/log-strict.txt) — the literal 70-second strict-parity artifact
 
 ## Licence
 

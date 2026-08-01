@@ -17,10 +17,14 @@
 //!    duration of the call, so every use of it here is within its lifetime.
 //! 2. **Every `napi_value` handed to these functions came from Node**, in the
 //!    same callback, and so is a live handle in the current handle scope.
-//! 3. **Out-parameters are always initialised by the API on success.** Each
+//! 3. **JavaScript can re-enter the addon.** Property access, coercion,
+//!    construction and function calls can all invoke user code. No wrapper in
+//!    this module returns a Rust reference into Node-owned data; payload access
+//!    is completed inside a closure, so a borrow cannot survive such a call.
+//! 4. **Out-parameters are always initialised by the API on success.** Each
 //!    call below checks the returned status before reading the out-parameter,
 //!    and returns `None`/`Err` if the call failed.
-//! 4. **Strings crossing the boundary are copied**, never borrowed, so no
+//! 5. **Strings crossing the boundary are copied**, never borrowed, so no
 //!    pointer outlives the call that produced it.
 //!
 //! Where a wrapper cannot uphold one of these on its own, it says so.
@@ -140,6 +144,16 @@ impl Env {
         self.callback_info(info, argc)
     }
 
+    /// The constructor used for `new Ctor(...)`, or `None` for an ordinary
+    /// function call.
+    pub fn new_target(self, info: sys::napi_callback_info) -> Option<Value> {
+        let mut out: Value = ptr::null_mut();
+        // SAFETY: `info` is the callback info Node supplied and `out` is a
+        // valid out-pointer. Node writes null when the call did not use `new`.
+        let status = unsafe { sys::napi_get_new_target(self.0, info, &mut out) };
+        (status == sys::Status::napi_ok && !out.is_null()).then_some(out)
+    }
+
     /// `typeof value`.
     pub fn type_of(self, value: Value) -> JsType {
         let mut result: sys::napi_valuetype = 0;
@@ -253,6 +267,16 @@ impl Env {
         // SAFETY: valid out-pointer.
         unsafe {
             sys::napi_get_boolean(self.0, value, &mut out);
+        }
+        out
+    }
+
+    /// A new plain JavaScript object.
+    pub fn object(self) -> Value {
+        let mut out: Value = ptr::null_mut();
+        // SAFETY: `out` is a valid out-pointer.
+        unsafe {
+            sys::napi_create_object(self.0, &mut out);
         }
         out
     }
@@ -417,30 +441,29 @@ impl Env {
 
     // -- references --------------------------------------------------------
 
-    /// A strong reference that keeps `value` alive beyond the current scope.
+    /// A weak reference to `value`.
     ///
-    /// Used for the constructor function, which every instance method needs to
-    /// reach in order to build its result. The reference is never released:
-    /// a `Decimal` constructor lives as long as the module does.
-    pub fn create_reference(self, value: Value) -> sys::napi_ref {
+    /// A zero reference count deliberately does not keep a cloned constructor
+    /// alive. During a callback the function itself, or an instance's own
+    /// `constructor` property, keeps it reachable. The reference is deleted by
+    /// the same finalizer that drops its native state.
+    fn create_weak_reference(self, value: Value) -> sys::napi_ref {
         let mut out: sys::napi_ref = ptr::null_mut();
-        // SAFETY: `value` is live; an initial refcount of 1 makes this a
-        // strong reference.
+        // SAFETY: `value` is live; an initial refcount of zero is Node-API's
+        // documented weak-reference form for objects and functions.
         unsafe {
-            sys::napi_create_reference(self.0, value, 1, &mut out);
+            sys::napi_create_reference(self.0, value, 0, &mut out);
         }
         out
     }
 
-    /// The value behind a reference created by [`Env::create_reference`].
-    pub fn reference_value(self, reference: sys::napi_ref) -> Value {
+    /// The live value behind a weak reference, if it has not been collected.
+    pub fn reference_value(self, reference: sys::napi_ref) -> Option<Value> {
         let mut out: Value = ptr::null_mut();
-        // SAFETY: `reference` was created by `create_reference` above and has
-        // never been released, so it is still valid.
-        unsafe {
-            sys::napi_get_reference_value(self.0, reference, &mut out);
-        }
-        out
+        // SAFETY: the reference is owned by live constructor state and is
+        // deleted only when that state is finalized.
+        let status = unsafe { sys::napi_get_reference_value(self.0, reference, &mut out) };
+        (status == sys::Status::napi_ok && !out.is_null()).then_some(out)
     }
 
     // -- native data attached to objects -----------------------------------
@@ -500,49 +523,78 @@ impl Env {
         }
     }
 
-    /// Borrow the payload previously attached to `object`.
+    /// Attach a payload and a weak self-reference to `object`.
     ///
-    /// Returns `None` when the object carries no payload, which happens for an
-    /// instance whose construction has not finished.
+    /// The JavaScript function owns the box; the weak reference lets calls
+    /// without `new` recover that function; [`finalize_weak`] deletes both.
+    /// No strong reference cycle is created.
+    pub fn wrap_with_weak_reference<T: WeakReferenceOwner + 'static>(
+        self,
+        object: Value,
+        mut payload: Box<T>,
+    ) {
+        let reference = self.create_weak_reference(object);
+        payload.set_weak_reference(reference);
+        let raw = Box::into_raw(payload);
+        // SAFETY: `raw` is uniquely owned and the specialised finalizer is
+        // instantiated for the same `T`.
+        let status = unsafe {
+            sys::napi_wrap(
+                self.0,
+                object,
+                raw.cast(),
+                Some(finalize_weak::<T>),
+                ptr::null_mut(),
+                ptr::null_mut(),
+            )
+        };
+        if status != sys::Status::napi_ok {
+            // SAFETY: Node declined ownership, so both resources remain ours.
+            let payload = unsafe { Box::from_raw(raw) };
+            unsafe { sys::napi_delete_reference(self.0, payload.weak_reference()) };
+            drop(payload);
+        }
+    }
+
+    /// Inspect an attached payload inside one lexical operation.
     ///
-    /// # Safety of the returned reference
-    ///
-    /// The reference borrows from data owned by the JavaScript object, which
-    /// cannot be collected while it is reachable from the arguments of the
-    /// call in progress. The lifetime is tied to `&self`, which is scoped to
-    /// the callback, so it cannot escape into a longer-lived binding.
-    ///
-    /// # Why the lint is allowed
-    ///
-    /// `clippy::mut_from_ref` is deny-by-default and it is right to be: handing
-    /// out `&mut T` from a `&self` normally means two callers can hold mutable
-    /// references to the same thing at once, which is undefined behaviour.
-    ///
-    /// It does not apply here, and the reason is not that the code is careful —
-    /// it is that `self` does not own the payload. `Env` is a bare
-    /// `napi_env` handle; the `T` lives in the JavaScript object, reached
-    /// through `object`. The borrow checker is being told the reference is
-    /// scoped to the callback, which is true and is the strongest statement
-    /// available, but `&self` is not what makes it unique. What makes it unique
-    /// is that Node is single-threaded, the callback holds the isolate, and no
-    /// other frame can be inside this addon while it runs.
-    ///
-    /// Taking `&mut self` instead would be a lie of the same size in the other
-    /// direction — it would suggest the environment is being mutated, which it
-    /// is not — and would force every call site to hold a mutable binding of a
-    /// `Copy` handle.
-    #[allow(clippy::mut_from_ref)]
-    pub fn unwrap<T: 'static>(&self, object: Value) -> Option<&mut T> {
+    /// The higher-ranked closure prevents a reference into the payload from
+    /// escaping. Callers must also keep the closure free of re-entrant Node-API
+    /// operations; constructor state enforces that discipline with `RefCell`,
+    /// while immutable Decimal payloads are only cloned through this door.
+    pub fn with_wrapped<T: 'static, R>(
+        self,
+        object: Value,
+        body: impl for<'a> FnOnce(&'a T) -> R,
+    ) -> Option<R> {
         let mut raw: *mut c_void = ptr::null_mut();
         // SAFETY: live handle and valid out-pointer.
         let status = unsafe { sys::napi_unwrap(self.0, object, &mut raw) };
         if status != sys::Status::napi_ok || raw.is_null() {
             return None;
         }
-        // SAFETY: `raw` was stored by `wrap::<T>` for this same `T` — every
-        // object this module wraps carries exactly one payload type — so the
-        // cast is type-correct. The pointer is live because the object is.
-        Some(unsafe { &mut *raw.cast::<T>() })
+        // SAFETY: `raw` was stored by a typed wrapping function for this same
+        // `T`; the object is live for the duration of the callback/local scope.
+        Some(body(unsafe { &*raw.cast::<T>() }))
+    }
+
+    /// Clone an attached value without exposing a reference into it.
+    pub fn clone_wrapped<T: Clone + 'static>(self, object: Value) -> Option<T> {
+        self.with_wrapped(object, Clone::clone)
+    }
+
+    /// Replace an attached value in one non-reentrant operation.
+    pub fn replace_wrapped<T: 'static>(self, object: Value, value: T) -> bool {
+        let mut raw: *mut c_void = ptr::null_mut();
+        // SAFETY: live handle and valid out-pointer.
+        let status = unsafe { sys::napi_unwrap(self.0, object, &mut raw) };
+        if status != sys::Status::napi_ok || raw.is_null() {
+            return false;
+        }
+        // SAFETY: the pointer was stored for `T`; no Node-API call occurs while
+        // this short mutable reference exists.
+        unsafe { *raw.cast::<T>() = value };
+        true
     }
 
     // -- errors ------------------------------------------------------------
@@ -589,6 +641,17 @@ impl Env {
     }
 }
 
+/// A payload that owns the weak reference to its JavaScript wrapper.
+///
+/// The reference and payload have one lifetime: both are created by
+/// [`Env::wrap_with_weak_reference`] and both are released by its finalizer.
+pub trait WeakReferenceOwner {
+    /// Store the newly-created weak reference.
+    fn set_weak_reference(&mut self, reference: sys::napi_ref);
+    /// Return the reference that must be resolved or deleted.
+    fn weak_reference(&self) -> sys::napi_ref;
+}
+
 /// Drop a payload attached by [`Env::wrap`] when its object is collected.
 ///
 /// # Safety
@@ -603,6 +666,22 @@ unsafe extern "C" fn finalize<T: 'static>(
     if !data.is_null() {
         drop(Box::from_raw(data.cast::<T>()));
     }
+}
+
+/// Delete a weak self-reference and drop its payload together.
+unsafe extern "C" fn finalize_weak<T: WeakReferenceOwner + 'static>(
+    env: sys::napi_env,
+    data: *mut c_void,
+    _hint: *mut c_void,
+) {
+    if data.is_null() {
+        return;
+    }
+    let payload = Box::from_raw(data.cast::<T>());
+    if !payload.weak_reference().is_null() {
+        sys::napi_delete_reference(env, payload.weak_reference());
+    }
+    drop(payload);
 }
 
 /// Define a class with the given name, constructor callback, and properties.

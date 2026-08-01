@@ -131,9 +131,9 @@ export const SuiteScene: React.FC = () => {
           ]}
         />
         <div style={{marginTop: 22, fontSize: 21, lineHeight: 1.45, color: theme.dim}}>
-          The one failure is <span style={{color: theme.bright}}>Decimal.prototype === D9.prototype</span> — the
-          Node-API attaches a V8 signature to every method it defines, so clones cannot share one prototype.
-          Written up as decision D-08.
+          The former <span style={{color: theme.bright}}>Decimal.prototype === D9.prototype</span> failure is
+          resolved: signature-free methods live on one shared plain prototype, and each instance owns its actual
+          clone constructor. The lifecycle and re-entry proof is D-23.
         </div>
       </Panel>
       <Panel box={{top: 660, left: 1332, width: 496}} title="the total line" accent={theme.panelEdge} at={52}>
@@ -148,9 +148,9 @@ export const SuiteScene: React.FC = () => {
 export const FuzzScene: React.FC = () => (
   <Stage>
     <Chrome step="04 / 12" />
-    <Heading title="A differential campaign" sub="node fuzz/campaign.js --seconds 70" />
+    <Heading title="A differential campaign" sub="node fuzz/campaign.js --seconds 70 --log fuzz/log.txt" />
     <Terminal
-      command="node fuzz/campaign.js --seconds 70"
+      command="node fuzz/campaign.js --seconds 70 --log fuzz/log.txt"
       cwd={command("campaign").cwd}
       lines={lines("campaign", 0, "elapsed   70")}
       box={{...FULL, width: 1180, height: 640}}
@@ -582,10 +582,10 @@ export const CloseScene: React.FC = () => {
         </div>
       </div>
       <div style={{position: "absolute", top: 470, left: layout.margin, display: "flex", gap: 78}}>
-        <Stat value="1" label="failing assertion, documented" at={20} />
-        <Stat value="0" label="undocumented divergences" colour={theme.ok} at={26} />
-        <Stat value="3,528" label="conformance calls" at={32} />
-        <Stat value="22" label="decisions, each written when made" at={38} />
+        <Stat value="0" label="failing assertions" colour={theme.ok} at={20} />
+        <Stat value="0" label="strict fuzz divergences" colour={theme.ok} at={26} />
+        <Stat value="3,528" label="conformance cases attempted" at={32} />
+        <Stat value="D-01…" label="decisions, each with its consequence" at={38} />
       </div>
       <Panel box={{top: 668, left: layout.margin, width: layout.width - layout.margin * 2}} accent={theme.rust} at={46}>
         <Rows

@@ -22,7 +22,7 @@ node bench/run.js --quick    # 5, for a fast check
 | OS | Windows 11 Pro, 10.0.26200 |
 | Node | v24.13.1 (V8 13.x) |
 | rustc | 1.97.1, `--release` |
-| Profile | opt-level 3, LTO `fat`, `codegen-units = 1`, `panic = "abort"` |
+| Profile | opt-level 3, LTO `fat`, `codegen-units = 1`, `panic = "unwind"` |
 | Boost clocks | **not** disabled |
 
 That last row matters, so it is in the report's header as well as here. This is
@@ -91,12 +91,12 @@ not a tail-latency claim about the arithmetic.
 ## Startup and memory
 
 Startup is nine fresh child processes per implementation, each doing
-`require()` plus one construction, timed from outside. It includes process
-creation on both sides, which is common to both and does not cancel out of the
-absolute figures — read the difference, not the totals.
+`require()` plus one construction. The timer starts **inside** the child,
+immediately before `require()`, so process creation is excluded; module loading
+and the first construction are included.
 
-Peak RSS is `process.memoryUsage().rss` sampled over 200 000 mixed operations at
-precision 200, in a fresh child process per implementation.
+Peak RSS is `process.memoryUsage().rss` sampled over a fixed 200 000-step chained
+add/multiply workload at precision 200, in a fresh child per implementation.
 
 ## What is not measured
 
