@@ -854,32 +854,51 @@ pub fn int_pow(ctx: &mut Ctx, x: &Decimal, n: i64, pr: i64) -> Decimal {
     let mut n = n;
     let k = ceil_div(pr, LOG_BASE) + 4;
 
-    ctx.without_clamping(|ctx| {
-        loop {
-            if n % 2 != 0 {
-                r = mul(ctx, &r, &x);
-                if let Some(d) = r.d.as_mut() {
-                    if truncate_limbs(d, k as usize) {
-                        is_truncated = true;
-                    }
+    // Deliberately *not* `without_clamping`. The original ends this function
+    // with a bare
+    //
+    //     external = true;
+    //
+    // which sets the flag rather than restoring what it was — and callers exist
+    // that had turned clamping off and do not expect it back. `parseOther` is
+    // one: it clears the flag around the whole radix conversion, then reaches
+    // `Decimal.pow(2, p)`, which reaches here, which hands clamping back on.
+    // `pow`'s very next line is its reciprocal branch, `new Ctor(1).div(r)`,
+    // and `div` re-judges its argument against `maxE` — so it clamps after all.
+    //
+    // That is observable, and not obscurely. With `maxE` at 41,
+    // `new Decimal('0x1p-1074')` is 0 upstream: `2^1074` has exponent 323, the
+    // restored flag lets the division's constructor see it, and it becomes
+    // Infinity on the way in. A correct save-and-restore here answers 5e-324 —
+    // the better value, and the wrong one for a port. Found by the differential
+    // campaign; no assertion in the suite reaches it, because every radix test
+    // runs at the default `maxE`.
+    ctx.external = false;
+    loop {
+        if n % 2 != 0 {
+            r = mul(ctx, &r, &x);
+            if let Some(d) = r.d.as_mut() {
+                if truncate_limbs(d, k as usize) {
+                    is_truncated = true;
                 }
-            }
-            n /= 2;
-            if n == 0 {
-                if let Some(d) = r.d.as_mut() {
-                    let last = d.len() - 1;
-                    if is_truncated && d[last] == 0 {
-                        d[last] += 1;
-                    }
-                }
-                break;
-            }
-            x = mul(ctx, &x, &x);
-            if let Some(d) = x.d.as_mut() {
-                truncate_limbs(d, k as usize);
             }
         }
-    });
+        n /= 2;
+        if n == 0 {
+            if let Some(d) = r.d.as_mut() {
+                let last = d.len() - 1;
+                if is_truncated && d[last] == 0 {
+                    d[last] += 1;
+                }
+            }
+            break;
+        }
+        x = mul(ctx, &x, &x);
+        if let Some(d) = x.d.as_mut() {
+            truncate_limbs(d, k as usize);
+        }
+    }
+    ctx.external = true;
 
     r
 }

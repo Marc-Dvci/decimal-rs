@@ -339,8 +339,21 @@ const OPERATIONS = [];
  * across the whole range. The bound is stated in the log header, family by
  * family, and it is the only restriction on the input space besides
  * `Decimal.random`.
+ *
+ * ---------------------------------------------------------------------------
+ *
+ * `--bounds off` removes it, and `campaign.js` runs one pass that way.
+ *
+ * The bound is an honest thing to publish but a coarse one: it names *families*
+ * of input, and the family is much larger than the set of inputs that actually
+ * defeat the oracle. Under the campaign's watchdog the bound is not needed to
+ * make a run finish — a slice that stops answering is killed, its input
+ * recorded by seed, and the slice resumed past it — so the unbounded pass can
+ * report the individual inputs instead. That is a better artifact: it says
+ * `x0.toFraction()` at this seed, with the port's own answer and timing beside
+ * it, rather than "toFraction, above 1e10000, sometimes".
  */
-const EXPONENT_BOUND = 10000;
+let EXPONENT_BOUND = 10000;
 
 /** Cost proportional to the exponent: fuzz these within the bound. */
 function withinExponentBound(a, b) {
@@ -358,10 +371,16 @@ function withinExponentBound(a, b) {
  * proportional to |x|. Upstream's `cosh(1e6)` takes two seconds; `cosh(1e8)`
  * takes minutes. See D-09.
  */
-const HYPERBOLIC_BOUND = 1e4;
+let HYPERBOLIC_BOUND = 1e4;
 
 function withinHyperbolicBound(a) {
   return withinExponentBound(a) && (!a.isFinite() || a.abs().lt(HYPERBOLIC_BOUND));
+}
+
+/** Remove both bounds, so that every operation sees the whole input space. */
+function unbound() {
+  EXPONENT_BOUND = Infinity;
+  HYPERBOLIC_BOUND = Infinity;
 }
 
 function unary(name, guard) {
@@ -484,22 +503,31 @@ const KNOWN_DIVERGENCES = [
   {
     tag: 'D-13 / BUG-003',
     what: 'upstream dereferences null in toPower when the base was clamped to Infinity',
-    matches: (expected, actual) =>
-      expected.indexOf('THROW Cannot read properties of null') === 0 &&
-      actual.indexOf('THROW') !== 0,
+    matches: (d) =>
+      d.expected.indexOf('THROW Cannot read properties of null') === 0 &&
+      d.actual.indexOf('THROW') !== 0,
   },
   {
     tag: 'D-11 / BUG-002',
     what: 'upstream leaves precision and rounding raised when an inverse hyperbolic throws',
-    matches: (expected, actual) =>
-      expected.indexOf('"precision":') !== -1 && actual.indexOf('"precision":') !== -1 &&
-      expected !== actual,
+    matches: (d) =>
+      d.expected.indexOf('"precision":') !== -1 && d.actual.indexOf('"precision":') !== -1 &&
+      d.expected !== d.actual,
+  },
+  {
+    tag: 'BUG-002 (wider) — shared configuration leak',
+    what: 'both implementations left the configuration changed, identically: upstream ' +
+      'raises precision for an intermediate and does not restore it when the ' +
+      'intermediate throws, and the port transcribes that faithfully. Observed for ' +
+      'cos as well as the inverse hyperbolics of D-11, so the defect is wider than ' +
+      'BUG-002 reports',
+    matches: (d) => d.kind === 'shared-config-leak',
   },
 ];
 
 function classify(divergence) {
   for (const known of KNOWN_DIVERGENCES) {
-    if (known.matches(divergence.expected, divergence.actual)) return known;
+    if (known.matches(divergence)) return known;
   }
   return null;
 }
@@ -543,8 +571,23 @@ function maybeCorrupt(D, result) {
  *
  * Returns null when the two implementations agreed throughout, or a divergence
  * report when they did not.
+ *
+ * ---------------------------------------------------------------------------
+ *
+ * `options.side` runs one implementation on its own — `'reference'`, `'port'`,
+ * or the default `'both'`. Nothing is compared then, and the return is always
+ * null; the question being asked is only whether that side *returns*.
+ *
+ * This is what the campaign's watchdog uses to attribute a hang. Every input in
+ * a sequence is drawn from the generator and none from a result, so one side
+ * alone walks through exactly the operations both sides would have. Run the
+ * offending sequence twice, once per side, each under a timeout, and the
+ * survivor names which implementation stopped answering.
  */
 function runSequence(steps, seed, options) {
+  const useReference = options.side !== 'port';
+  const usePort = options.side !== 'reference';
+  const comparing = useReference && usePort;
   const rng = new Rng(seed);
   const log = {
     entries: [],
@@ -553,6 +596,11 @@ function runSequence(steps, seed, options) {
       // `--trace` writes each step before it runs, so that an operation which
       // never returns still names itself. Nothing else finds a hang.
       if (options.trace) process.stderr.write('    · ' + line + '\n');
+      // `--trace-file` is the same thing survivable: stderr through a pipe is
+      // buffered, and a killed process does not flush. The file is opened,
+      // written and closed per step, which is far too slow for a fuzzing run
+      // and exactly right for the one sequence being diagnosed.
+      if (options.traceFile) fs.appendFileSync(options.traceFile, '    · ' + line + '\n');
     },
     slice() { return this.entries.slice(); },
   };
@@ -561,8 +609,8 @@ function runSequence(steps, seed, options) {
   const config = randomConfig(rng, options.sweep);
   let R = Reference;
   let P = Port;
-  R.config(config);
-  P.config(config);
+  if (useReference) R.config(config);
+  if (usePort) P.config(config);
   log.push('Decimal.set(' + JSON.stringify(config) + ')');
 
   // The pool holds matched pairs: the same value on both sides.
@@ -572,6 +620,23 @@ function runSequence(steps, seed, options) {
     const input = randomInput(rng);
     const literal = input.kind === 'number' ? input.value : input.value;
     let r, p;
+
+    // A literal the constructor rejects is not an input; it is skipped and
+    // redrawn. On one side alone there is nothing to cross-check the rejection
+    // against, so it is simply skipped.
+    if (!comparing) {
+      try {
+        if (useReference) r = new R(literal);
+        if (usePort) p = new P(literal);
+      } catch (ignored) {
+        i--;
+        continue;
+      }
+      log.push('x' + i + ' = new Decimal(' + JSON.stringify(literal) + ')');
+      pool.push({ r, p });
+      continue;
+    }
+
     try {
       r = new R(literal);
     } catch (error) {
@@ -605,8 +670,8 @@ function runSequence(steps, seed, options) {
     // a cached constant gets wrong.
     if (rng.chance(0.12)) {
       const next = randomConfig(rng, options.sweep + step);
-      R.config(next);
-      P.config(next);
+      if (useReference) R.config(next);
+      if (usePort) P.config(next);
       log.push('Decimal.set(' + JSON.stringify(next) + ')');
       continue;
     }
@@ -615,14 +680,14 @@ function runSequence(steps, seed, options) {
     // parent and must carry the parent's settings.
     if (rng.chance(0.05)) {
       const overrides = { precision: 1 + rng.below(50), rounding: rng.below(9) };
-      R = R.clone(overrides);
-      P = P.clone(overrides);
+      if (useReference) R = R.clone(overrides);
+      if (usePort) P = P.clone(overrides);
       log.push('Decimal = Decimal.clone(' + JSON.stringify(overrides) + ')');
       continue;
     }
 
     const useStatic = rng.chance(0.12);
-    const configBefore = [readConfig(R), readConfig(P)];
+    const configBefore = comparing ? [readConfig(R), readConfig(P)] : null;
 
     // How many operands, and which.
     const op = useStatic ? rng.pick(STATICS) : rng.pick(OPERATIONS);
@@ -638,9 +703,13 @@ function runSequence(steps, seed, options) {
     // An operation with a guard that its operand fails is not run at all, and
     // the step is spent. Substituting a different operand instead would bias
     // the input distribution towards whatever the guard admits.
-    if (!useStatic && op.guard && !op.guard(chosen[0].r, chosen[1] && chosen[1].r)) continue;
+    const guardOperand = useReference ? 'r' : 'p';
+    if (!useStatic && op.guard &&
+        !op.guard(chosen[0][guardOperand], chosen[1] && chosen[1][guardOperand])) continue;
 
-    const operandsBefore = chosen.map((v) => [describe(R, v.r), describe(P, v.p)]);
+    const operandsBefore = comparing
+      ? chosen.map((v) => [describe(R, v.r), describe(P, v.p)])
+      : null;
 
     const expression = useStatic
       ? 'Decimal.' + op.name + '(' + chosen.map((_, i) => 'x' + i).join(', ') + ')'
@@ -660,19 +729,36 @@ function runSequence(steps, seed, options) {
     // answer would differ.
     const rngBefore = rng.state;
 
+    // Whichever side runs first establishes where the generator ends up; the
+    // other is rewound to `rngBefore` so that it draws the same arguments. When
+    // only one side runs, that side establishes it alone — which is what keeps
+    // a single-sided replay on the same sequence as the two-sided original.
+    let rngAfter = rngBefore;
+
     if (useStatic) {
-      referenceResult = attempt(R, () => op.apply(R, chosen.map((v) => v.r)));
+      // Statics take no generated arguments, so the generator does not move.
+      if (useReference) referenceResult = attempt(R, () => op.apply(R, chosen.map((v) => v.r)));
       rng.state = rngBefore;
-      portResult = attempt(P, () => maybeCorrupt(P, op.apply(P, chosen.map((v) => v.p))));
+      if (usePort) {
+        portResult = attempt(P, () => maybeCorrupt(P, op.apply(P, chosen.map((v) => v.p))));
+      }
+      rng.state = rngBefore;
     } else {
-      referenceResult = attempt(R, () =>
-        op.apply(chosen[0].r, chosen[1] && chosen[1].r, rng, chosen[2] && chosen[2].r));
-      const rngAfter = rng.state;
+      if (useReference) {
+        referenceResult = attempt(R, () =>
+          op.apply(chosen[0].r, chosen[1] && chosen[1].r, rng, chosen[2] && chosen[2].r));
+        rngAfter = rng.state;
+      }
       rng.state = rngBefore;
-      portResult = attempt(P, () => maybeCorrupt(P,
-        op.apply(chosen[0].p, chosen[1] && chosen[1].p, rng, chosen[2] && chosen[2].p)));
+      if (usePort) {
+        portResult = attempt(P, () => maybeCorrupt(P,
+          op.apply(chosen[0].p, chosen[1] && chosen[1].p, rng, chosen[2] && chosen[2].p)));
+        if (!useReference) rngAfter = rng.state;
+      }
       rng.state = rngAfter;
     }
+
+    if (!comparing) continue;
 
     if (referenceResult !== portResult) {
       return report(log, expression, referenceResult, portResult);
@@ -697,21 +783,30 @@ function runSequence(steps, seed, options) {
     // settings must be untouched — on both sides, and identically. A port that
     // raises the precision for an intermediate and forgets to put it back
     // passes every single-call test and fails here on the next step.
+    //
+    // Leaking *identically* on both sides is a different finding from leaking
+    // differently, and conflating them would be wrong in both directions. The
+    // port is behaviourally equivalent when it leaks the same settings the
+    // original does — that is the thesis, not a failure of it — while the
+    // original leaking at all is a defect worth naming. So a shared leak is
+    // tagged and counted, and only an asymmetric one is a divergence.
     const configAfter = [readConfig(R), readConfig(P)];
     if (configAfter[0] !== configAfter[1] ||
         configBefore[0] !== configAfter[0] ||
         configBefore[1] !== configAfter[1]) {
+      const shared = configAfter[0] === configAfter[1] && configBefore[0] === configBefore[1];
       return report(log, expression + '  [configuration across the call]',
         configBefore[0] + ' -> ' + configAfter[0],
-        configBefore[1] + ' -> ' + configAfter[1]);
+        configBefore[1] + ' -> ' + configAfter[1],
+        shared ? 'shared-config-leak' : null);
     }
   }
 
   return null;
 }
 
-function report(log, expression, expected, actual) {
-  return { log: log.slice(), expression, expected, actual };
+function report(log, expression, expected, actual, kind) {
+  return { log: log.slice(), expression, expected, actual, kind: kind || null };
 }
 
 // ---------------------------------------------------------------------------
@@ -743,8 +838,126 @@ function minimise(seed, steps, options) {
 // The run
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Slices
+// ---------------------------------------------------------------------------
+
+/*
+ * A *slice* is a numbered run of sequences derived from one seed.
+ *
+ * `campaign.js` runs slices as child processes so that it can kill one that
+ * stops answering. For that to work, a slice must be resumable past the
+ * sequence that killed it — which means sequence `index` has to be derivable
+ * from the slice's seed and its index alone, without running the sequences
+ * before it. Hence this function rather than a running generator: the original
+ * loop drew each sequence's seed from the previous one, and there is no way to
+ * resume that except by replaying, which would replay the hang.
+ */
+function sequencePlan(sliceSeed, index) {
+  const rng = new Rng((sliceSeed ^ Math.imul(index + 1, 0x9e3779b1)) >>> 0);
+  rng.next();
+  return { steps: 3 + rng.below(12), seed: rng.next(), sweep: index };
+}
+
+/*
+ * Run one slice and report what happened as JSON on stdout.
+ *
+ * Before each sequence the plan for that sequence is written to the status
+ * file — one small overwrite, a few tens of microseconds against a sequence
+ * costing milliseconds. It is the only way a parent that has just killed this
+ * process can learn which input it died on, and naming the input is the whole
+ * point of the exercise.
+ */
+function runSlice(options) {
+  const divergences = [];
+  const known = {};
+  let sequences = 0;
+  let operations = 0;
+  let index = options.resume;
+  const last = options.resume + options.sequences;
+
+  for (; index < last; index++) {
+    const plan = sequencePlan(options.slice, index);
+    if (options.status) {
+      // `sequences` and `operations` are the work *completed* before this one.
+      // Without them a parent that kills this process would have to discard
+      // everything the process had already refereed, and with a stall timeout
+      // of a few seconds that is most of what it did.
+      fs.writeFileSync(options.status, JSON.stringify({
+        index, seed: plan.seed, steps: plan.steps, slice: options.slice,
+        sequences, operations,
+      }));
+    }
+    if (options.traceFile) {
+      fs.appendFileSync(options.traceFile,
+        '== sequence ' + index + ' (' + plan.steps + ' steps, seed 0x' +
+        plan.seed.toString(16) + ')\n');
+    }
+
+    const divergence = runSequence(plan.steps, plan.seed, {
+      sweep: plan.sweep,
+      trace: options.trace,
+      traceFile: options.traceFile,
+      side: options.side,
+    });
+    sequences++;
+    operations += plan.steps;
+
+    if (!divergence) continue;
+
+    const documented = classify(divergence);
+    if (documented) {
+      known[documented.tag] = (known[documented.tag] || 0) + 1;
+      continue;
+    }
+    divergences.push({
+      index,
+      seed: plan.seed,
+      steps: minimise(plan.seed, plan.steps, { sweep: plan.sweep, side: options.side }),
+      log: divergence.log,
+      expression: divergence.expression,
+      expected: divergence.expected,
+      actual: divergence.actual,
+    });
+  }
+
+  process.stdout.write(JSON.stringify({
+    slice: options.slice,
+    from: options.resume,
+    through: index - 1,
+    sequences,
+    operations,
+    divergences,
+    known,
+  }) + '\n');
+}
+
+/*
+ * The self-check, as its own process.
+ *
+ * A log that says "zero divergences" is worth nothing without evidence that
+ * this file can see one, so the campaign runs this first and refuses to start
+ * if it fails. Corrupting the port's results by one ulp and requiring the
+ * comparator to notice is the smallest error a real rounding bug could make.
+ */
+function runSelfCheck(options) {
+  faultArmed = true;
+  let detectedAt = 0;
+  const rng = new Rng(options.seed ^ 0xa5a5a5a5);
+  for (let i = 1; i <= 20000; i++) {
+    if (runSequence(6, rng.next(), { sweep: i, trace: false })) { detectedAt = i; break; }
+  }
+  faultArmed = false;
+  process.stdout.write(JSON.stringify({ detectedAt }) + '\n');
+  process.exitCode = detectedAt ? 0 : 1;
+}
+
 function parseArguments(argv) {
-  const options = { seconds: 63, seed: null, iterations: Infinity, quiet: false, log: null, trace: false };
+  const options = {
+    seconds: 63, seed: null, iterations: Infinity, quiet: false, log: null, trace: false,
+    slice: null, sequences: 200, resume: 0, status: null, traceFile: null,
+    side: 'both', selfCheck: false, bounds: true,
+  };
   for (let i = 0; i < argv.length; i++) {
     const flag = argv[i];
     if (flag === '--seconds') options.seconds = Number(argv[++i]);
@@ -753,6 +966,15 @@ function parseArguments(argv) {
     else if (flag === '--quiet') options.quiet = true;
     else if (flag === '--trace') options.trace = true;
     else if (flag === '--log') options.log = argv[++i];
+    // Slice mode, driven by campaign.js.
+    else if (flag === '--slice') options.slice = Number(argv[++i]) >>> 0;
+    else if (flag === '--sequences') options.sequences = Number(argv[++i]);
+    else if (flag === '--resume') options.resume = Number(argv[++i]);
+    else if (flag === '--status') options.status = argv[++i];
+    else if (flag === '--trace-file') options.traceFile = argv[++i];
+    else if (flag === '--side') options.side = argv[++i];
+    else if (flag === '--self-check') options.selfCheck = true;
+    else if (flag === '--bounds') options.bounds = argv[++i] !== 'off';
   }
   if (options.seed === null) options.seed = (Date.now() ^ (Math.random() * 0xffffffff)) >>> 0;
   return options;
@@ -760,6 +982,13 @@ function parseArguments(argv) {
 
 function main() {
   const options = parseArguments(process.argv.slice(2));
+  if (!options.bounds) unbound();
+
+  // Two modes that produce machine-readable output for `campaign.js` and no
+  // log of their own. Everything below them is the standalone run.
+  if (options.selfCheck) return runSelfCheck(options);
+  if (options.slice !== null) return runSlice(options);
+
   const lines = [];
   const emit = (line) => {
     lines.push(line);

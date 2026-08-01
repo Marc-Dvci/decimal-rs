@@ -399,22 +399,40 @@ pub fn parse_other(ctx: &mut Ctx, s: Sign, text: &str) -> crate::Result<Decimal>
         }
 
         if binary_exponent != 0 {
-            let two = Decimal::from_i32(2);
-            let scale = crate::arith::int_pow(
-                ctx,
-                &two,
-                binary_exponent.abs(),
-                ctx.cfg.precision + 10,
-            );
-            let rm = ctx.cfg.rounding;
-            x = if binary_exponent > 0 {
-                crate::arith::mul(ctx, &x, &scale)
+            // The original:
+            //
+            //     if (p) x = x.times(Math.abs(p) < 54 ? mathpow(2, p) : Decimal.pow(2, p));
+            //
+            // Two scales, not one, and which of them is used is observable.
+            //
+            // Below 54 the scale is a *double*. Every power of two in that
+            // range is exact as a double and converts to a Decimal exactly, so
+            // the only rounding is the multiplication's.
+            //
+            // At 54 and above it is the library's own `pow` — and `pow` is not
+            // merely `int_pow` with a reciprocal. It rounds the power to the
+            // working precision, and before doing any of that it estimates the
+            // result's exponent and returns 0 or Infinity outright if the
+            // estimate falls outside `minE`/`maxE`. Computing the scale
+            // directly, as this did, bypasses that estimate: with `maxE` at 41
+            // and precision 1, `new Decimal('0x1p-1074')` is 0 upstream —
+            // because `pow` gives up on `2^-1074` — and was 5e-324 here.
+            //
+            // Found by the differential campaign, not by the suite; the suite's
+            // radix modules all run at the default `maxE`.
+            let scale = if binary_exponent.abs() < 54 {
+                let doubled = (2f64).powi(binary_exponent as i32);
+                parse_decimal(ctx, Sign::Pos, &crate::format::number_to_string(doubled))
             } else {
-                crate::arith::divide(ctx, &x, &scale, None, rm, false, None)
+                let sign = if binary_exponent < 0 { Sign::Neg } else { Sign::Pos };
+                let exponent =
+                    parse_decimal(ctx, sign, &binary_exponent.unsigned_abs().to_string());
+                crate::power::to_power(ctx, &Decimal::from_i32(2), &exponent)?
             };
+            x = crate::arith::mul(ctx, &x, &scale);
         }
-        x.clone()
-    });
+        Ok(x.clone())
+    })?;
 
     let mut result = result;
     crate::round::finalise(ctx, &mut result, None, ctx.cfg.rounding, false);
@@ -516,6 +534,36 @@ mod tests {
 
         assert!(is_octal_literal(b"0o777"));
         assert!(!is_octal_literal(b"0o8"));
+    }
+
+    /// A hex float with a large negative binary exponent is measured against
+    /// `maxE`, because the scale it is divided by is not.
+    ///
+    /// `0x1p-1074` is 4.94e-324 and comfortably inside the default limits, so
+    /// nothing about the *answer* suggests `maxE` should have any say. But the
+    /// original reaches it through `Decimal.pow(2, -1074)`, whose reciprocal
+    /// branch divides by `2^1074` — exponent 323 — and `div` re-judges its
+    /// argument against `maxE` on the way in. Below 323 the divisor becomes
+    /// Infinity and the answer is 0.
+    ///
+    /// Two separate transcription errors had to be fixed for this to hold, and
+    /// they cancel in the default configuration, which is why the suite is
+    /// silent about both: `parse_other` computed the scale itself instead of
+    /// going through `pow`, and `int_pow` restored the clamping flag where the
+    /// original merely sets it. D-15.
+    #[test]
+    fn a_hex_float_is_clamped_through_the_scale_it_divides_by() {
+        let mut ctx = Ctx::default();
+        for (max_e, expected) in [(41i64, "0"), (322, "0"), (323, "5e-324"), (400, "5e-324")] {
+            ctx.cfg.precision = 1;
+            ctx.cfg.max_e = max_e;
+            let x = parse_other(&mut ctx, Sign::Pos, "0x1p-1074").expect("a valid literal");
+            assert_eq!(
+                crate::format::to_string(&x, &ctx.cfg),
+                expected,
+                "new Decimal('0x1p-1074') with maxE = {max_e}"
+            );
+        }
     }
 
     /// Reconstruct the decimal digit string a value represents, so that

@@ -66,7 +66,7 @@
 use crate::arith::{add, compare, divide, mul, sub};
 use crate::config::rounding;
 use crate::error::Error;
-use crate::format::{digits_to_string, to_string};
+use crate::format::digits_to_string;
 use crate::roots::magnitude;
 use crate::{pow10, Ctx, Decimal, Result, Sign, LOG_BASE};
 
@@ -276,6 +276,7 @@ pub fn to_fraction(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::format::to_string;
     use crate::parse::parse_decimal;
 
     fn d(text: &str) -> Decimal {
