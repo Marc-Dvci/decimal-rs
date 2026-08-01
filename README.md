@@ -245,6 +245,27 @@ literals are stripped.
 here rather than taken from a bignum crate, for reasons in
 [D-02](DECISIONS.md).
 
+## The port without Node
+
+`decimal-core` is the deliverable and the addon is evidence, so there is a
+second consumer of the crate that has never heard of Node:
+
+```
+$ decimal-calc 2 sqrt --precision 40
+1.41421356237309504880168872420969807857
+$ decimal-calc 355 div 113
+3.1415929203539823009
+$ decimal-calc 0x1.8p3 add 1
+13
+```
+
+23 unary and 9 binary operations, with `--precision`, `--rounding`, `--min-e`
+and `--max-e`. It parses through `parse::from_str` and renders through
+`format::to_string` — the same two functions the addon calls — and contains no
+arithmetic of its own, because anything it computed itself would be a behaviour
+this port has and the original does not. Built by `make` alongside the addon,
+and shipped in the Docker image at `bin/decimal-calc`.
+
 ## Memory
 
 ```
@@ -270,7 +291,9 @@ crates/decimal-core   the port: parsing, limb arithmetic, rounding, formatting,
                       transcendentals. Zero dependencies, zero unsafe, no Node.
 crates/decimal-napi   the only place that knows Node exists: object protocol,
                       config state, error mapping. All unsafe lives here.
-crates/decimal-cli    standalone binary — the port runs with no Node present.
+crates/decimal-cli    decimal-calc, a standalone evaluator — the port computes
+                      with no Node present, through the same two functions the
+                      addon uses to parse and to render.
 test/                 the original suite, unmodified and hash-pinned.
 tests/                ORIGINAL_HASHES.txt and verification artifacts.
 fuzz/                 the differential campaign, its oracle, and the upstream

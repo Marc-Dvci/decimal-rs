@@ -54,6 +54,13 @@ limits_log   = "fuzz/log-limits.txt"
 command      = "node fuzz/campaign.js --seconds 70"
 self_check   = true   # a one-ulp fault is injected and must be detected before the run starts
 
+[cli]
+# A second consumer of decimal-core that has never heard of Node, so that the
+# core is demonstrably a library rather than a plugin for decimal.js's host.
+binary  = "target/release/decimal-calc"
+example = "decimal-calc 2 sqrt --precision 40"
+note    = "parses and renders through the same two core functions the addon uses; contains no arithmetic of its own"
+
 [conformance]
 # Two targeted checks, each exhaustive over an axis the original suite never
 # varies. Both compare against the vendored oracle and count their documented
