@@ -1,14 +1,14 @@
 # Defects found in the original
 
-Six defects in [decimal.js](https://github.com/MikeMcl/decimal.js) v10.6.0
+Seven defects in [decimal.js](https://github.com/MikeMcl/decimal.js) v10.6.0
 (`cd73a7f`), plus two findings that are cost rather than correctness.
 
-Five of the six are crashes or hangs. Three of those five leave the library in a
-state it cannot recover from: after them, either every subsequent operation
+Five of the seven are crashes or hangs. Three of those five leave the library in
+a state it cannot recover from: after them, either every subsequent operation
 takes minutes, or the documented `minE`/`maxE` limits silently stop applying to
 anything.
 
-Every one is reproducible in three to five lines with no unusual operand.
+Every one is reproducible in two to five lines with no unusual operand.
 
 | | Defect | Failure | Reachable in | Found by |
 |---|---|---|---|---|
@@ -18,6 +18,7 @@ Every one is reproducible in three to five lines with no unusual operand.
 | [BUG-004](BUG-004-tofraction-round-floor.md) | `toFraction` never returns under `ROUND_FLOOR` | infinite loop, **every finite value** | 3 lines | differential campaign |
 | [BUG-005](BUG-005-taylorseries-null-dereference.md) | `taylorSeries` dereferences null, and leaves the exponent clamps off | `TypeError` + silent loss of `minE`/`maxE` | 4 lines | differential campaign |
 | [BUG-006](BUG-006-argument-reduction-null-dereference.md) | the argument reduction of `sin`/`cos`/`tan` dereferences null | `TypeError` | 4 lines | differential campaign |
+| [BUG-007](BUG-007-precision-above-939524081.md) | `precision` is documented to 1e9 and division fails above 939,524,081 | host `RangeError`, not `[DecimalError]` | 2 lines | reproducing the host's ceiling in Rust |
 | [notes](NOTES-cbrt-and-hyperbolic-cost.md) | `cbrt` does not return near the exponent floor | non-termination | 3 lines | differential campaign |
 | [notes](NOTES-cbrt-and-hyperbolic-cost.md) | the hyperbolic argument fold ignores magnitude | 1.1 s for `cosh(1e6)` | 2 lines | benchmarking |
 
@@ -60,6 +61,14 @@ deliberate.
 BUG-004 belongs to neither family. It is a termination test standing in for a
 different question, and a signed zero is enough to separate them.
 
+BUG-007 belongs to neither either, and is the only one of the seven that is not
+a mistake in the arithmetic: it is a range the documentation promises and the
+implementation cannot reach, because the quotient array it would need is larger
+than the engine will build. It is included because a caller who sets a
+documented value and receives a host `RangeError` from an unrelated line has
+been told nothing useful, and because the same line carries the 32-bit
+truncation described at the end of that write-up.
+
 ## How they were found
 
 BUG-001 came from scoring **error in ulps** against mpmath at 500 bits, sampling
@@ -76,6 +85,6 @@ five of these came from. See [`fuzz/log-limits.txt`](../../fuzz/log-limits.txt).
 
 ## Filing status
 
-BUG-001 is written up for filing by the author of this port. The remaining five
+BUG-001 is written up for filing by the author of this port. The remaining six
 are written here in filable form; each has a runnable reproduction and a
 suggested patch, and none has been submitted upstream at the time of writing.
