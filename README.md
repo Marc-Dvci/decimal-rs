@@ -19,9 +19,10 @@ Upstream: [MikeMcl/decimal.js](https://github.com/MikeMcl/decimal.js) @ [`cd73a7
 4. **Hostile-domain evidence:** [`fuzz/log.txt`](fuzz/log.txt) and
    [`fuzz/log-limits.txt`](fuzz/log-limits.txt) retain extreme exponents, known
    upstream failures, watchdog attribution, and explicit unrefereeable accounting.
-5. **Audited boundary:** [`scripts/adapter-regression.js`](scripts/adapter-regression.js)
-   proves calls without `new`, shared clone prototypes, re-entry safety, rejected
-   clone handling, and collection of discarded constructors.
+5. **The boundary is under test, not merely asserted:**
+   [`scripts/adapter-regression.js`](scripts/adapter-regression.js) proves calls
+   without `new`, shared clone prototypes, re-entry safety, rejected clone
+   handling, and collection of discarded constructors.
 6. **Balanced benchmark:** the port wins by 2.9× at 100 digits and 8.6× at
    10,000, but loses on tiny per-call latency; protocol and raw results are in
    [`bench/`](bench/README.md).
@@ -51,7 +52,7 @@ the unsafe report, and a 70-second strict differential campaign.
 ## The demo film
 
 **[film/output/decimal-rs-port-mortem-2026.mp4](film/output/decimal-rs-port-mortem-2026.mp4)**
-— 4 minutes 2 seconds, 1080p, in the repository rather than behind a link.
+— 4 minutes 1 second, 1080p, in the repository rather than behind a link.
 
 **No terminal in it was typed.** Every command shown was run by
 [`film/scripts/capture.ts`](film/scripts/capture.ts), which records each line of
@@ -186,7 +187,7 @@ proves nothing.
 node fuzz/campaign.js --seconds 70 --log fuzz/log.txt
 ```
 
-An omitted `--log` now writes only to stdout, so an exploratory run cannot
+An omitted `--log` writes only to stdout, so an exploratory run cannot
 overwrite published evidence. Log: [`fuzz/log.txt`](fuzz/log.txt). The unbounded pass, which fuzzes the entire
 legal input space including `1e9000000000000000`, is
 [`fuzz/log-limits.txt`](fuzz/log-limits.txt).
@@ -238,8 +239,8 @@ node scripts/host-limits.js           # the ceilings the original's host imposes
 [`scripts/clamp-conformance.js`](scripts/clamp-conformance.js) builds each
 operand under wide exponent limits and then **narrows the limits before the
 call**. That is the only arrangement in which the original's pervasive
-`x = new Ctor(x)` — thirty places, a re-judgement and not a copy — is observable
-at all, and it is why some 22,650 assertions have nothing to say about the whole
+`x = new Ctor(x)` — a re-judgement against the current limits, not a copy — is
+observable at all, and it is why some 22,650 assertions have nothing to say about the whole
 family: the suite never narrows the limits after building an operand. This was
 the largest single family of defect in the port ([D-18](DECISIONS.md)). The
 check attempts 3,528 cases: zero unexpected mismatches, 18 named intentional
@@ -338,9 +339,8 @@ loop with no exit is that. A precision left at nine quadrillion is that.
 Every one of the six is *documented*, not quietly corrected: each has a write-up
 in [`docs/upstream/`](docs/upstream/README.md), and the differential harness
 knows each by name so that a hostile run counts them rather than hiding them.
-The former prototype-identity divergence [D-08](DECISIONS.md) is now resolved by
-the shared plain-prototype adapter design, so the upstream suite has no failing
-assertion.
+None of the six is reachable from the original suite, which is why it passes in
+full.
 
 All eight upstream bugs were found during the competition, but GitHub issue
 creation is restricted in the upstream repository. That restriction is why no
