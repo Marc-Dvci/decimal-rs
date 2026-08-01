@@ -36,6 +36,19 @@
 //! *inexact* — so where exactly the cap falls, and the `+ 2` on it in `minus`
 //! against the `+ 1` in `plus`, are observable in the final digit. They are
 //! copied exactly.
+//!
+//! ## The other cap, which is the host's
+//!
+//! The cap above is bounded by the working precision, and the working precision
+//! is itself unbounded — the transcendental functions raise it by the operand's
+//! exponent. Three places in this module can therefore be asked for a digit
+//! array larger than a JavaScript array can be: the alignment in `plus` and in
+//! `minus`, and the quotient loop in `divide`. Where the original is stopped by
+//! its host with a catchable `RangeError`, a `Vec` would grow until the
+//! allocator killed the process, so all three check
+//! [`crate::MAX_ARRAY_LENGTH`], set [`Ctx::array_limit_exceeded`], and abandon
+//! the calculation for the boundary to turn into that same error. D-10 and
+//! D-19.
 
 use crate::{digit_count, format, round::finalise, Ctx, Decimal, Sign, BASE, LOG_BASE};
 use core::cmp::Ordering;
@@ -572,6 +585,32 @@ fn subtract_limbs(a: &mut Vec<u32>, b: &[u32], a_len: usize, base: u32) {
     }
 }
 
+/// Append one quotient limb, or report that the host's arrays cannot hold it.
+///
+/// The original writes the quotient as `qd[i] = …`, one index at a time, and
+/// that assignment is where JavaScript stops a division whose limb target the
+/// working precision has made absurd — `RangeError: Invalid array length`,
+/// catchable, the calculation abandoned. A `Vec` grows instead, doubling its
+/// capacity, and the request that finally fails is for twice the memory the
+/// original ever asked for; there is no exception, only a dead process.
+///
+/// So the ceiling is checked here, at the one statement that can breach it,
+/// rather than being inferred from the loop bound — which cannot be done,
+/// because the loop bound is exactly the thing that has gone wrong.
+///
+/// `None` means the caller must abandon the calculation and return; the flag it
+/// sets is turned into the thrown error at the boundary. See
+/// [`Ctx::array_limit_exceeded`] and [`crate::MAX_ARRAY_LENGTH`].
+#[must_use]
+fn push_limb(ctx: &mut Ctx, qd: &mut Vec<u32>, limb: u32) -> Option<()> {
+    if qd.len() as i64 >= crate::MAX_ARRAY_LENGTH {
+        ctx.array_limit_exceeded = true;
+        return None;
+    }
+    qd.push(limb);
+    Some(())
+}
+
 /// `x / y`, by long division.
 ///
 /// `pr` is the significant-digit target; `None` means "use the configured
@@ -658,14 +697,27 @@ pub fn divide(
     } else {
         // Convert the target from decimal digits to limbs, with two limbs of
         // headroom so that rounding has something to look at.
-        let mut sd = sd / log_base + 2;
-        let mut i = 0usize;
+        //
+        // The original is `sd = sd / logBase + 2 | 0`, and both halves of that
+        // matter. The division is *floating point*, so it is transcribed in
+        // `f64` rather than as an integer division; and the `| 0` is a 32-bit
+        // truncation which, for the raised precisions the transcendental
+        // functions work at, wraps — `sinh` near the exponent ceiling arrives
+        // here with a target of 9 × 10¹⁵ and leaves with −1_354_212_501.
+        //
+        // A negative limb target does not stop the loop below, because `sd--`
+        // is truthy for every non-zero value; what stops it is the array
+        // ceiling. Keeping the wide value instead made the loop run four
+        // billion times longer than the original's and take the process with
+        // it. See D-19.
+        let mut sd = i64::from(crate::to_int32(sd as f64 / log_base as f64 + 2.0));
 
         if y_len == 1 {
             // A single-limb divisor divides in one pass, with the remainder
             // carried in a scalar.
             let divisor = u64::from(yd[0]);
             let mut k: u64 = 0;
+            let mut i = 0usize;
             sd += 1;
 
             // The original's `for (; (i < xL || k) && sd--; i++)`. The
@@ -674,7 +726,9 @@ pub fn divide(
             while (i < x_len || k != 0) && sd != 0 {
                 sd -= 1;
                 let t = k * u64::from(base) + u64::from(xd.get(i).copied().unwrap_or(0));
-                qd.push((t / divisor) as u32);
+                if push_limb(ctx, &mut qd, (t / divisor) as u32).is_none() {
+                    return Decimal::nan();
+                }
                 k = t % divisor;
                 i += 1;
             }
@@ -780,8 +834,12 @@ pub fn divide(
                 }
                 // When cmp == 1 the divisor exceeds the remainder and k stays 0.
 
-                qd.push(k);
-                i += 1;
+                // The original writes `qd[i++] = k` here. The index is implicit
+                // in a `push`, and it is read nowhere else in this branch —
+                // unlike the single-limb one above, where it also walks `xd`.
+                if push_limb(ctx, &mut qd, k).is_none() {
+                    return Decimal::nan();
+                }
 
                 // Bring down the next digit of the dividend. When the dividend
                 // is exhausted the original stores `undefined` here, which is
@@ -825,7 +883,6 @@ pub fn divide(
         if qd.first() == Some(&0) {
             qd.remove(0);
         }
-        let _ = i;
     }
 
     if qd.is_empty() {

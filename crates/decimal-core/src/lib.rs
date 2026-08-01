@@ -108,14 +108,59 @@ pub const EXP_LIMIT: i64 = 9_000_000_000_000_000;
 /// `Number.MAX_SAFE_INTEGER`, i.e. 2⁵³ − 1.
 pub const MAX_SAFE_INTEGER: i64 = 9_007_199_254_740_991;
 
-/// The most elements a JavaScript array can hold, 2³² − 1.
+/// The most elements a JavaScript array can hold **when it is grown one index
+/// at a time**, which is every place the original grows a digit array: 2²⁷.
 ///
 /// This is a limit of the *original's* host rather than of Rust, and it is
 /// reproduced on purpose. A `Vec` has no such bound, which sounds like an
 /// improvement right up until an operation the original refuses in a catchable
 /// way instead asks the allocator for ten petabytes and takes the process down
 /// with it. See [`Ctx::array_limit_exceeded`].
-pub const MAX_ARRAY_LENGTH: i64 = 4_294_967_295;
+///
+/// # Why 2²⁷ and not the specification's 2³² − 1
+///
+/// 2³² − 1 is the largest value an array's `length` may *hold*; it is not the
+/// largest array that can be *built*. A 64-bit V8 stores a dense array's
+/// elements in a `FixedArray`, whose backing store is capped at one gigabyte of
+/// eight-byte slots, so growth by assignment stops at 2²⁷ elements and throws
+/// `RangeError: Invalid array length` there — four billion elements below where
+/// the specification would. `node scripts/host-limits.js` measures it and
+/// checks it against this constant rather than trusting either number.
+///
+/// The distinction is not academic. `divide`'s quotient loop is bounded only by
+/// the working precision, and `Decimal.set({ precision: 1e9 })` — the largest
+/// precision the library documents — asks it for 1e9/7 + 2 ≈ 1.43 × 10⁸ limbs.
+/// That is above 2²⁷ and far below 2³² − 1, so `new Decimal(1).div(3)` throws
+/// upstream; with the specification's constant here the port would have
+/// answered, and disagreed with the original on a three-line program in a
+/// documented configuration. See DECISIONS.md D-19.
+pub const MAX_ARRAY_LENGTH: i64 = 134_217_728;
+
+/// The claim in the paragraph above, checked by the compiler: the largest
+/// precision the library accepts really does ask `divide` for more limbs than
+/// the host will hold. If a future edit reconciles these two constants, the
+/// case that motivated this one has stopped existing and the reasoning around
+/// it needs re-reading rather than the assertion needs deleting.
+const _: () = assert!(MAX_DIGITS / LOG_BASE + 2 > MAX_ARRAY_LENGTH);
+
+/// ECMAScript's `ToInt32`, i.e. what the original's pervasive `… | 0` does.
+///
+/// Rust's `as i32` is *saturating* on floats and is not this: `1e16 as i32` is
+/// `i32::MAX`, while `1e16 | 0` in JavaScript is 1_874_919_424. The difference
+/// is invisible until an intermediate leaves the 32-bit range, at which point
+/// the original silently wraps — sometimes to a negative number — and any port
+/// that saturated, or that kept the wide value, has stopped computing the same
+/// function. See D-19, where the wide value cost a process.
+pub fn to_int32(value: f64) -> i32 {
+    if !value.is_finite() {
+        return 0;
+    }
+    // `trunc` and `rem_euclid` are both exact on integral doubles of any
+    // magnitude, so the residue below is the specification's `modulo 2³²`
+    // rather than an approximation of it.
+    let residue = value.trunc().rem_euclid(4_294_967_296.0);
+    (residue as u32) as i32
+}
 
 /// Powers of ten up to the base, for limb-splitting arithmetic.
 ///
@@ -210,5 +255,42 @@ mod tests {
             assert_eq!(u64::from(pow10(k)), expected);
             expected *= 10;
         }
+    }
+
+    #[test]
+    fn to_int32_wraps_where_rust_would_saturate() {
+        // Inside the 32-bit range the two agree, which is why the difference
+        // hides for so long.
+        assert_eq!(to_int32(0.0), 0);
+        assert_eq!(to_int32(-1.5), -1, "truncation is toward zero, not down");
+        assert_eq!(to_int32(2_147_483_647.0), i32::MAX);
+
+        // Outside it they do not. `1e16 as i32` is `i32::MAX`; `1e16 | 0` is
+        // this. Every value below was read out of Node, not derived here.
+        assert_eq!(to_int32(1e16), 1_874_919_424);
+        assert_eq!(to_int32(2_147_483_648.0), i32::MIN);
+        assert_eq!(to_int32(4_294_967_296.0), 0);
+        assert_eq!(to_int32(-4_294_967_297.0), -1);
+
+        // The value that cost a process: the limb target `divide` computes for
+        // `sinh` one exponent below the ceiling. See D-19.
+        assert_eq!(
+            to_int32(8_999_999_999_999_967f64 / 7.0 + 2.0),
+            -1_354_212_501
+        );
+
+        // The specification maps every non-finite input to zero.
+        assert_eq!(to_int32(f64::NAN), 0);
+        assert_eq!(to_int32(f64::INFINITY), 0);
+        assert_eq!(to_int32(f64::NEG_INFINITY), 0);
+    }
+
+    #[test]
+    fn the_array_ceiling_is_the_one_the_host_enforces() {
+        // Not the specification's 2³² − 1. `scripts/host-limits.js` measures
+        // the live value and fails if it has moved; this only pins the constant
+        // against a careless edit, and the relation that makes the distinction
+        // matter is asserted at the definition itself, at compile time.
+        assert_eq!(MAX_ARRAY_LENGTH, 1 << 27);
     }
 }
