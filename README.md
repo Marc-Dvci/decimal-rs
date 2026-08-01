@@ -6,7 +6,7 @@ Upstream: [MikeMcl/decimal.js](https://github.com/MikeMcl/decimal.js) @ [`cd73a7
 | | |
 |---|---|
 | **Original test suite** | **exactly one failure**, documented ([D-08](DECISIONS.md)) — of about 22,650 assertions |
-| **Test files modified** | **0 of 69** — SHA-256 manifest enforced by the build |
+| **Test files modified** | **0 of 69** — SHA-256 manifest enforced by the build, and the fuzzing oracle is pinned the same way |
 | **Differential fuzzing** | **zero undocumented divergences** over 70 continuous seconds, four independent seeds |
 | **Unsafe in `decimal-core`** | **0**, compiler-enforced (`unsafe_code = "forbid"`) |
 | **Dependencies of `decimal-core`** | **0** |
@@ -209,7 +209,7 @@ configuration range the documentation promises and the engine will not build the
 array for. `node scripts/host-limits.js` reproduces it, from both sides of a
 threshold the two implementations agree on to the digit.
 
-## Fidelity, and the five places it is set aside
+## Fidelity, and the six places it is set aside
 
 The rule is **fidelity over correctness**: where the original is wrong, this
 port is wrong in the same way, because reproducing the original's answers is the
@@ -217,12 +217,19 @@ point. `tan` near its poles is transcribed defect and all, with a test asserting
 the wrong answer so that a fix upstream would show up here as a decision rather
 than a drift.
 
-There are exactly five deliberate exceptions, each with its own DECISIONS entry,
-and the test for setting fidelity aside has been the same every time:
-**reproducing the original would hand a caller a way to break the library rather
-than a way to compute a number.** A `TypeError` from an unguarded null
-dereference is that. A loop with no exit is that. A precision left at nine
-quadrillion is that.
+There are exactly six deliberate exceptions — [D-11](DECISIONS.md),
+[D-13](DECISIONS.md), [D-14](DECISIONS.md), [D-16](DECISIONS.md),
+[D-17](DECISIONS.md), [D-20](DECISIONS.md) — each with its own entry, and the
+test for setting fidelity aside has been the same every time: **reproducing the
+original would hand a caller a way to break the library rather than a way to
+compute a number.** A `TypeError` from an unguarded null dereference is that. A
+loop with no exit is that. A precision left at nine quadrillion is that.
+
+Every one of the six is *reported*, not quietly corrected: each has a write-up
+in [`docs/upstream/`](docs/upstream/README.md), and the differential harness
+knows each by name so that a run counts them rather than hiding them. A seventh
+divergence, [D-08](DECISIONS.md), is a constraint of the Node-API rather than a
+choice, and is the single failing assertion.
 
 ## Safety
 
@@ -296,7 +303,7 @@ crates/decimal-cli    decimal-calc, a standalone evaluator — the port computes
                       with no Node present, through the same two functions the
                       addon uses to parse and to render.
 test/                 the original suite, unmodified and hash-pinned.
-tests/                ORIGINAL_HASHES.txt and verification artifacts.
+tests/                the two manifests: the suite's hashes, and the oracle's.
 fuzz/                 the differential campaign, its oracle, and the upstream
                       reproductions.
 bench/                the benchmark harness, its methodology, and its results.

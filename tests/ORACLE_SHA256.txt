@@ -1,0 +1,13 @@
+# The fuzzing oracle, pinned.
+#
+# `fuzz/reference/decimal.js` is a byte-for-byte copy of upstream decimal.js at
+# commit cd73a7f830f07bc98e906d2ebe76e8c02cc20c8f (v10.6.0). Every claim the
+# differential campaign makes is a claim about agreement with *that* file, so a
+# modified oracle would be a quieter way to fake a passing fuzz run than a
+# modified test file — and a harder one to notice, because the suite would still
+# pass.
+#
+# The hash below was taken from a pristine clone of upstream, not from this
+# repository. `node scripts/verify-tests.js` checks it alongside the test-suite
+# manifest and fails the build on a mismatch.
+ed643f9a0c8a44cdb7edc9adab1b0bd2b209b5d5c6866009ba17bf10f16a1a19  fuzz/reference/decimal.js

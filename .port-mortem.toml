@@ -34,6 +34,9 @@ files_modified = 0
 files_total    = 69
 manifest       = "tests/ORIGINAL_HASHES.txt"
 manifest_check = "node scripts/verify-tests.js"
+# The oracle is pinned by the same check, for the same reason: a modified oracle
+# would fake a clean differential campaign and leave the suite passing.
+oracle_manifest = "tests/ORACLE_SHA256.txt"
 # About 6,000 of the assertions are generated with Math.random(), so the
 # denominator moves between runs (22,598 / 22,628 / 22,658 / 22,688 all
 # observed). `failing` is the stable number, and it is the only one stated here.
