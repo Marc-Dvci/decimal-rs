@@ -388,7 +388,44 @@ async function main() {
   emit('[harness self-check] injected a one-ulp fault into the port\'s results');
   emit('[harness self-check]   -> DETECTED at sequence ' + detected.detectedAt +
        ' (comparator is live)');
-  emit('[harness self-check] fault reverted; starting clean run');
+  emit('[harness self-check] fault reverted');
+
+  // -- replay check -------------------------------------------------------
+  //
+  // Every unrefereeable input below is published as a `--slice S --resume N`
+  // command, and every divergence is published as a seed. Both are worthless
+  // if a slice does not reproduce, so this checks that it does before printing
+  // any of them: one slice run twice must give byte-identical output, and a
+  // slice run in two halves must account for exactly the work of the whole.
+  const probe = ['--slice', String(options.seed), '--sequences', '30'];
+  const bounded = options.bounds ? [] : ['--bounds', 'off'];
+  const first = await runChild(probe.concat(bounded), { stall: 30000 });
+  const again = await runChild(probe.concat(bounded), { stall: 30000 });
+  const half1 = await runChild(['--slice', String(options.seed), '--sequences', '15', '--resume', '0']
+    .concat(bounded), { stall: 30000 });
+  const half2 = await runChild(['--slice', String(options.seed), '--sequences', '15', '--resume', '15']
+    .concat(bounded), { stall: 30000 });
+
+  const whole = parseResult(first.stdout);
+  const repeat = parseResult(again.stdout);
+  const a = parseResult(half1.stdout);
+  const b = parseResult(half2.stdout);
+  const deterministic = whole && repeat && first.stdout === again.stdout;
+  const resumable = whole && a && b && a.operations + b.operations === whole.operations;
+
+  emit('[replay check] one slice run twice: ' +
+       (deterministic ? 'identical' : 'DIFFERED — seeds in this log are not replayable'));
+  emit('[replay check] the same slice in two halves: ' +
+       (resumable ? 'accounts for the whole (' + a.operations + ' + ' + b.operations +
+        ' = ' + whole.operations + ' operations)'
+                  : 'DID NOT — resumption after a stall is unsound'));
+  if (!deterministic || !resumable) {
+    emit('This run cannot publish replayable seeds and is aborted.');
+    finish(lines, options, 1);
+    return;
+  }
+  emit('');
+  emit('starting clean run');
   emit('');
 
   // -- the timed run ------------------------------------------------------
