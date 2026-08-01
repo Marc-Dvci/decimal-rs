@@ -49,14 +49,22 @@ src/components.tsx              the terminal replay, panels, captions
 
 ## Specification
 
+- 4 minutes 4.5 seconds · 24.6 MiB
 - 1920×1080, 30 fps, H.264 High, `yuv420p`, faststart
 - AAC 256 kbit/s, 48 kHz, mastered to −16 LUFS / −1.5 dBTP
 - burned-in captions, one neural voice (`en-GB-RyanNeural`)
-- under five minutes, checked by the render script rather than by eye
+- under five minutes, and the duration, both codecs, the resolution and the
+  pixel format are checked by the render script rather than by eye — a render
+  that silently produced four seconds of video with no audio would otherwise
+  still exit zero
 
-## Why this is not in the port's repository
+## What this directory is not
 
-It has its own dependency tree — React, Remotion, a headless Chrome — and
-nothing in it is part of the port or of the port's build. The film's sources
-are kept beside the repository so that `decimal-rs` stays a Rust workspace with
-one JavaScript oracle and three JavaScript harnesses, and nothing else.
+It is not part of the port and not part of the port's build. `cargo build`
+never looks here, the Dockerfile excludes it, and nothing under `crates/` can
+reach it. It has its own dependency tree — React, Remotion, a headless Chrome —
+and none of that is a dependency of `decimal-rs`.
+
+It is in the repository for one reason: the film makes claims about what the
+commands print, and `artifacts/capture.json` is the recording those claims come
+from. A film whose evidence is checkable belongs next to the evidence.
