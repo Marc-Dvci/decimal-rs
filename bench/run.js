@@ -320,20 +320,22 @@ function startup(which, repetitions) {
   return samples;
 }
 
-/* Peak RSS over a fixed workload, again in a fresh process each time. */
-function peakRss(which) {
-  const load = which === 'port'
-    ? "const D=require('./decimal.node');"
-    : "const D=require('./fuzz/reference/decimal.js');";
-  const script = load +
-    "D.precision=200;let a=new D('1.2345678901234567890123456789');let peak=0;" +
-    "for(let i=0;i<200000;i++){a=a.plus('0.000000000000000000001').times('1.0000001');" +
-    "if((i&8191)===0){const r=process.memoryUsage().rss;if(r>peak)peak=r;}}" +
-    "const r=process.memoryUsage().rss;if(r>peak)peak=r;process.stdout.write(String(peak));";
-  return Number(execFileSync(process.execPath, ['-e', script], {
-    cwd: path.join(__dirname, '..'),
-    encoding: 'utf8',
-  }));
+/*
+ * Peak RSS over a fixed workload, in a fresh process, in each of two modes.
+ *
+ * `bench/rss-probe.js` explains why there are two. Briefly: Node runs
+ * Node-API finalizers from the event loop, so a synchronous burst holds
+ * everything the addon allocated until it ends, while the same work done in
+ * batches does not. The first is what a tight loop costs and the second is the
+ * resident footprint; for the pure-JavaScript original they are nearly equal,
+ * and the gap between them is the price of the boundary.
+ */
+function peakRss(which, mode) {
+  return Number(execFileSync(
+    process.execPath,
+    [path.join(__dirname, 'rss-probe.js'), which, mode],
+    { cwd: path.join(__dirname, '..'), encoding: 'utf8' },
+  ));
 }
 
 function artifactSizes() {
@@ -455,11 +457,20 @@ function main() {
 
   // -- memory -------------------------------------------------------------
   process.stdout.write('\npeak RSS over 200,000 mixed operations at precision 200\n');
-  const rss = { reference: peakRss('reference'), port: peakRss('port') };
+  process.stdout.write('                              synchronous     yielding\n');
+  const rss = {
+    reference: { burst: peakRss('reference', 'burst'), steady: peakRss('reference', 'steady') },
+    port: { burst: peakRss('port', 'burst'), steady: peakRss('port', 'steady') },
+  };
   for (const which of ['reference', 'port']) {
     process.stdout.write('  ' + (which === 'reference' ? 'decimal.js' : 'decimal-rs').padEnd(28) +
-      (rss[which] / 1048576).toFixed(1).padStart(9) + ' MiB\n');
+      (rss[which].burst / 1048576).toFixed(1).padStart(9) + ' MiB' +
+      (rss[which].steady / 1048576).toFixed(1).padStart(9) + ' MiB\n');
   }
+  process.stdout.write(
+    '  Node runs Node-API finalizers from the event loop, so a synchronous burst\n' +
+    '  holds everything the addon allocated until it ends. The right-hand column\n' +
+    '  is the resident footprint; the gap is the cost of that deferral.\n');
 
   // -- artifact -----------------------------------------------------------
   const sizes = artifactSizes();

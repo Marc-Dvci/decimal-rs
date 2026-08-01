@@ -439,9 +439,32 @@ impl Env {
     /// This transfers ownership of the box into the JavaScript object. The
     /// finalizer below is the only place it is freed, and it runs exactly once
     /// per successful wrap, so the value is neither leaked nor freed twice.
+    ///
+    /// # The last argument must be null
+    ///
+    /// `napi_wrap`'s sixth parameter is an *out* parameter: pass a pointer and
+    /// Node hands back a `napi_ref` to the wrapped object. It is documented as
+    /// optional and it reads like a convenience. It is not — the reference it
+    /// returns is a **strong** one, and a strong reference is precisely what
+    /// stops an object from being collected. Nothing here can release it
+    /// either: the only correct moment to call `napi_delete_reference` on it is
+    /// from inside the finalizer, and the finalizer cannot run while the
+    /// reference is holding the object alive.
+    ///
+    /// So asking for the reference and dropping it on the floor makes every
+    /// Decimal this module returns immortal. The finalizer never fires, the
+    /// `Box` is never dropped, and native memory grows without bound behind a
+    /// JavaScript heap that looks perfectly healthy. A forced `global.gc()`
+    /// gives none of it back, which is what tells this apart from ordinary
+    /// collection pressure.
+    ///
+    /// Measured before the fix: 600 000 operations took RSS from 34 MiB to
+    /// 183 MiB, and 1.8 million to 450 MiB, monotonically. Found by
+    /// `scripts/soak.js`. No assertion could have found it — leaking memory is
+    /// not a wrong answer, and the original suite runs for a quarter of a
+    /// second.
     pub fn wrap<T: 'static>(self, object: Value, payload: Box<T>) {
         let raw = Box::into_raw(payload);
-        let mut reference: sys::napi_ref = ptr::null_mut();
         // SAFETY: `raw` is a live, uniquely-owned pointer from `Box::into_raw`
         // that nothing else refers to. `finalize::<T>` is instantiated for the
         // same `T`, so the pointer it reconstructs has the correct type.
@@ -452,7 +475,7 @@ impl Env {
                 raw.cast(),
                 Some(finalize::<T>),
                 ptr::null_mut(),
-                &mut reference,
+                ptr::null_mut(),
             )
         };
         if status != sys::Status::napi_ok {
