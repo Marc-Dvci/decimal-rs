@@ -178,6 +178,33 @@ pub fn to_fraction(
                 let scaled = mul(ctx, &a, &q1);
                 add(ctx, &q0, &scaled)
             };
+
+            // The expansion has terminated: `den` reached zero, so `a` is
+            // infinite and so is this convergent. The original has no test for
+            // this — it relies on the comparison below, since `+Infinity` is
+            // greater than any bound.
+            //
+            // That reliance is what makes upstream's `toFraction` hang under
+            // `ROUND_FLOOR`, and this line is the whole of the difference
+            // (D-14 / BUG-004). Under that one mode a subtraction which
+            // cancels exactly returns *negative* zero, so `a` is `-Infinity`,
+            // so this convergent is `-Infinity`, which is not greater than the
+            // bound; the loop goes round, `-Infinity × -0` makes it NaN, and
+            // every comparison from then on is false. It never terminates —
+            // for every finite value, `0` and `1` included.
+            //
+            // Testing finiteness rather than the sign is not a repair of the
+            // arithmetic but of the *termination test*, and it leaves the
+            // answer alone: in the eight modes where upstream returns, it
+            // breaks at exactly the same iteration with exactly the same
+            // convergents, because `+Infinity` already failed the comparison
+            // below. In the ninth it returns what the other eight do, which is
+            // the only defensible answer — the fraction is a property of the
+            // value, and none of this recurrence is supposed to be rounded.
+            if !q_next.is_finite() {
+                break;
+            }
+
             if compare(&q_next, &max_denominator) == Some(core::cmp::Ordering::Greater) {
                 break;
             }
@@ -338,6 +365,43 @@ mod tests {
             );
         }
         assert!(to_fraction(&mut ctx, &d("123.45"), Some(&Decimal::nan())).is_err());
+    }
+
+    /// The answer must not depend on the rounding mode, and the search must
+    /// terminate under all nine of them.
+    ///
+    /// This is the regression test for D-14. Upstream fails it in the strongest
+    /// sense available: under `ROUND_FLOOR` it does not return at all, for any
+    /// finite input. Nothing in the original suite catches it because every one
+    /// of its two hundred `toFraction` assertions runs at the default rounding.
+    ///
+    /// `0` and `1` are in the list deliberately. It would be reasonable to
+    /// expect a defect this shape to need an awkward operand; it needs none.
+    #[test]
+    fn the_search_terminates_under_every_rounding_mode() {
+        let expected = [
+            ("0", "0,1"),
+            ("1", "1,1"),
+            ("7", "7,1"),
+            ("-4", "-4,1"),
+            ("0.5", "1,2"),
+            ("2.5", "5,2"),
+            ("0.1", "1,10"),
+            ("3.14159", "314159,100000"),
+            ("123456789012345678901234567890", "1.2345678901234567890123456789e+29,1"),
+        ];
+
+        for mode in 0..=8u8 {
+            let mut ctx = Ctx::default();
+            ctx.cfg.rounding = mode;
+            for (input, answer) in expected {
+                assert_eq!(
+                    run(&mut ctx, input, None),
+                    answer,
+                    "toFraction({input}) under rounding mode {mode}"
+                );
+            }
+        }
     }
 
     #[test]

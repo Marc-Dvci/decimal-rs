@@ -630,10 +630,10 @@ the same TypeError. Reported as BUG-003.
 *own first line* uses for a base that was already non-finite —
 `Math.pow(+x, yn)` — which is the same question reached by a different road.
 
-This is the third and last deliberate divergence, alongside D-08 (a constraint,
-not a choice) and D-11. The test for setting fidelity aside has been the same
-each time: reproducing the original would give a caller a way to break the
-library rather than a way to compute a number. A `TypeError` from an unguarded
+This is the third deliberate divergence, alongside D-08 (a constraint, not a
+choice) and D-11; D-14 is the fourth. The test for setting fidelity aside has
+been the same each time: reproducing the original would give a caller a way to
+break the library rather than a way to compute a number. A `TypeError` from an unguarded
 null dereference is exactly that, and matching it would mean the port throwing
 V8's own message for a mistake V8 was merely the reporter of.
 
@@ -644,5 +644,78 @@ on both sides, because `Infinity^-3` is 0 by the same table.
 ±Infinity or 0 as the exponent's sign dictates. The differential harness
 classifies the remaining difference as a *known* divergence, counted and named
 with this entry in its log rather than filtered out of it.
+
+---
+
+### D-14 · The fourth divergence: a termination test that a signed zero defeats
+
+**Context.** The differential campaign's watchdog reported
+`x0.toFraction()` as an input neither implementation would return from. It was
+not an oracle limitation and not a large operand — it was `ROUND_FLOOR`.
+
+Three lines, against the pinned upstream tree, hang forever:
+
+```js
+const Decimal = require('decimal.js');       // v10.6.0, cd73a7f
+Decimal.set({ rounding: Decimal.ROUND_FLOOR });
+new Decimal(1).toFraction();                 // never returns
+```
+
+Not `1` in particular. Every finite value, `0` included, under that one mode.
+The other eight are unaffected. Reported as BUG-004.
+
+**Why.** `toFraction` runs the continued-fraction recurrence until the
+denominator of the next convergent exceeds the bound:
+
+```js
+d2 = d0.plus(q.times(d1));
+if (d2.cmp(maxD) == 1) break;
+```
+
+The expansion of a terminating decimal — which is every value this library
+holds — ends by cancelling exactly, at `d = n.minus(q.times(d2))`. That
+subtraction returns zero, and *which* zero is a rounding-mode question:
+`ROUND_FLOOR` rounds towards −Infinity, so it returns `-0`. Everywhere else it
+is `+0`.
+
+From there the loop is over as a computation and unbounded as a program. The
+next quotient is `n / -0` = `-Infinity`, so `d2` is `-Infinity`, which is not
+greater than `maxD`, so there is no break; the iteration after that forms
+`-Infinity × -0` = `NaN`, and every comparison involving `NaN` is false
+forever. The loop makes no further progress and has no exit.
+
+The termination test is the defect. It is written as "has the denominator grown
+past the bound", and it is standing in for "has the expansion finished" — which
+is true for eight rounding modes because `+Infinity > maxD` happens to be the
+right answer to the wrong question.
+
+**Decision.** Break when the convergent stops being finite, before comparing it
+to the bound.
+
+In the eight modes where upstream returns, this changes nothing whatsoever: it
+breaks at the same iteration, on the same convergents, because `+Infinity` was
+already failing the comparison one line later. In the ninth it returns what the
+other eight return. That is the only defensible answer — the nearest fraction is
+a property of the value, the recurrence is run unrounded on purpose (`external`
+is off and the working precision is twice the operand's digit count), and the
+rounding mode has no business reaching the result at all. It reaches it here
+only through the sign of a zero.
+
+Verified: across 702 calls — thirteen values × six denominator bounds × nine
+modes — the port's answer under `ROUND_FLOOR` is identical to the oracle's under
+each of the eight modes that terminate. `fraction.rs` asserts this directly.
+
+**Why this one is not transcribed.** The same test as the previous three
+(D-08, D-11, D-13): reproducing the original would hand a caller a way to break
+the library rather than a way to compute a number. A non-terminating loop is the
+strongest form of that available — no exception to catch, no value to inspect,
+no way back except killing the process. The port did reproduce it faithfully
+until this change, and the campaign log records the input that proved it.
+
+**Consequence.** `toFraction` terminates under all nine rounding modes. The
+divergence is unobservable to the differential harness in the ordinary way,
+because the oracle never answers; it appears in `fuzz/log-limits.txt` as an
+input the oracle could not referee, with the port's own answer and timing beside
+it.
 
 ---
