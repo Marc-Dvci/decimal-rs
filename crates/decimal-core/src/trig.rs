@@ -156,7 +156,10 @@ pub fn taylor_series(
     let pr = ctx.cfg.precision;
     let k = if pr <= 0 { 0 } else { (pr + LOG_BASE - 1) / LOG_BASE };
 
-    let external_before = ctx.external;
+    // Set, not saved and restored. The original clears the flag on entry and
+    // ends with a bare `external = true`, so a caller that had suppressed
+    // clamping does not get it back — the same shape as `int_pow`, and
+    // observable for the same reason. See the note there.
     ctx.external = false;
 
     let x2 = mul(ctx, x, x);
@@ -192,8 +195,31 @@ pub fn taylor_series(
 
         t = add(ctx, &u, &y);
 
+        // Overflowed. The partial sum is ±Infinity; every remaining term is
+        // added to an infinity, so no iteration can bring it back and this is
+        // the answer, such as it is.
+        //
+        // The original has no such test. Its next line is
+        // `if (t.d[k] !== void 0)`, and `t.d` is null here, so it raises
+        //
+        //     TypeError: Cannot read properties of null (reading '30')
+        //
+        // from inside its own `external = false` — which nothing then restores,
+        // so the constructor stops clamping to `minE`/`maxE` for the remaining
+        // life of the process. Reported as BUG-005; reachable in four lines,
+        // by building a value while `maxE` is wide, narrowing `maxE` below its
+        // exponent, and calling `sinh`.
+        //
+        // Not reproduced, on the same test as D-11 and D-13: it is a way to
+        // break the library rather than a way to compute a number. D-16.
+        // Without this line the port has the same non-answer in worse clothes —
+        // it does not crash, so it simply never leaves this loop.
+        if !t.is_finite() {
+            break;
+        }
+
         // Converged? Only once the sum actually has a limb at position k.
-        if t.is_finite() && (t.digits().len() as i64) > k {
+        if (t.digits().len() as i64) > k {
             let mut j = k;
             let converged = loop {
                 let tj = t.digits().get(j as usize).copied();
@@ -216,7 +242,7 @@ pub fn taylor_series(
         y = t.clone();
     }
 
-    ctx.external = external_before;
+    ctx.external = true;
 
     // Trim to the working width; the digits beyond it are not meaningful.
     if let Some(d) = t.d.as_mut() {
@@ -597,6 +623,44 @@ mod tests {
             parse_decimal(&ctx, Sign::Neg, rest)
         } else {
             parse_decimal(&ctx, Sign::Pos, text)
+        }
+    }
+
+    /// A series that overflows must terminate, and must not leave clamping off.
+    ///
+    /// The operand is built while `maxE` is wide and the hyperbolic is taken
+    /// after `maxE` has been narrowed below its exponent, so the very first
+    /// argument reduction produces ±Infinity and the series is summing an
+    /// infinity from its first term.
+    ///
+    /// Upstream raises `TypeError: Cannot read properties of null` here, from
+    /// inside its own `external = false`, and never restores the flag — so
+    /// afterwards nothing clamps. That is BUG-005, and D-16 is the decision not
+    /// to reproduce it. Both halves are asserted: an answer, and a context that
+    /// still enforces its own limits.
+    #[test]
+    fn an_overflowing_series_terminates_and_leaves_clamping_on() {
+        for (name, f) in [
+            ("sinh", sinh as fn(&mut Ctx, &Decimal) -> Decimal),
+            ("cosh", cosh),
+            ("tanh", tanh),
+        ] {
+            let mut ctx = Ctx::default();
+            let x = d("5.879302975574934568e100");
+
+            ctx.cfg.precision = 100;
+            ctx.cfg.max_e = 73;
+            let value = f(&mut ctx, &x);
+
+            assert!(
+                !value.is_finite(),
+                "{name} of a value above maxE should be non-finite, got {}",
+                to_string(&value, &ctx.cfg)
+            );
+            assert!(
+                ctx.external,
+                "{name} must leave the exponent clamps in force"
+            );
         }
     }
 
