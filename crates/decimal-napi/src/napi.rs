@@ -158,6 +158,12 @@ impl Env {
             sys::ValueType::napi_object => JsType::Object,
             sys::ValueType::napi_function => JsType::Function,
             sys::ValueType::napi_external => JsType::External,
+            // `napi_bigint` is 9. The constant exists in napi-sys only behind
+            // its `napi6` feature, and enabling that would widen the set of
+            // Node-API symbols this addon expects to resolve at load — which on
+            // Windows it resolves by hand, so widening it is not free. The
+            // value is part of the Node-API ABI and cannot change.
+            9 => JsType::BigInt,
             _ => JsType::Unknown,
         }
     }
@@ -361,15 +367,22 @@ impl Env {
         out
     }
 
-    /// `value instanceof constructor`.
-    pub fn instance_of(self, value: Value, constructor: Value) -> bool {
-        let mut out = false;
-        // SAFETY: live handles; `constructor` is known to be a function
-        // because it is one this module created.
-        unsafe {
-            sys::napi_instanceof(self.0, value, constructor, &mut out);
+    /// `String(value)` — JavaScript's own conversion, whatever the value is.
+    ///
+    /// Used for BigInt, where it is the only sensible way across. The
+    /// alternative, `napi_get_value_bigint_words`, hands back a sign and an
+    /// array of 64-bit limbs which would then have to be converted to decimal
+    /// here — reimplementing, less well, a conversion V8 already has. The
+    /// original writes `v.toString()`, and this is that.
+    pub fn to_string_value(self, value: Value) -> Option<String> {
+        let mut coerced: Value = ptr::null_mut();
+        // SAFETY: `value` is a live handle and `coerced` a valid out-pointer.
+        // Coercion throws for a Symbol, which the status check catches.
+        let status = unsafe { sys::napi_coerce_to_string(self.0, value, &mut coerced) };
+        if status != sys::Status::napi_ok {
+            return None;
         }
-        out
+        self.as_string(coerced)
     }
 
     /// `new constructor(...args)`.
@@ -498,6 +511,27 @@ impl Env {
     /// cannot be collected while it is reachable from the arguments of the
     /// call in progress. The lifetime is tied to `&self`, which is scoped to
     /// the callback, so it cannot escape into a longer-lived binding.
+    ///
+    /// # Why the lint is allowed
+    ///
+    /// `clippy::mut_from_ref` is deny-by-default and it is right to be: handing
+    /// out `&mut T` from a `&self` normally means two callers can hold mutable
+    /// references to the same thing at once, which is undefined behaviour.
+    ///
+    /// It does not apply here, and the reason is not that the code is careful —
+    /// it is that `self` does not own the payload. `Env` is a bare
+    /// `napi_env` handle; the `T` lives in the JavaScript object, reached
+    /// through `object`. The borrow checker is being told the reference is
+    /// scoped to the callback, which is true and is the strongest statement
+    /// available, but `&self` is not what makes it unique. What makes it unique
+    /// is that Node is single-threaded, the callback holds the isolate, and no
+    /// other frame can be inside this addon while it runs.
+    ///
+    /// Taking `&mut self` instead would be a lie of the same size in the other
+    /// direction — it would suggest the environment is being mutated, which it
+    /// is not — and would force every call site to hold a mutable binding of a
+    /// `Copy` handle.
+    #[allow(clippy::mut_from_ref)]
     pub fn unwrap<T: 'static>(&self, object: Value) -> Option<&mut T> {
         let mut raw: *mut c_void = ptr::null_mut();
         // SAFETY: live handle and valid out-pointer.
@@ -518,8 +552,8 @@ impl Env {
     /// A Rust panic must never cross this boundary, so every fallible path in
     /// the binding ends here instead.
     pub fn throw(self, message: &str) {
-        let message = std::ffi::CString::new(message.replace('\0', ""))
-            .expect("NULs were just removed");
+        let message =
+            std::ffi::CString::new(message.replace('\0', "")).expect("NULs were just removed");
         // SAFETY: a null code and a valid NUL-terminated message is the
         // documented way to throw a plain `Error`.
         unsafe {
@@ -534,8 +568,8 @@ impl Env {
     /// length. Reproducing the message but not the constructor would leave
     /// `err instanceof RangeError` false where the original makes it true.
     pub fn throw_range_error(self, message: &str) {
-        let message = std::ffi::CString::new(message.replace('\0', ""))
-            .expect("NULs were just removed");
+        let message =
+            std::ffi::CString::new(message.replace('\0', "")).expect("NULs were just removed");
         // SAFETY: a null code and a valid NUL-terminated message is the
         // documented way to throw a `RangeError`.
         unsafe {

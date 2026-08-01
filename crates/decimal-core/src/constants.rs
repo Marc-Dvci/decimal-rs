@@ -76,9 +76,7 @@ mod tests {
     fn the_constants_are_bare_decimal_literals() {
         for constant in [LN10, PI] {
             assert_eq!(constant.matches('.').count(), 1);
-            assert!(constant
-                .chars()
-                .all(|c| c.is_ascii_digit() || c == '.'));
+            assert!(constant.chars().all(|c| c.is_ascii_digit() || c == '.'));
         }
     }
 }

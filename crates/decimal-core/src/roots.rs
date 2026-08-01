@@ -39,7 +39,7 @@
 //! difference between a `sqrt` that is right and a `sqrt` that is right except
 //! on the inputs a test suite is most likely to contain.
 
-use crate::arith::{add, compare, divide, mul, sub};
+use crate::arith::{add, compare, divide, mul};
 use crate::config::rounding;
 use crate::format::{digits_to_string, value_of};
 use crate::round::finalise;
@@ -164,7 +164,13 @@ pub fn sqrt(ctx: &mut Ctx, x: &Decimal) -> Decimal {
                 // ever on repeating nines.
                 if !repeated {
                     let mut candidate = t.clone();
-                    finalise(ctx, &mut candidate, Some(precision + 1), rounding::UP, false);
+                    finalise(
+                        ctx,
+                        &mut candidate,
+                        Some(precision + 1),
+                        rounding::UP,
+                        false,
+                    );
                     let squared = mul(ctx, &candidate, &candidate);
                     if compare(&squared, x) == Some(core::cmp::Ordering::Equal) {
                         r = candidate;
@@ -223,13 +229,16 @@ pub fn cbrt(ctx: &mut Ctx, x: &Decimal) -> Decimal {
             // integer part come out with the right scale.
             let adjust = (e - n.len() as i64 + 1) % 3;
             if adjust != 0 {
-                n.push_str(if adjust == 1 || adjust == -2 { "0" } else { "00" });
+                n.push_str(if adjust == 1 || adjust == -2 {
+                    "0"
+                } else {
+                    "00"
+                });
             }
             let s = n.parse::<f64>().unwrap_or(f64::INFINITY).cbrt();
 
             // Rarely, `e` is one less than the result's exponent.
-            let e = (e + 1).div_euclid(3)
-                - i64::from(e % 3 == if e < 0 { -1 } else { 2 });
+            let e = (e + 1).div_euclid(3) - i64::from(e % 3 == if e < 0 { -1 } else { 2 });
 
             let text = if s.is_infinite() {
                 format!("5e{e}")
@@ -287,7 +296,13 @@ pub fn cbrt(ctx: &mut Ctx, x: &Decimal) -> Decimal {
             if window == "9999" || (!repeated && window == "4999") {
                 if !repeated {
                     let mut candidate = t.clone();
-                    finalise(ctx, &mut candidate, Some(precision + 1), rounding::UP, false);
+                    finalise(
+                        ctx,
+                        &mut candidate,
+                        Some(precision + 1),
+                        rounding::UP,
+                        false,
+                    );
                     let cubed = {
                         let square = mul(ctx, &candidate, &candidate);
                         mul(ctx, &square, &candidate)
@@ -330,11 +345,6 @@ pub(crate) fn magnitude(x: &Decimal) -> Decimal {
         out.s = Sign::Pos;
     }
     out
-}
-
-/// `x - y` without rounding, for callers already inside `without_clamping`.
-pub(crate) fn difference(ctx: &mut Ctx, x: &Decimal, y: &Decimal) -> Decimal {
-    sub(ctx, x, y)
 }
 
 /// `hypot(x₀, x₁, …)` — the Euclidean length `√(x₀² + x₁² + …)`.
@@ -446,18 +456,9 @@ mod tests {
     #[test]
     fn square_roots_of_irrationals_carry_the_full_precision() {
         let mut ctx = Ctx::default();
-        assert_eq!(
-            run(&mut ctx, sqrt, &&d("2")),
-            "1.4142135623730950488"
-        );
-        assert_eq!(
-            run(&mut ctx, sqrt, &&d("3")),
-            "1.7320508075688772935"
-        );
-        assert_eq!(
-            run(&mut ctx, sqrt, &&d("10")),
-            "3.162277660168379332"
-        );
+        assert_eq!(run(&mut ctx, sqrt, &d("2")), "1.4142135623730950488");
+        assert_eq!(run(&mut ctx, sqrt, &d("3")), "1.7320508075688772935");
+        assert_eq!(run(&mut ctx, sqrt, &d("10")), "3.162277660168379332");
     }
 
     #[test]
@@ -493,12 +494,9 @@ mod tests {
     #[test]
     fn cube_roots_of_irrationals_carry_the_full_precision() {
         let mut ctx = Ctx::default();
+        assert_eq!(run(&mut ctx, cbrt, &d("2")), "1.2599210498948731648");
         assert_eq!(
-            run(&mut ctx, cbrt, &&d("2")),
-            "1.2599210498948731648"
-        );
-        assert_eq!(
-            run(&mut ctx, cbrt, &&d("-2")),
+            run(&mut ctx, cbrt, &d("-2")),
             "-1.2599210498948731648",
             "the cube root of a negative is real"
         );
@@ -509,11 +507,11 @@ mod tests {
         let mut ctx = Ctx::default();
         ctx.cfg.precision = 40;
         assert_eq!(
-            run(&mut ctx, sqrt, &&d("2")),
+            run(&mut ctx, sqrt, &d("2")),
             "1.41421356237309504880168872420969807857"
         );
         ctx.cfg.precision = 5;
-        assert_eq!(run(&mut ctx, sqrt, &&d("2")), "1.4142");
+        assert_eq!(run(&mut ctx, sqrt, &d("2")), "1.4142");
     }
 
     #[test]
@@ -521,9 +519,9 @@ mod tests {
         // These are the inputs where `Math.sqrt(+x)` under- or overflows, so
         // the estimate has to be built from the digit string instead.
         let mut ctx = Ctx::default();
-        assert_eq!(run(&mut ctx, sqrt, &&d("1e400")), "1e+200");
-        assert_eq!(run(&mut ctx, sqrt, &&d("1e-400")), "1e-200");
-        assert_eq!(run(&mut ctx, cbrt, &&d("1e600")), "1e+200");
+        assert_eq!(run(&mut ctx, sqrt, &d("1e400")), "1e+200");
+        assert_eq!(run(&mut ctx, sqrt, &d("1e-400")), "1e-200");
+        assert_eq!(run(&mut ctx, cbrt, &d("1e600")), "1e+200");
     }
 
     /// `hypot` is exact where a naive `sqrt(x*x + y*y)` is not: both squares

@@ -41,8 +41,8 @@ use crate::arith::{compare, divide, int_pow, mul};
 use crate::config::rounding;
 use crate::elementary::{check_rounding_digits, get_ln10, natural_exponential, natural_logarithm};
 use crate::format::{digits_to_string, number_to_string};
-use crate::round::finalise;
 use crate::roots::to_f64;
+use crate::round::finalise;
 use crate::{Ctx, Decimal, Result, Sign, LOG_BASE, MAX_SAFE_INTEGER};
 
 /// Whether `x` equals the small integer `n`.
@@ -64,7 +64,10 @@ fn fourteen_nines_from(x: &Decimal, at: i64) -> bool {
         return false;
     }
     let slice = &digits[start..end.min(digits.len())];
-    slice.parse::<u64>().map(|n| n + 1 == 100_000_000_000_000).unwrap_or(false)
+    slice
+        .parse::<u64>()
+        .map(|n| n + 1 == 100_000_000_000_000)
+        .unwrap_or(false)
 }
 
 /// `log_base(arg)`, with base 10 when `base` is `None`.
@@ -106,7 +109,7 @@ pub fn logarithm(ctx: &mut Ctx, arg: &Decimal, base: Option<&Decimal>) -> Result
             non_terminating = true;
         } else {
             let mut k = d[0];
-            while k % 10 == 0 {
+            while k.is_multiple_of(10) {
                 k /= 10;
             }
             non_terminating = k != 1;
@@ -124,7 +127,15 @@ pub fn logarithm(ctx: &mut Ctx, arg: &Decimal, base: Option<&Decimal>) -> Result
         } else {
             natural_logarithm(ctx, &base, Some(sd))?
         };
-        let mut r = divide(ctx, &numerator, &denominator, Some(sd), rounding::DOWN, false, None);
+        let mut r = divide(
+            ctx,
+            &numerator,
+            &denominator,
+            Some(sd),
+            rounding::DOWN,
+            false,
+            None,
+        );
 
         // Five rounding digits were computed; if they sit on a boundary the
         // last digit cannot yet be decided.
@@ -138,7 +149,15 @@ pub fn logarithm(ctx: &mut Ctx, arg: &Decimal, base: Option<&Decimal>) -> Result
                 } else {
                     natural_logarithm(ctx, &base, Some(sd))?
                 };
-                r = divide(ctx, &numerator, &denominator, Some(sd), rounding::DOWN, false, None);
+                r = divide(
+                    ctx,
+                    &numerator,
+                    &denominator,
+                    Some(sd),
+                    rounding::DOWN,
+                    false,
+                    None,
+                );
 
                 if !non_terminating {
                     // Fourteen nines from the second rounding digit — the
@@ -201,7 +220,11 @@ fn from_f64_result(ctx: &Ctx, result: f64) -> Decimal {
     if result.is_nan() {
         return Decimal::nan();
     }
-    let sign = if result.is_sign_negative() { Sign::Neg } else { Sign::Pos };
+    let sign = if result.is_sign_negative() {
+        Sign::Neg
+    } else {
+        Sign::Pos
+    };
     if result.is_infinite() {
         return Decimal::infinity(sign);
     }
@@ -420,7 +443,10 @@ mod tests {
         let mut ctx = Ctx::default();
         assert_eq!(pow_str(&mut ctx, "2", "0.5"), "1.4142135623730950488");
         assert_eq!(pow_str(&mut ctx, "4", "0.5"), "2");
-        assert_eq!(pow_str(&mut ctx, "8", "0.3333333333333333"), "1.9999999999999998614");
+        assert_eq!(
+            pow_str(&mut ctx, "8", "0.3333333333333333"),
+            "1.9999999999999998614"
+        );
     }
 
     #[test]
@@ -469,7 +495,9 @@ mod tests {
                 to_string(&value, &ctx.cfg)
             );
         }
-        assert!(to_power(&mut ctx, &d("1"), &Decimal::nan()).unwrap().is_nan());
+        assert!(to_power(&mut ctx, &d("1"), &Decimal::nan())
+            .unwrap()
+            .is_nan());
 
         // Everything else is the IEEE table, unmodified.
         assert_eq!(pow_str(&mut ctx, "0", "0"), "1", "0^0 is 1");
@@ -518,9 +546,24 @@ mod tests {
     fn logarithm_edge_cases() {
         let mut ctx = Ctx::default();
         assert!(logarithm(&mut ctx, &d("-1"), None).unwrap().is_nan());
-        assert!(logarithm(&mut ctx, &d("1"), Some(&d("1"))).unwrap().is_nan(), "base 1");
-        assert!(logarithm(&mut ctx, &d("1"), Some(&d("-2"))).unwrap().is_nan(), "negative base");
-        assert!(logarithm(&mut ctx, &d("1"), Some(&d("0"))).unwrap().is_nan(), "zero base");
+        assert!(
+            logarithm(&mut ctx, &d("1"), Some(&d("1")))
+                .unwrap()
+                .is_nan(),
+            "base 1"
+        );
+        assert!(
+            logarithm(&mut ctx, &d("1"), Some(&d("-2")))
+                .unwrap()
+                .is_nan(),
+            "negative base"
+        );
+        assert!(
+            logarithm(&mut ctx, &d("1"), Some(&d("0")))
+                .unwrap()
+                .is_nan(),
+            "zero base"
+        );
 
         let zero = logarithm(&mut ctx, &Decimal::zero(Sign::Pos), None).unwrap();
         assert!(zero.is_infinite() && zero.is_negative());
@@ -533,6 +576,9 @@ mod tests {
         // so does this. Reproducing the limitation is the point.
         let mut ctx = Ctx::default();
         ctx.cfg.precision = 2;
-        assert_eq!(log_str(&mut ctx, "4503599627370502", Some("1048576")), "2.6");
+        assert_eq!(
+            log_str(&mut ctx, "4503599627370502", Some("1048576")),
+            "2.6"
+        );
     }
 }

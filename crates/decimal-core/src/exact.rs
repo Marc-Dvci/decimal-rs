@@ -124,14 +124,13 @@ pub(crate) fn exact_decimal(v: f64) -> (String, i64) {
 
     // `scale` is the power of ten the digit string still has to be multiplied
     // by; only the `p < 0` branch produces one.
-    let scale: i64;
-    if power_of_two >= 0 {
+    let scale = if power_of_two >= 0 {
         mul_pow(&mut n, 2, 29, TWO_29, power_of_two as u32);
-        scale = 0;
+        0
     } else {
         mul_pow(&mut n, 5, 12, FIVE_12, (-power_of_two) as u32);
-        scale = power_of_two;
-    }
+        power_of_two
+    };
 
     let digits = to_decimal_digits(&n);
     let length = digits.len() as i64;
@@ -227,7 +226,11 @@ mod tests {
         let (digits, n) = exact_decimal(5e-324);
         assert_eq!(n, -323);
         assert!(digits.starts_with('4'), "5e-324 is really 4.94…e-324");
-        assert!(digits.len() > 700, "767 significant digits, got {}", digits.len());
+        assert!(
+            digits.len() > 700,
+            "767 significant digits, got {}",
+            digits.len()
+        );
     }
 
     #[test]

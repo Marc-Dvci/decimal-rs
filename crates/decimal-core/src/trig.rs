@@ -154,7 +154,11 @@ pub fn taylor_series(
     is_hyperbolic: bool,
 ) -> Decimal {
     let pr = ctx.cfg.precision;
-    let k = if pr <= 0 { 0 } else { (pr + LOG_BASE - 1) / LOG_BASE };
+    let k = if pr <= 0 {
+        0
+    } else {
+        (pr + LOG_BASE - 1) / LOG_BASE
+    };
 
     // Set, not saved and restored. The original clears the flag on entry and
     // ends with a bare `external = true`, so a caller that had suppressed
@@ -177,7 +181,15 @@ pub fn taylor_series(
         n += 1;
         let numerator = mul(ctx, &u, &x2);
         let denominator = series_denominator(ctx, a, b);
-        t = divide(ctx, &numerator, &denominator, Some(pr), rounding::DOWN, false, None);
+        t = divide(
+            ctx,
+            &numerator,
+            &denominator,
+            Some(pr),
+            rounding::DOWN,
+            false,
+            None,
+        );
 
         u = if is_hyperbolic {
             add(ctx, &y, &t)
@@ -191,7 +203,15 @@ pub fn taylor_series(
         n += 1;
         let numerator = mul(ctx, &t, &x2);
         let denominator = series_denominator(ctx, a, b);
-        y = divide(ctx, &numerator, &denominator, Some(pr), rounding::DOWN, false, None);
+        y = divide(
+            ctx,
+            &numerator,
+            &denominator,
+            Some(pr),
+            rounding::DOWN,
+            false,
+            None,
+        );
 
         t = add(ctx, &u, &y);
 
@@ -402,7 +422,11 @@ pub fn to_less_than_half_pi(ctx: &mut Ctx, x: &Decimal) -> Result<Decimal> {
         // Now 0 <= reduced < π.
         if lte(&reduced, &half_pi) {
             ctx.quadrant = if is_odd(&t) {
-                if is_negative { 2 } else { 3 }
+                if is_negative {
+                    2
+                } else {
+                    3
+                }
             } else if is_negative {
                 4
             } else {
@@ -412,7 +436,11 @@ pub fn to_less_than_half_pi(ctx: &mut Ctx, x: &Decimal) -> Result<Decimal> {
         }
 
         ctx.quadrant = if is_odd(&t) {
-            if is_negative { 1 } else { 4 }
+            if is_negative {
+                1
+            } else {
+                4
+            }
         } else if is_negative {
             3
         } else {
@@ -793,8 +821,12 @@ mod tests {
     #[test]
     fn non_finite_arguments() {
         let mut ctx = Ctx::default();
-        assert!(sin(&mut ctx, &Decimal::infinity(Sign::Pos)).unwrap().is_nan());
-        assert!(cos(&mut ctx, &Decimal::infinity(Sign::Pos)).unwrap().is_nan());
+        assert!(sin(&mut ctx, &Decimal::infinity(Sign::Pos))
+            .unwrap()
+            .is_nan());
+        assert!(cos(&mut ctx, &Decimal::infinity(Sign::Pos))
+            .unwrap()
+            .is_nan());
         assert!(tan(&mut ctx, &Decimal::nan()).unwrap().is_nan());
 
         assert!(cosh(&mut ctx, &Decimal::infinity(Sign::Neg)).is_infinite());
@@ -809,9 +841,15 @@ mod tests {
     fn signed_zero_survives_the_odd_functions() {
         let mut ctx = Ctx::default();
         let neg_zero = Decimal::zero(Sign::Neg);
-        assert!(sin(&mut ctx, &neg_zero).unwrap().is_negative(), "sin(-0) is -0");
+        assert!(
+            sin(&mut ctx, &neg_zero).unwrap().is_negative(),
+            "sin(-0) is -0"
+        );
         assert!(sinh(&mut ctx, &neg_zero).is_negative(), "sinh(-0) is -0");
-        assert!(tan(&mut ctx, &neg_zero).unwrap().is_negative(), "tan(-0) is -0");
+        assert!(
+            tan(&mut ctx, &neg_zero).unwrap().is_negative(),
+            "tan(-0) is -0"
+        );
         // cos is even: cos(-0) is +1.
         assert!(!cos(&mut ctx, &neg_zero).unwrap().is_negative());
     }
@@ -894,12 +932,24 @@ mod tests {
     fn integers_convert_exactly_past_the_thirty_two_bit_boundary() {
         let cfg = crate::Config::default();
         for n in [
-            0i64, 1, 9_999_999, 10_000_000, 2_147_483_647, 2_147_483_648,
-            46_341 * 46_342, 9_007_199_254_740_991,
+            0i64,
+            1,
+            9_999_999,
+            10_000_000,
+            2_147_483_647,
+            2_147_483_648,
+            46_341 * 46_342,
+            9_007_199_254_740_991,
         ] {
             assert_eq!(to_string(&Decimal::from_integer(n), &cfg), n.to_string());
-            assert_eq!(to_string(&Decimal::from_integer(-n), &cfg),
-                       if n == 0 { "0".to_string() } else { (-n).to_string() });
+            assert_eq!(
+                to_string(&Decimal::from_integer(-n), &cfg),
+                if n == 0 {
+                    "0".to_string()
+                } else {
+                    (-n).to_string()
+                }
+            );
         }
     }
 }

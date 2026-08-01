@@ -212,7 +212,10 @@ mod tests {
 
     impl Scripted {
         fn new(limbs: &[u32]) -> Self {
-            Scripted { limbs: limbs.to_vec(), next: 0 }
+            Scripted {
+                limbs: limbs.to_vec(),
+                next: 0,
+            }
         }
     }
 
@@ -248,8 +251,8 @@ mod tests {
     fn trimming_the_last_limb_does_not_shift_the_earlier_digits() {
         let mut ctx = Ctx::default();
         ctx.cfg.precision = 9;
-        let value = random(&ctx, None, &mut Scripted::new(&[1_234_567, 8_900_000]))
-            .expect("a valid sd");
+        let value =
+            random(&ctx, None, &mut Scripted::new(&[1_234_567, 8_900_000])).expect("a valid sd");
         assert_eq!(to_string(&value, &ctx.cfg), "0.123456789");
     }
 
@@ -276,8 +279,8 @@ mod tests {
 
     #[test]
     fn an_all_zero_draw_is_zero() {
-        let value = random(&Ctx::default(), Some(20.0), &mut Scripted::new(&[0]))
-            .expect("a valid sd");
+        let value =
+            random(&Ctx::default(), Some(20.0), &mut Scripted::new(&[0])).expect("a valid sd");
         assert!(value.is_zero() && !value.is_negative());
     }
 
@@ -298,7 +301,7 @@ mod tests {
     #[test]
     fn every_draw_lands_in_the_unit_interval_with_no_more_digits_than_asked() {
         let ctx = Ctx::default();
-        let mut source = Xoshiro256StarStar::seeded(0x0DDB_A11D_EAD_BEEF);
+        let mut source = Xoshiro256StarStar::seeded(0x00DD_BA11_DEAD_BEEF);
 
         for sd in 1..=100 {
             let value = random(&ctx, Some(f64::from(sd)), &mut source).expect("a valid sd");

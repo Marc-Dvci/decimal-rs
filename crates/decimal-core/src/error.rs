@@ -52,9 +52,9 @@ pub type Result<T> = core::result::Result<T, Error>;
 pub fn check_int32(value: f64, min: i64, max: i64) -> Result<i64> {
     let truncated = value as i32;
     if value != f64::from(truncated) || (value as i64) < min || (value as i64) > max {
-        return Err(Error::InvalidArgument(
-            crate::format::number_to_string(value),
-        ));
+        return Err(Error::InvalidArgument(crate::format::number_to_string(
+            value,
+        )));
     }
     Ok(value as i64)
 }

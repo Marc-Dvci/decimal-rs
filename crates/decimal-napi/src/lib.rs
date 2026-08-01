@@ -44,8 +44,10 @@ mod napi;
 
 use decimal_core::arith::{self, compare};
 use decimal_core::random::Xoshiro256StarStar;
-use decimal_core::{format, fraction, inverse, ops, parse, roots, Config, Ctx, Decimal, Error, Sign};
-use napi::{define_class, bind_symbols, Env, JsType, Value};
+use decimal_core::{
+    format, fraction, inverse, ops, parse, roots, Config, Ctx, Decimal, Error, Sign,
+};
+use napi::{bind_symbols, define_class, Env, JsType, Value};
 use napi_sys as sys;
 use std::ffi::c_void;
 use std::ptr;
@@ -121,6 +123,27 @@ fn coerce(env: Env, st: &mut ConstructorState, value: Value) -> Result<Decimal, 
             let text = env.as_string(value).unwrap_or_default();
             from_str(&mut st.ctx, &text)
         }
+        // The fourth accepted type, and the one easiest to forget: the
+        // original's constructor has a `t === 'bigint'` branch, and its
+        // documentation comments say `{number|string|bigint|Decimal}` on
+        // nineteen methods. It takes the sign off and then hands the digits to
+        // `parseDecimal` — not to `parseOther` — so a BigInt goes down the
+        // plain decimal path and never sees the radix or separator rules.
+        //
+        // Nothing in the original suite constructs one, and the differential
+        // harness generates strings and numbers, so this was missing until the
+        // dead-code warning on the unused `JsType::BigInt` variant asked why
+        // the variant existed.
+        JsType::BigInt => match env.to_string_value(value) {
+            Some(text) => {
+                let (sign, digits) = match text.strip_prefix('-') {
+                    Some(rest) => (Sign::Neg, rest),
+                    None => (Sign::Pos, text.as_str()),
+                };
+                Ok(parse::parse_decimal(&st.ctx, sign, digits))
+            }
+            None => Err(Error::InvalidArgument(describe(env, value))),
+        },
         _ => Err(Error::InvalidArgument(describe(env, value))),
     }
 }
@@ -129,7 +152,11 @@ fn coerce(env: Env, st: &mut ConstructorState, value: Value) -> Result<Decimal, 
 fn from_f64(ctx: &Ctx, v: f64) -> Decimal {
     if v == 0.0 {
         // `1 / v < 0` distinguishes -0 from +0, which `v == 0.0` does not.
-        return Decimal::zero(if v.is_sign_negative() { Sign::Neg } else { Sign::Pos });
+        return Decimal::zero(if v.is_sign_negative() {
+            Sign::Neg
+        } else {
+            Sign::Pos
+        });
     }
     if v.is_nan() {
         return Decimal::nan();
@@ -168,9 +195,19 @@ fn describe(env: Env, value: Value) -> String {
         JsType::Boolean => env.as_bool(value).unwrap_or(false).to_string(),
         JsType::Number => format::number_to_string(env.as_f64(value).unwrap_or(f64::NAN)),
         JsType::String => env.as_string(value).unwrap_or_default(),
-        JsType::Symbol => "Symbol()".to_string(),
-        JsType::Function => "function".to_string(),
-        _ => "[object Object]".to_string(),
+        // Everything else goes through JavaScript's own conversion, because
+        // that is what the original does: `Error(invalidArgument + v)` is a
+        // string concatenation, and the result is whatever `v` stringifies to.
+        //
+        // Guessing at it produced two wrong messages. An empty array gives the
+        // empty string, not `[object Object]` — `'' + []` is `''`, because
+        // `Array.prototype.toString` joins. And a Symbol does not stringify at
+        // all: the concatenation raises `TypeError: Cannot convert a Symbol
+        // value to a string`, so `new Decimal(Symbol())` fails with a TypeError
+        // and never reaches the library's own error. Here that falls out
+        // correctly — the coercion leaves V8's exception pending, and `fail`
+        // declines to throw over one that is already there.
+        _ => env.to_string_value(value).unwrap_or_default(),
     }
 }
 
@@ -275,7 +312,12 @@ fn receiver(
 }
 
 /// An argument coerced to a decimal, or a thrown error.
-fn argument(env: Env, st: &mut ConstructorState, args: &[Value], index: usize) -> Result<Decimal, Error> {
+fn argument(
+    env: Env,
+    st: &mut ConstructorState,
+    args: &[Value],
+    index: usize,
+) -> Result<Decimal, Error> {
     let value = args.get(index).copied().unwrap_or_else(|| env.undefined());
     coerce(env, st, value)
 }
@@ -381,7 +423,8 @@ macro_rules! stringify {
             };
             let a = optional_number(env, &args, 0);
             let b = optional_number(env, &args, 1);
-            let f: fn(&mut Ctx, &Decimal, Option<f64>, Option<f64>) -> Result<String, Error> = $body;
+            let f: fn(&mut Ctx, &Decimal, Option<f64>, Option<f64>) -> Result<String, Error> =
+                $body;
             match f(&mut st.ctx, &x, a, b) {
                 Ok(text) => env.string(&text),
                 Err(e) => fail(env, e),
@@ -404,7 +447,8 @@ macro_rules! rounder {
             };
             let a = optional_number(env, &args, 0);
             let b = optional_number(env, &args, 1);
-            let f: fn(&mut Ctx, &Decimal, Option<f64>, Option<f64>) -> Result<Decimal, Error> = $body;
+            let f: fn(&mut Ctx, &Decimal, Option<f64>, Option<f64>) -> Result<Decimal, Error> =
+                $body;
             match f(&mut st.ctx, &x, a, b) {
                 Ok(value) => make(env, st, value),
                 Err(e) => fail(env, e),
@@ -463,10 +507,7 @@ fallible_unary!(m_atanh, |ctx, x| decimal_core::inverse::atanh(ctx, x));
 /// `naturalLogarithm`, which can raise `[DecimalError] Precision limit
 /// exceeded` when the configured precision outruns the 1025-digit `LN10`
 /// constant.
-unsafe extern "C" fn m_ln(
-    env: sys::napi_env,
-    info: sys::napi_callback_info,
-) -> sys::napi_value {
+unsafe extern "C" fn m_ln(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
     let Some((_, x, st)) = receiver(env, info, 0) else {
         return env.undefined();
@@ -485,7 +526,9 @@ binary!(m_div, |ctx, x, y| {
     arith::divide(ctx, x, y, None, rm, false, None)
 });
 binary!(m_mod, |ctx, x, y| ops::modulo(ctx, x, y));
-binary!(m_div_to_int, |ctx, x, y| decimal_core::trig::div_to_int(ctx, x, y));
+binary!(m_div_to_int, |ctx, x, y| decimal_core::trig::div_to_int(
+    ctx, x, y
+));
 
 predicate!(m_is_nan, |x| x.is_nan());
 predicate!(m_is_finite, |x| x.is_finite());
@@ -507,43 +550,26 @@ comparison!(m_gte, |o| matches!(
 ));
 
 stringify!(m_to_fixed, |ctx, x, a, b| ops::to_fixed(ctx, x, a, b));
-stringify!(m_to_exponential, |ctx, x, a, b| ops::to_exponential(ctx, x, a, b));
-stringify!(m_to_precision, |ctx, x, a, b| ops::to_precision(ctx, x, a, b));
-stringify!(m_to_binary, |ctx, x, a, b| decimal_core::radix::to_string_binary(ctx, x, 2, a, b));
-stringify!(m_to_octal, |ctx, x, a, b| decimal_core::radix::to_string_binary(ctx, x, 8, a, b));
-stringify!(m_to_hex, |ctx, x, a, b| decimal_core::radix::to_string_binary(ctx, x, 16, a, b));
+stringify!(m_to_exponential, |ctx, x, a, b| ops::to_exponential(
+    ctx, x, a, b
+));
+stringify!(m_to_precision, |ctx, x, a, b| ops::to_precision(
+    ctx, x, a, b
+));
+stringify!(m_to_binary, |ctx, x, a, b| {
+    decimal_core::radix::to_string_binary(ctx, x, 2, a, b)
+});
+stringify!(m_to_octal, |ctx, x, a, b| {
+    decimal_core::radix::to_string_binary(ctx, x, 8, a, b)
+});
+stringify!(m_to_hex, |ctx, x, a, b| {
+    decimal_core::radix::to_string_binary(ctx, x, 16, a, b)
+});
 
 rounder!(m_to_dp, |ctx, x, a, b| ops::to_decimal_places(ctx, x, a, b));
-rounder!(m_to_sd, |ctx, x, a, b| ops::to_significant_digits(ctx, x, a, b));
-
-/// Declares a method that is present but not yet ported.
-///
-/// These exist because `test/test.js` has no `try`/`catch`: it loads each
-/// module with a bare `require`, so a single missing method is not one failing
-/// assertion but a `TypeError` that aborts the entire run and scores zero. The
-/// surface therefore has to be complete before the pass count means anything.
-///
-/// Returning NaN is the honest placeholder — it is a value the library already
-/// produces for undefined results, so it propagates rather than crashing, and
-/// every assertion that depends on it fails and is counted as failing. What it
-/// must not do is quietly resemble a correct answer; see the unported-function
-/// inventory in DECISIONS.md, which lists each of these with the number of
-/// assertions it accounts for.
-macro_rules! not_yet_ported {
-    ($name:ident) => {
-        unsafe extern "C" fn $name(
-            env: sys::napi_env,
-            info: sys::napi_callback_info,
-        ) -> sys::napi_value {
-            let env = Env(env);
-            let (_, this, data) = env.callback_info(info, 2);
-            let _ = this;
-            // SAFETY: `data` is the leaked ConstructorState for this class.
-            let st = unsafe { state(data) };
-            make(env, st, Decimal::nan())
-        }
-    };
-}
+rounder!(m_to_sd, |ctx, x, a, b| ops::to_significant_digits(
+    ctx, x, a, b
+));
 
 /// `toFraction([maxDenominator])`, which returns a two-element array rather
 /// than a Decimal — except for a non-finite receiver, where it returns a
@@ -583,10 +609,7 @@ unsafe extern "C" fn m_to_fraction(
 }
 
 /// `logarithm`, whose base argument is optional and defaults to 10.
-unsafe extern "C" fn m_log(
-    env: sys::napi_env,
-    info: sys::napi_callback_info,
-) -> sys::napi_value {
+unsafe extern "C" fn m_log(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
     let Some((args, x, st)) = receiver(env, info, 1) else {
         return env.undefined();
@@ -606,10 +629,7 @@ unsafe extern "C" fn m_log(
 }
 
 /// `toPower`.
-unsafe extern "C" fn m_pow(
-    env: sys::napi_env,
-    info: sys::napi_callback_info,
-) -> sys::napi_value {
+unsafe extern "C" fn m_pow(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
     let Some((args, x, st)) = receiver(env, info, 1) else {
         return env.undefined();
@@ -654,10 +674,7 @@ static_log_base!(s_log2, 2);
 static_log_base!(s_log10, 10);
 
 /// `clampedTo`, which takes two bounds and can reject an inverted range.
-unsafe extern "C" fn m_clamp(
-    env: sys::napi_env,
-    info: sys::napi_callback_info,
-) -> sys::napi_value {
+unsafe extern "C" fn m_clamp(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
     let Some((args, x, st)) = receiver(env, info, 2) else {
         return env.undefined();
@@ -852,14 +869,38 @@ accessor!(get_d, |env, x| match &x.d {
 // Statics: configuration
 // ---------------------------------------------------------------------------
 
+/// One configurable setting: its name, a reader, and a writer.
+///
+/// Every setting is carried as an `f64` on the JavaScript side, including the
+/// three that are conceptually integers — because that is what a JavaScript
+/// number is, and because `config` validates the integrality itself rather
+/// than letting a conversion do it silently.
+type Setting = (&'static str, fn(&Config) -> f64, fn(&mut Config, f64));
+
 /// The eight configurable settings, with the ranges `config` validates them
 /// against and the accessors that read and write them.
-const SETTINGS: &[(&str, fn(&Config) -> f64, fn(&mut Config, f64))] = &[
-    ("precision", |c| c.precision as f64, |c, v| c.precision = v as i64),
-    ("rounding", |c| c.rounding as f64, |c, v| c.rounding = v as u8),
+const SETTINGS: &[Setting] = &[
+    (
+        "precision",
+        |c| c.precision as f64,
+        |c, v| c.precision = v as i64,
+    ),
+    (
+        "rounding",
+        |c| c.rounding as f64,
+        |c, v| c.rounding = v as u8,
+    ),
     ("modulo", |c| c.modulo as f64, |c, v| c.modulo = v as u8),
-    ("toExpNeg", |c| c.to_exp_neg as f64, |c, v| c.to_exp_neg = v as i64),
-    ("toExpPos", |c| c.to_exp_pos as f64, |c, v| c.to_exp_pos = v as i64),
+    (
+        "toExpNeg",
+        |c| c.to_exp_neg as f64,
+        |c, v| c.to_exp_neg = v as i64,
+    ),
+    (
+        "toExpPos",
+        |c| c.to_exp_pos as f64,
+        |c, v| c.to_exp_pos = v as i64,
+    ),
     ("minE", |c| c.min_e as f64, |c, v| c.min_e = v as i64),
     ("maxE", |c| c.max_e as f64, |c, v| c.max_e = v as i64),
 ];
@@ -932,11 +973,15 @@ unsafe extern "C" fn s_config(
         // `true`, `false`, `0` and `1` are all accepted.
         let requested = match env.type_of(raw) {
             JsType::Boolean => env.as_bool(raw),
-            JsType::Number => match env.as_f64(raw) {
-                Some(v) if v == 0.0 => Some(false),
-                Some(v) if v == 1.0 => Some(true),
-                _ => None,
-            },
+            JsType::Number => env.as_f64(raw).and_then(|v| {
+                if v == 0.0 {
+                    Some(false)
+                } else if v == 1.0 {
+                    Some(true)
+                } else {
+                    None
+                }
+            }),
             _ => None,
         };
         match requested {
@@ -1025,10 +1070,7 @@ unsafe extern "C" fn set_crypto(
     let (args, _, data) = env.callback_info(info, 1);
     // SAFETY: as above.
     let st = unsafe { state(data) };
-    st.ctx.cfg.crypto = args
-        .first()
-        .and_then(|&v| env.as_bool(v))
-        .unwrap_or(false);
+    st.ctx.cfg.crypto = args.first().and_then(|&v| env.as_bool(v)).unwrap_or(false);
     env.undefined()
 }
 
@@ -1097,23 +1139,6 @@ static_via_instance!(s_sub, "minus");
 static_via_instance!(s_tan, "tan");
 static_via_instance!(s_tanh, "tanh");
 static_via_instance!(s_trunc, "trunc");
-
-/// A static that is not yet ported, returning NaN. See the inventory in
-/// DECISIONS.md.
-macro_rules! static_not_yet_ported {
-    ($name:ident) => {
-        unsafe extern "C" fn $name(
-            env: sys::napi_env,
-            info: sys::napi_callback_info,
-        ) -> sys::napi_value {
-            let env = Env(env);
-            let (_, _, data) = env.callback_info(info, 0);
-            // SAFETY: `data` is the leaked ConstructorState for this class.
-            let st = unsafe { state(data) };
-            make(env, st, Decimal::nan())
-        }
-    };
-}
 
 /// The `crypto` global, if it exists and offers either entropy function.
 ///
@@ -1223,10 +1248,7 @@ unsafe extern "C" fn s_random(
 /// Both arguments are coerced before either is used, so a bad `x` raises even
 /// when `y` is already NaN — the original writes `y = new this(y); x = new
 /// this(x);` on two consecutive lines, ahead of every test.
-unsafe extern "C" fn s_atan2(
-    env: sys::napi_env,
-    info: sys::napi_callback_info,
-) -> sys::napi_value {
+unsafe extern "C" fn s_atan2(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
     let (args, _, data) = env.callback_info(info, 2);
     // SAFETY: `data` is the leaked ConstructorState for this class.
@@ -1252,10 +1274,7 @@ unsafe extern "C" fn s_atan2(
 /// Arguments are coerced one at a time, inside the loop, because the original
 /// does: an infinite argument returns before the rest are ever looked at, so a
 /// later value that would fail to convert never gets the chance.
-unsafe extern "C" fn s_hypot(
-    env: sys::napi_env,
-    info: sys::napi_callback_info,
-) -> sys::napi_value {
+unsafe extern "C" fn s_hypot(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
     let (args, _, data) = env.callback_info_variadic(info);
     // SAFETY: `data` is the leaked ConstructorState for this class.
@@ -1296,10 +1315,7 @@ unsafe extern "C" fn s_hypot(
 ///
 /// Coerced lazily for the same reason as `hypot`, and stopping at the first
 /// NaN: `Decimal.sum(NaN, {})` is NaN, because the `{}` is never constructed.
-unsafe extern "C" fn s_sum(
-    env: sys::napi_env,
-    info: sys::napi_callback_info,
-) -> sys::napi_value {
+unsafe extern "C" fn s_sum(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
     let (args, _, data) = env.callback_info_variadic(info);
     // SAFETY: `data` is the leaked ConstructorState for this class.
@@ -1408,26 +1424,17 @@ unsafe extern "C" fn s_max_or_min<const WANT_GREATER: bool>(
     make(env, st, best)
 }
 
-unsafe extern "C" fn s_max(
-    env: sys::napi_env,
-    info: sys::napi_callback_info,
-) -> sys::napi_value {
+unsafe extern "C" fn s_max(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     s_max_or_min::<true>(env, info)
 }
 
-unsafe extern "C" fn s_min(
-    env: sys::napi_env,
-    info: sys::napi_callback_info,
-) -> sys::napi_value {
+unsafe extern "C" fn s_min(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     s_max_or_min::<false>(env, info)
 }
 
 /// `Decimal.sign`, which returns a plain number and distinguishes the two
 /// zeros.
-unsafe extern "C" fn s_sign(
-    env: sys::napi_env,
-    info: sys::napi_callback_info,
-) -> sys::napi_value {
+unsafe extern "C" fn s_sign(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
     let (args, _, data) = env.callback_info(info, 1);
     // SAFETY: `data` is the leaked ConstructorState for this class.
@@ -1468,10 +1475,7 @@ unsafe extern "C" fn s_is_decimal(
     env.boolean(is)
 }
 
-unsafe extern "C" fn s_clone(
-    env: sys::napi_env,
-    info: sys::napi_callback_info,
-) -> sys::napi_value {
+unsafe extern "C" fn s_clone(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
     let (args, _, data) = env.callback_info(info, 1);
     let parent = state(data);
@@ -1525,7 +1529,11 @@ unsafe extern "C" fn s_clone(
 // ---------------------------------------------------------------------------
 
 /// A property descriptor for a method.
-fn method(name: &'static str, cb: sys::napi_callback, data: *mut c_void) -> sys::napi_property_descriptor {
+fn method(
+    name: &'static str,
+    cb: sys::napi_callback,
+    data: *mut c_void,
+) -> sys::napi_property_descriptor {
     sys::napi_property_descriptor {
         utf8name: name.as_ptr().cast(),
         name: ptr::null_mut(),
@@ -1539,7 +1547,11 @@ fn method(name: &'static str, cb: sys::napi_callback, data: *mut c_void) -> sys:
 }
 
 /// A property descriptor for an instance accessor.
-fn getter(name: &'static str, cb: sys::napi_callback, data: *mut c_void) -> sys::napi_property_descriptor {
+fn getter(
+    name: &'static str,
+    cb: sys::napi_callback,
+    data: *mut c_void,
+) -> sys::napi_property_descriptor {
     sys::napi_property_descriptor {
         utf8name: name.as_ptr().cast(),
         name: ptr::null_mut(),
@@ -1678,8 +1690,11 @@ fn build_class(env: Env, cfg: Config) -> Value {
         properties.push(method(names[0], cb, data));
     }
 
-    let accessors: &[(&'static str, sys::napi_callback)] =
-        &[("s\0", Some(get_s)), ("e\0", Some(get_e)), ("d\0", Some(get_d))];
+    let accessors: &[(&'static str, sys::napi_callback)] = &[
+        ("s\0", Some(get_s)),
+        ("e\0", Some(get_e)),
+        ("d\0", Some(get_d)),
+    ];
     for &(name, cb) in accessors {
         properties.push(getter(name, cb, data));
     }
@@ -1690,7 +1705,13 @@ fn build_class(env: Env, cfg: Config) -> Value {
     // of the original's assertions.
     properties.push(static_entry("config\0", Some(s_config), None, None, data));
     properties.push(static_entry("clone\0", Some(s_clone), None, None, data));
-    properties.push(static_entry("isDecimal\0", Some(s_is_decimal), None, None, data));
+    properties.push(static_entry(
+        "isDecimal\0",
+        Some(s_is_decimal),
+        None,
+        None,
+        data,
+    ));
 
     let statics: &[(&'static str, sys::napi_callback)] = &[
         ("abs\0", Some(s_abs)),
@@ -1736,14 +1757,62 @@ fn build_class(env: Env, cfg: Config) -> Value {
         properties.push(static_entry(name, cb, None, None, data));
     }
 
-    properties.push(static_entry("precision\0", None, Some(get_precision), Some(set_precision), data));
-    properties.push(static_entry("rounding\0", None, Some(get_rounding), Some(set_rounding), data));
-    properties.push(static_entry("modulo\0", None, Some(get_modulo), Some(set_modulo), data));
-    properties.push(static_entry("toExpNeg\0", None, Some(get_to_exp_neg), Some(set_to_exp_neg), data));
-    properties.push(static_entry("toExpPos\0", None, Some(get_to_exp_pos), Some(set_to_exp_pos), data));
-    properties.push(static_entry("minE\0", None, Some(get_min_e), Some(set_min_e), data));
-    properties.push(static_entry("maxE\0", None, Some(get_max_e), Some(set_max_e), data));
-    properties.push(static_entry("crypto\0", None, Some(get_crypto), Some(set_crypto), data));
+    properties.push(static_entry(
+        "precision\0",
+        None,
+        Some(get_precision),
+        Some(set_precision),
+        data,
+    ));
+    properties.push(static_entry(
+        "rounding\0",
+        None,
+        Some(get_rounding),
+        Some(set_rounding),
+        data,
+    ));
+    properties.push(static_entry(
+        "modulo\0",
+        None,
+        Some(get_modulo),
+        Some(set_modulo),
+        data,
+    ));
+    properties.push(static_entry(
+        "toExpNeg\0",
+        None,
+        Some(get_to_exp_neg),
+        Some(set_to_exp_neg),
+        data,
+    ));
+    properties.push(static_entry(
+        "toExpPos\0",
+        None,
+        Some(get_to_exp_pos),
+        Some(set_to_exp_pos),
+        data,
+    ));
+    properties.push(static_entry(
+        "minE\0",
+        None,
+        Some(get_min_e),
+        Some(set_min_e),
+        data,
+    ));
+    properties.push(static_entry(
+        "maxE\0",
+        None,
+        Some(get_max_e),
+        Some(set_max_e),
+        data,
+    ));
+    properties.push(static_entry(
+        "crypto\0",
+        None,
+        Some(get_crypto),
+        Some(set_crypto),
+        data,
+    ));
 
     // SAFETY: `properties` lives until after the call returns, and `data` is
     // leaked, so both outlive every invocation of the methods they describe.

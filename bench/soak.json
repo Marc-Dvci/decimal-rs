@@ -1,0 +1,37 @@
+{
+  "generated": "2026-08-01T09:01:34.834Z",
+  "host": "AMD Ryzen 5 7600 6-Core Processor / win32 10.0.26200",
+  "node": "v24.13.1",
+  "options": {
+    "minutes": 10,
+    "interval": 2,
+    "json": "bench/soak.json",
+    "warmup": 60
+  },
+  "results": [
+    {
+      "label": "decimal.js  (control)",
+      "rounds": 1001100,
+      "seconds": 600.005,
+      "samples": 299,
+      "kept": 269,
+      "peakMiB": 115.578125,
+      "firstQuarterMiB": 83.96233675373135,
+      "lastQuarterMiB": 115.54804104477611,
+      "slopeMiBPerHour": 280.7368836961403,
+      "driftMiB": 31.585704291044763
+    },
+    {
+      "label": "decimal-rs  (subject)",
+      "rounds": 995125,
+      "seconds": 600,
+      "samples": 299,
+      "kept": 269,
+      "peakMiB": 163.58203125,
+      "firstQuarterMiB": 87.4911963619403,
+      "lastQuarterMiB": 61.69787779850746,
+      "slopeMiBPerHour": -238.37912826479916,
+      "driftMiB": -25.793318563432834
+    }
+  ]
+}

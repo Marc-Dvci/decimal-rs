@@ -266,7 +266,9 @@ pub fn clamp(ctx: &mut Ctx, x: &Decimal, min: &Decimal, max: &Decimal) -> Result
         return Ok(Decimal::nan());
     }
     if crate::arith::compare(min, max) == Some(Ordering::Greater) {
-        return Err(Error::InvalidArgument(crate::format::interpolated(max, &ctx.cfg)));
+        return Err(Error::InvalidArgument(crate::format::interpolated(
+            max, &ctx.cfg,
+        )));
     }
     Ok(match crate::arith::compare(x, min) {
         Some(Ordering::Less) => min.clone(),
@@ -420,21 +422,42 @@ mod tests {
         // The rounded value is a positive zero, but the value that was rounded
         // was negative, so the sign survives. This is the case the original
         // comments on, and the reason the sign is not read off the result.
-        assert_eq!(to_fixed(&mut ctx, &d("-0.4"), Some(0.0), None).unwrap(), "-0");
+        assert_eq!(
+            to_fixed(&mut ctx, &d("-0.4"), Some(0.0), None).unwrap(),
+            "-0"
+        );
         // Under the default HALF_UP the tie goes away from zero, so -0.5 does
         // round to a non-zero value and the question does not arise.
-        assert_eq!(to_fixed(&mut ctx, &d("-0.5"), Some(0.0), None).unwrap(), "-1");
+        assert_eq!(
+            to_fixed(&mut ctx, &d("-0.5"), Some(0.0), None).unwrap(),
+            "-1"
+        );
         assert_eq!(to_fixed(&mut ctx, &d("0.5"), Some(0.0), None).unwrap(), "1");
-        assert_eq!(to_fixed(&mut ctx, &d("-1.5"), Some(0.0), None).unwrap(), "-2");
+        assert_eq!(
+            to_fixed(&mut ctx, &d("-1.5"), Some(0.0), None).unwrap(),
+            "-2"
+        );
     }
 
     #[test]
     fn to_fixed_pads_to_the_requested_places() {
         let mut ctx = Ctx::default();
-        assert_eq!(to_fixed(&mut ctx, &d("1"), Some(3.0), None).unwrap(), "1.000");
-        assert_eq!(to_fixed(&mut ctx, &d("1.5"), Some(3.0), None).unwrap(), "1.500");
-        assert_eq!(to_fixed(&mut ctx, &d("1.2345"), Some(2.0), None).unwrap(), "1.23");
-        assert_eq!(to_fixed(&mut ctx, &d("0"), Some(2.0), None).unwrap(), "0.00");
+        assert_eq!(
+            to_fixed(&mut ctx, &d("1"), Some(3.0), None).unwrap(),
+            "1.000"
+        );
+        assert_eq!(
+            to_fixed(&mut ctx, &d("1.5"), Some(3.0), None).unwrap(),
+            "1.500"
+        );
+        assert_eq!(
+            to_fixed(&mut ctx, &d("1.2345"), Some(2.0), None).unwrap(),
+            "1.23"
+        );
+        assert_eq!(
+            to_fixed(&mut ctx, &d("0"), Some(2.0), None).unwrap(),
+            "0.00"
+        );
     }
 
     #[test]
@@ -448,15 +471,23 @@ mod tests {
             to_exponential(&mut ctx, &d("0.00012345"), Some(3.0), None).unwrap(),
             "1.235e-4"
         );
-        assert_eq!(to_precision(&mut ctx, &d("12345"), Some(3.0), None).unwrap(), "1.23e+4");
-        assert_eq!(to_precision(&mut ctx, &d("1.2345"), Some(3.0), None).unwrap(), "1.23");
+        assert_eq!(
+            to_precision(&mut ctx, &d("12345"), Some(3.0), None).unwrap(),
+            "1.23e+4"
+        );
+        assert_eq!(
+            to_precision(&mut ctx, &d("1.2345"), Some(3.0), None).unwrap(),
+            "1.23"
+        );
     }
 
     #[test]
     fn out_of_range_arguments_are_rejected_with_the_originals_message() {
         let mut ctx = Ctx::default();
         assert_eq!(
-            to_fixed(&mut ctx, &d("1"), Some(-1.0), None).unwrap_err().to_string(),
+            to_fixed(&mut ctx, &d("1"), Some(-1.0), None)
+                .unwrap_err()
+                .to_string(),
             "[DecimalError] Invalid argument: -1"
         );
         assert!(to_significant_digits(&mut ctx, &d("1"), Some(0.0), None).is_err());
@@ -519,9 +550,18 @@ mod tests {
     #[test]
     fn clamp_bounds_and_rejects_an_inverted_range() {
         let mut ctx = Ctx::default();
-        assert_eq!(show(&clamp(&mut ctx, &d("5"), &d("1"), &d("3")).unwrap()), "3");
-        assert_eq!(show(&clamp(&mut ctx, &d("0"), &d("1"), &d("3")).unwrap()), "1");
-        assert_eq!(show(&clamp(&mut ctx, &d("2"), &d("1"), &d("3")).unwrap()), "2");
+        assert_eq!(
+            show(&clamp(&mut ctx, &d("5"), &d("1"), &d("3")).unwrap()),
+            "3"
+        );
+        assert_eq!(
+            show(&clamp(&mut ctx, &d("0"), &d("1"), &d("3")).unwrap()),
+            "1"
+        );
+        assert_eq!(
+            show(&clamp(&mut ctx, &d("2"), &d("1"), &d("3")).unwrap()),
+            "2"
+        );
         assert!(clamp(&mut ctx, &d("2"), &d("3"), &d("1")).is_err());
         assert!(clamp(&mut ctx, &d("2"), &Decimal::nan(), &d("1"))
             .unwrap()
@@ -556,9 +596,9 @@ mod tests {
 
         let big = d("9.87e300");
         assert!(abs(&mut ctx, &big).is_infinite(), "above maxE, so infinite");
-        assert!(
-            to_significant_digits(&mut ctx, &big, Some(5.0), None).unwrap().is_infinite()
-        );
+        assert!(to_significant_digits(&mut ctx, &big, Some(5.0), None)
+            .unwrap()
+            .is_infinite());
 
         // Below minE, so zero — and `neg` of it is a zero too, not the value.
         let tiny = d("-1785178753e-8999999999999985");
@@ -570,6 +610,9 @@ mod tests {
         // the two come from different values and the answer is enormous. That
         // is upstream's arithmetic, reproduced; see D-12.
         let floored = floor(&mut ctx, &tiny);
-        assert_eq!(crate::format::to_string(&floored, &ctx.cfg), "-1e+8999999999999976");
+        assert_eq!(
+            crate::format::to_string(&floored, &ctx.cfg),
+            "-1e+8999999999999976"
+        );
     }
 }

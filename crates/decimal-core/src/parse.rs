@@ -122,7 +122,7 @@ fn count_digits(s: &[u8], at: &mut usize) -> usize {
 /// Advance past a run of digits valid in `radix`, returning how many.
 fn count_radix_digits(s: &[u8], at: &mut usize, radix: u32) -> usize {
     let start = *at;
-    while *at < s.len() && (s[*at] as char).to_digit(radix).is_some() {
+    while *at < s.len() && (s[*at] as char).is_digit(radix) {
         *at += 1;
     }
     *at - start
@@ -186,7 +186,8 @@ pub fn parse_decimal(ctx: &Ctx, s: Sign, text: &str) -> Decimal {
     // and completely wrong exponent. Saturating into a range far outside
     // `EXP_LIMIT` reproduces the original's outcome — the value overflows —
     // while keeping the limb arithmetic below in range.
-    let mut e = saturate_exponent((point_at.unwrap_or(digits.len()) as i64).saturating_add(exponent_part));
+    let mut e =
+        saturate_exponent((point_at.unwrap_or(digits.len()) as i64).saturating_add(exponent_part));
 
     // -- 2. Trim ---------------------------------------------------------
     let first_significant = digits.iter().position(|&d| d != 0);
@@ -350,7 +351,7 @@ pub fn parse_other(ctx: &mut Ctx, s: Sign, text: &str) -> crate::Result<Decimal>
     let (mantissa, binary_exponent) = match lowered.find('p') {
         Some(at) => (
             &lowered[2..at],
-            parse_exponent(lowered[at + 1..].as_bytes()),
+            parse_exponent(&lowered.as_bytes()[at + 1..]),
         ),
         None => (&lowered[2..], 0),
     };
@@ -381,7 +382,11 @@ pub fn parse_other(ctx: &mut Ctx, s: Sign, text: &str) -> crate::Result<Decimal>
         return Ok(Decimal::zero(s));
     }
 
-    let mut x = Decimal::finite(s, crate::arith::base10_exponent(&limbs, limb_exponent), limbs);
+    let mut x = Decimal::finite(
+        s,
+        crate::arith::base10_exponent(&limbs, limb_exponent),
+        limbs,
+    );
 
     let result = ctx.without_clamping(|ctx| {
         if fraction_length > 0 {
@@ -424,7 +429,11 @@ pub fn parse_other(ctx: &mut Ctx, s: Sign, text: &str) -> crate::Result<Decimal>
                 let doubled = (2f64).powi(binary_exponent as i32);
                 parse_decimal(ctx, Sign::Pos, &crate::format::number_to_string(doubled))
             } else {
-                let sign = if binary_exponent < 0 { Sign::Neg } else { Sign::Pos };
+                let sign = if binary_exponent < 0 {
+                    Sign::Neg
+                } else {
+                    Sign::Pos
+                };
                 let exponent =
                     parse_decimal(ctx, sign, &binary_exponent.unsigned_abs().to_string());
                 crate::power::to_power(ctx, &Decimal::from_i32(2), &exponent)?
@@ -480,7 +489,9 @@ fn parse_exponent(bytes: &[u8]) -> i64 {
 
 /// Pack up to seven decimal digits into a limb, most significant first.
 fn digits_to_limb(digits: &[u8]) -> u32 {
-    digits.iter().fold(0u32, |limb, &d| limb * 10 + u32::from(d))
+    digits
+        .iter()
+        .fold(0u32, |limb, &d| limb * 10 + u32::from(d))
 }
 
 /// Pack digits into a limb, padding on the right to the full seven positions.

@@ -114,7 +114,11 @@ pub fn to_string_binary(
 
     let mut str;
     if xd.is_empty() || xd[0] == 0 {
-        str = if is_exp { "0p+0".to_string() } else { "0".to_string() };
+        str = if is_exp {
+            "0p+0".to_string()
+        } else {
+            "0".to_string()
+        };
     } else {
         let mut round_up = false;
 
@@ -124,8 +128,7 @@ pub fn to_string_binary(
                 let mut numerator = x.clone();
                 numerator.d = Some(xd.clone());
                 numerator.e = e;
-                let quotient =
-                    divide(ctx, &numerator, &divisor, Some(sd), rm, false, Some(base));
+                let quotient = divide(ctx, &numerator, &divisor, Some(sd), rm, false, Some(base));
                 xd = quotient.digits().to_vec();
                 e = quotient.e;
                 round_up = ctx.inexact;
@@ -173,7 +176,7 @@ pub fn to_string_binary(
                 }
                 i -= 1;
                 xd[i] += 1;
-                if xd[i] <= base - 1 {
+                if xd[i] < base {
                     break;
                 }
                 xd[i] = 0;
@@ -198,7 +201,7 @@ pub fn to_string_binary(
                     // that the leading digit is 1 as the C99 form requires.
                     let group = if base_out == 16 { 4 } else { 3 };
                     let mut padded_len = len - 1;
-                    while padded_len % group != 0 {
+                    while !padded_len.is_multiple_of(group) {
                         str.push('0');
                         padded_len += 1;
                     }
@@ -297,11 +300,20 @@ mod tests {
     fn non_finite_values_carry_no_prefix() {
         let mut ctx = Ctx::default();
         let inf = Decimal::infinity(Sign::Pos);
-        assert_eq!(to_string_binary(&mut ctx, &inf, 16, None, None).unwrap(), "Infinity");
+        assert_eq!(
+            to_string_binary(&mut ctx, &inf, 16, None, None).unwrap(),
+            "Infinity"
+        );
         let nan = Decimal::nan();
-        assert_eq!(to_string_binary(&mut ctx, &nan, 2, None, None).unwrap(), "NaN");
+        assert_eq!(
+            to_string_binary(&mut ctx, &nan, 2, None, None).unwrap(),
+            "NaN"
+        );
         let neg = Decimal::infinity(Sign::Neg);
-        assert_eq!(to_string_binary(&mut ctx, &neg, 8, None, None).unwrap(), "-Infinity");
+        assert_eq!(
+            to_string_binary(&mut ctx, &neg, 8, None, None).unwrap(),
+            "-Infinity"
+        );
     }
 
     #[test]

@@ -55,12 +55,12 @@
 //! **The truncation flag.** See [`TRUNCATED_BY_ASSIGNMENT`], which is the
 //! subtlest thing in this file and is invisible in the original.
 
-use crate::arith::{add, compare, divide, mul, sub};
+use crate::arith::{add, divide, mul, sub};
 use crate::config::rounding;
 use crate::constants::{LN10, LN10_PRECISION};
 use crate::format::digits_to_string;
 use crate::round::finalise;
-use crate::{digit_count, Ctx, Decimal, Error, Result, Sign, LOG_BASE};
+use crate::{Ctx, Decimal, Error, Result, Sign, LOG_BASE};
 
 /// The `isTruncated` argument the original passes when a series sum reaches
 /// `finalise`, and the reason it is easy to miss.
@@ -254,7 +254,15 @@ pub fn natural_exponential(ctx: &mut Ctx, x: &Decimal, sd: Option<i64>) -> Decim
         i += 1;
         denominator = mul(ctx, &denominator, &Decimal::from_integer(i));
 
-        let term = divide(ctx, &pow, &denominator, Some(wpr), rounding::DOWN, false, None);
+        let term = divide(
+            ctx,
+            &pow,
+            &denominator,
+            Some(wpr),
+            rounding::DOWN,
+            false,
+            None,
+        );
         let t = add(ctx, &sum, &term);
 
         if agree(&t, &sum, wpr) {
@@ -362,8 +370,7 @@ pub fn natural_logarithm(ctx: &mut Ctx, y: &Decimal, sd: Option<i64>) -> Result<
         if e < 0 {
             t.s = t.s.negated();
         }
-        let mantissa =
-            crate::parse::parse_decimal(ctx, Sign::Pos, &format!("{}.{}", c0, &c[1..]));
+        let mantissa = crate::parse::parse_decimal(ctx, Sign::Pos, &format!("{}.{}", c0, &c[1..]));
         let inner = natural_logarithm(ctx, &mantissa, Some(wpr - guard))?;
         let mut result = add(ctx, &inner, &t);
         ctx.cfg.precision = pr;
@@ -383,7 +390,15 @@ pub fn natural_logarithm(ctx: &mut Ctx, y: &Decimal, sd: Option<i64>) -> Result<
     let mut t = {
         let numerator = sub(ctx, &x, &one);
         let denominator = add(ctx, &x, &one);
-        divide(ctx, &numerator, &denominator, Some(wpr), rounding::DOWN, false, None)
+        divide(
+            ctx,
+            &numerator,
+            &denominator,
+            Some(wpr),
+            rounding::DOWN,
+            false,
+            None,
+        )
     };
     let mut sum = t.clone();
     let mut numerator = t.clone();
@@ -397,7 +412,15 @@ pub fn natural_logarithm(ctx: &mut Ctx, y: &Decimal, sd: Option<i64>) -> Result<
         finalise(ctx, &mut numerator, Some(wpr), rounding::DOWN, false);
 
         let divisor = Decimal::from_integer(denominator);
-        let term = divide(ctx, &numerator, &divisor, Some(wpr), rounding::DOWN, false, None);
+        let term = divide(
+            ctx,
+            &numerator,
+            &divisor,
+            Some(wpr),
+            rounding::DOWN,
+            false,
+            None,
+        );
         let next = add(ctx, &sum, &term);
 
         if agree(&next, &sum, wpr) {
@@ -468,21 +491,6 @@ pub fn exp(ctx: &mut Ctx, x: &Decimal) -> Decimal {
     natural_exponential(ctx, x, None)
 }
 
-/// The number of digits of `x` — used by `log` to spot exact powers of ten.
-pub(crate) fn leading_digit_count(x: &Decimal) -> i64 {
-    digit_count(x.digits()[0])
-}
-
-/// Whether `x` is exactly a power of ten, and if so which.
-pub(crate) fn power_of_ten(x: &Decimal) -> Option<i64> {
-    (x.digits() == [1]).then_some(x.e)
-}
-
-/// A comparison helper shared with `log`.
-pub(crate) fn equals(a: &Decimal, b: &Decimal) -> bool {
-    compare(a, b) == Some(core::cmp::Ordering::Equal)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -534,10 +542,17 @@ mod tests {
         assert!(ln(&mut ctx, &Decimal::nan()).unwrap().is_nan());
 
         let zero = ln(&mut ctx, &Decimal::zero(Sign::Pos)).unwrap();
-        assert!(zero.is_infinite() && zero.is_negative(), "ln(0) is -Infinity");
+        assert!(
+            zero.is_infinite() && zero.is_negative(),
+            "ln(0) is -Infinity"
+        );
 
-        assert!(ln(&mut ctx, &Decimal::infinity(Sign::Pos)).unwrap().is_infinite());
-        assert!(ln(&mut ctx, &Decimal::infinity(Sign::Neg)).unwrap().is_nan());
+        assert!(ln(&mut ctx, &Decimal::infinity(Sign::Pos))
+            .unwrap()
+            .is_infinite());
+        assert!(ln(&mut ctx, &Decimal::infinity(Sign::Neg))
+            .unwrap()
+            .is_nan());
     }
 
     #[test]
@@ -561,8 +576,15 @@ mod tests {
             // The round trip loses a digit or two to the two roundings, so
             // compare at a slightly reduced precision.
             let difference = crate::arith::sub(&mut ctx, &back, &value);
-            let relative =
-                divide(&mut ctx, &difference, &value, Some(20), rounding::HALF_UP, false, None);
+            let relative = divide(
+                &mut ctx,
+                &difference,
+                &value,
+                Some(20),
+                rounding::HALF_UP,
+                false,
+                None,
+            );
             assert!(
                 relative.is_zero() || relative.e < -17,
                 "exp(ln({text})) round-trips, got relative error {}",
@@ -590,7 +612,10 @@ mod tests {
         let mut ctx = Ctx::default();
         ctx.cfg.precision = 12;
         ctx.cfg.rounding = rounding::DOWN;
-        assert_eq!(show_ln(&mut ctx, "135520028.6126091714265381533"), "18.72463");
+        assert_eq!(
+            show_ln(&mut ctx, "135520028.6126091714265381533"),
+            "18.72463"
+        );
     }
 
     #[test]

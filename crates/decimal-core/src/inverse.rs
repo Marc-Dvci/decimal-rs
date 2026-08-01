@@ -120,7 +120,9 @@ pub fn atan(ctx: &mut Ctx, x: &Decimal) -> Result<Decimal> {
     let x2 = mul(ctx, &x, &x);
     let mut r = x.clone();
     let mut px = x.clone();
-    let mut t = r.clone();
+    // Written on the first pass before anything reads it: the loop always runs
+    // at least once, and its first group of statements ends by assigning `t`.
+    let mut t;
 
     // Two terms per iteration, so that the convergence test always compares a
     // partial sum against the one two terms behind it.
@@ -128,12 +130,28 @@ pub fn atan(ctx: &mut Ctx, x: &Decimal) -> Result<Decimal> {
     while !converged {
         px = mul(ctx, &px, &x2);
         n += 2;
-        let term = divide(ctx, &px, &Decimal::from_integer(n), None, rounding::DOWN, false, None);
+        let term = divide(
+            ctx,
+            &px,
+            &Decimal::from_integer(n),
+            None,
+            rounding::DOWN,
+            false,
+            None,
+        );
         t = sub(ctx, &r, &term);
 
         px = mul(ctx, &px, &x2);
         n += 2;
-        let term = divide(ctx, &px, &Decimal::from_integer(n), None, rounding::DOWN, false, None);
+        let term = divide(
+            ctx,
+            &px,
+            &Decimal::from_integer(n),
+            None,
+            rounding::DOWN,
+            false,
+            None,
+        );
         r = add(ctx, &t, &term);
 
         if r.is_finite() && (r.digits().len() as i64) > j {
@@ -498,8 +516,14 @@ mod tests {
         let from_plus_zero = atan2(&mut ctx, &Decimal::zero(Sign::Pos), &minus_one).unwrap();
         let from_minus_zero = atan2(&mut ctx, &Decimal::zero(Sign::Neg), &minus_one).unwrap();
 
-        assert_eq!(to_string(&from_plus_zero, &ctx.cfg), "3.1415926535897932385");
-        assert_eq!(to_string(&from_minus_zero, &ctx.cfg), "-3.1415926535897932385");
+        assert_eq!(
+            to_string(&from_plus_zero, &ctx.cfg),
+            "3.1415926535897932385"
+        );
+        assert_eq!(
+            to_string(&from_minus_zero, &ctx.cfg),
+            "-3.1415926535897932385"
+        );
     }
 
     /// Both infinite: the point is on a diagonal, and only `x`'s sign chooses

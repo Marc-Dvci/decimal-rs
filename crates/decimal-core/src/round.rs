@@ -207,7 +207,7 @@ fn round_to_significant_digits(
                         } else {
                             0
                         };
-                        left % 10 & 1 == 1
+                        (left % 10) & 1 == 1
                     }
                     || rm == if negative { 8 } else { 7 })
     };
@@ -367,7 +367,11 @@ mod tests {
     fn down_never_rounds_up_and_up_always_does() {
         assert_eq!(round_to("1.9", 1, DOWN), "1");
         assert_eq!(round_to("1.1", 1, UP), "2");
-        assert_eq!(round_to("1", 1, UP), "1", "nothing discarded, nothing to do");
+        assert_eq!(
+            round_to("1", 1, UP),
+            "1",
+            "nothing discarded, nothing to do"
+        );
     }
 
     #[test]

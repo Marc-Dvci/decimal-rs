@@ -51,8 +51,11 @@ pub fn digits_to_string(d: &[u32]) -> String {
 
     // Trailing zeros of the final limb are padding, not digits. The invariant
     // guarantees `w != 0` here, so this terminates.
-    debug_assert!(w != 0, "the final limb is non-zero unless the value is zero");
-    while w % 10 == 0 {
+    debug_assert!(
+        w != 0,
+        "the final limb is non-zero unless the value is zero"
+    );
+    while w.is_multiple_of(10) {
         w /= 10;
     }
     out.push_str(&w.to_string());
@@ -400,7 +403,10 @@ mod tests {
     #[test]
     fn number_to_string_switches_exactly_at_the_thresholds() {
         // The boundary cases are the ones that break silently.
-        assert_eq!(number_to_string(999999999999999900000.0), "999999999999999900000");
+        assert_eq!(
+            number_to_string(999999999999999900000.0),
+            "999999999999999900000"
+        );
         assert!(number_to_string(1e21).contains("e+"), "1e21 is exponential");
         assert!(!number_to_string(1e20).contains('e'), "1e20 is not");
         assert!(!number_to_string(1e-6).contains('e'), "1e-6 is not");

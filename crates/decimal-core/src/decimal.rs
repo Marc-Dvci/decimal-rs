@@ -280,7 +280,7 @@ impl Decimal {
 
         let mut w = limbs[last];
         if w != 0 {
-            while w % 10 == 0 {
+            while w.is_multiple_of(10) {
                 w /= 10;
                 len -= 1;
             }
@@ -375,7 +375,17 @@ mod tests {
 
     #[test]
     fn small_integers_round_trip_through_limbs() {
-        for n in [1, 2, 5, 9, 10, 9_999_999, 10_000_000, 12_345_678, 2_000_000_000] {
+        for n in [
+            1,
+            2,
+            5,
+            9,
+            10,
+            9_999_999,
+            10_000_000,
+            12_345_678,
+            2_000_000_000,
+        ] {
             let x = Decimal::from_i32(n);
             assert!(x.is_finite() && !x.is_negative());
             // 0.d × 10^(e+1) == n, checked via the digit count.

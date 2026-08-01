@@ -78,8 +78,8 @@ pub mod fraction;
 pub mod inverse;
 pub mod ops;
 pub mod parse;
-pub mod radix;
 pub mod power;
+pub mod radix;
 pub mod random;
 pub mod roots;
 pub mod round;
@@ -124,7 +124,15 @@ pub const MAX_ARRAY_LENGTH: i64 = 4_294_967_295;
 /// with integer arithmetic only because every power involved is exactly
 /// representable. Keeping them exact keeps the agreement exact.
 pub(crate) const POW10: [u32; 9] = [
-    1, 10, 100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000, 100_000_000,
+    1,
+    10,
+    100,
+    1_000,
+    10_000,
+    100_000,
+    1_000_000,
+    10_000_000,
+    100_000_000,
 ];
 
 /// The number of decimal digits in `w`, counting zero as having one digit.

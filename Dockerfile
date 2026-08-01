@@ -35,7 +35,7 @@ WORKDIR /app
 # The compiled Rust library, renamed so that Node's own module resolver picks
 # it up for require('../decimal'). There is no JavaScript shim.
 COPY --from=build /src/target/release/libdecimal.so ./decimal.node
-COPY --from=build /src/target/release/decimal ./bin/decimal
+COPY --from=build /src/target/release/decimal-calc ./bin/decimal-calc
 
 COPY test ./test
 COPY tests ./tests

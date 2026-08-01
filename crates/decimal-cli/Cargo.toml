@@ -6,8 +6,13 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 
+# Named `decimal-calc` rather than `decimal`, which collides with the `decimal`
+# cdylib that decimal-napi produces: on Windows both targets want to write
+# target/release/decimal.pdb, and cargo warns that one silently overwrites the
+# other. The debug info of a release build is not load-bearing here, but a
+# warning nobody can fix is worse than a binary with a name of its own.
 [[bin]]
-name = "decimal"
+name = "decimal-calc"
 path = "src/main.rs"
 
 [dependencies]

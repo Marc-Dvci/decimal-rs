@@ -132,13 +132,19 @@ pub fn to_fraction(
 
     // The largest bound worth searching under: `10^e` if `x` has a fractional
     // part, and 1 if it does not.
-    let ceiling = if e > 0 { exact_denominator.clone() } else { one.clone() };
+    let ceiling = if e > 0 {
+        exact_denominator.clone()
+    } else {
+        one.clone()
+    };
 
     let max_denominator = match max_denominator {
         None => ceiling,
         Some(n) => {
             if !n.is_integer() || compare(n, &one) == Some(core::cmp::Ordering::Less) {
-                return Err(Error::InvalidArgument(crate::format::interpolated(n, &ctx.cfg)));
+                return Err(Error::InvalidArgument(crate::format::interpolated(
+                    n, &ctx.cfg,
+                )));
             }
             // A bound above `10^e` cannot buy a better answer, so it is capped
             // rather than honoured.
@@ -158,11 +164,7 @@ pub fn to_fraction(
 
         // The recurrence runs on |x| — the sign is reattached at the end — and
         // starts from x's digits read as an integer over `10^e`.
-        let mut n = crate::parse::parse_decimal(
-            ctx,
-            Sign::Pos,
-            &digits_to_string(x.digits()),
-        );
+        let mut n = crate::parse::parse_decimal(ctx, Sign::Pos, &digits_to_string(x.digits()));
         let mut den = exact_denominator.clone();
 
         // The two previous convergents, p_{k−1}/q_{k−1} and p_{k−2}/q_{k−2},
@@ -320,8 +322,14 @@ mod tests {
     fn a_bounded_denominator_gives_the_nearest_approximation() {
         let mut ctx = Ctx::default();
         assert_eq!(run(&mut ctx, "5.1582612935891", Some("3")), "5,1");
-        assert_eq!(run(&mut ctx, "8.14969395596340", Some("4682")), "14645,1797");
-        assert_eq!(run(&mut ctx, "4.28004634702", Some("82418")), "350921,81990");
+        assert_eq!(
+            run(&mut ctx, "8.14969395596340", Some("4682")),
+            "14645,1797"
+        );
+        assert_eq!(
+            run(&mut ctx, "4.28004634702", Some("82418")),
+            "350921,81990"
+        );
         assert_eq!(run(&mut ctx, "9.610016056348", Some("8529")), "65819,6849");
     }
 
@@ -389,7 +397,10 @@ mod tests {
             ("2.5", "5,2"),
             ("0.1", "1,10"),
             ("3.14159", "314159,100000"),
-            ("123456789012345678901234567890", "1.2345678901234567890123456789e+29,1"),
+            (
+                "123456789012345678901234567890",
+                "1.2345678901234567890123456789e+29,1",
+            ),
         ];
 
         for mode in 0..=8u8 {

@@ -195,7 +195,33 @@ function randomInput(rng) {
     // implementations would be given genuinely different inputs.
     if (!Number.isNaN(n) || literal === 'NaN') return { kind: 'number', value: n };
   }
+
+  // The fourth constructor path, and the one this port was missing entirely
+  // until a dead-code warning asked why the `BigInt` type tag existed. The
+  // original takes the sign off and hands the digits straight to
+  // `parseDecimal`, so a BigInt never sees the radix or separator rules that a
+  // string of the same digits would.
+  //
+  // Offered only for literals BigInt actually accepts — no point, no exponent,
+  // and short enough that constructing it is not itself the experiment.
+  if (rng.chance(0.1) && /^-?\d{1,60}$/.test(literal)) {
+    return { kind: 'bigint', value: BigInt(literal) };
+  }
+
   return { kind: 'string', value: literal };
+}
+
+/*
+ * How an input appears in a replay log.
+ *
+ * `JSON.stringify` did this until BigInt joined the corpus, and
+ * `JSON.stringify(1n)` does not give a poor answer — it throws
+ * `TypeError: Do not know how to serialize a BigInt`, from inside the logger,
+ * while it is in the middle of reporting some other divergence. The one place
+ * a harness must not fail is the one where it explains a failure.
+ */
+function literalSource(value) {
+  return typeof value === 'bigint' ? value.toString() + 'n' : JSON.stringify(value);
 }
 
 // ---------------------------------------------------------------------------
@@ -655,7 +681,7 @@ function runSequence(steps, seed, options) {
   const seedCount = 2 + rng.below(3);
   for (let i = 0; i < seedCount; i++) {
     const input = randomInput(rng);
-    const literal = input.kind === 'number' ? input.value : input.value;
+    const literal = input.value;
     let r, p;
 
     // A literal the constructor rejects is not an input; it is skipped and
@@ -669,7 +695,7 @@ function runSequence(steps, seed, options) {
         i--;
         continue;
       }
-      log.push('x' + i + ' = new Decimal(' + JSON.stringify(literal) + ')');
+      log.push('x' + i + ' = new Decimal(' + literalSource(literal) + ')');
       pool.push({ r, p });
       continue;
     }
@@ -681,23 +707,23 @@ function runSequence(steps, seed, options) {
         new P(literal);
       } catch (portError) {
         if (portError.message === error.message) { i--; continue; }
-        return report(log, 'new Decimal(' + JSON.stringify(literal) + ')',
+        return report(log, 'new Decimal(' + literalSource(literal) + ')',
           'THROW ' + error.message, 'THROW ' + portError.message);
       }
-      return report(log, 'new Decimal(' + JSON.stringify(literal) + ')',
+      return report(log, 'new Decimal(' + literalSource(literal) + ')',
         'THROW ' + error.message, 'no exception');
     }
     try {
       p = new P(literal);
     } catch (portError) {
-      return report(log, 'new Decimal(' + JSON.stringify(literal) + ')',
+      return report(log, 'new Decimal(' + literalSource(literal) + ')',
         describe(R, r), 'THROW ' + portError.message);
     }
     const before = [describe(R, r), describe(P, p)];
     if (before[0] !== before[1]) {
-      return report(log, 'new Decimal(' + JSON.stringify(literal) + ')', before[0], before[1]);
+      return report(log, 'new Decimal(' + literalSource(literal) + ')', before[0], before[1]);
     }
-    log.push('x' + i + ' = new Decimal(' + JSON.stringify(literal) + ')');
+    log.push('x' + i + ' = new Decimal(' + literalSource(literal) + ')');
     pool.push({ r, p });
   }
 

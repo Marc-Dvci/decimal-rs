@@ -44,15 +44,16 @@ fn matches_node_on_every_value_in_the_corpus() {
             // Report the first few in full; a long list of the same mistake is
             // less useful than the mistake plus a count.
             if failures.len() < 12 {
-                failures.push(format!(
-                    "  {bits}  expected {expected:?}, got {actual:?}"
-                ));
+                failures.push(format!("  {bits}  expected {expected:?}, got {actual:?}"));
             }
         }
         checked += 1;
     }
 
-    assert!(checked > 5_000, "the fixture should be substantial, saw {checked}");
+    assert!(
+        checked > 5_000,
+        "the fixture should be substantial, saw {checked}"
+    );
 
     if !failures.is_empty() {
         panic!(
@@ -77,7 +78,7 @@ fn the_corpus_covers_both_notation_thresholds() {
         "the corpus must reach the upper notation threshold"
     );
     assert!(
-        strings.iter().any(|s| *s == "1e-7"),
+        strings.contains(&"1e-7"),
         "the corpus must reach the lower notation threshold"
     );
     assert!(

@@ -37,9 +37,7 @@
 //! against the `+ 1` in `plus`, are observable in the final digit. They are
 //! copied exactly.
 
-use crate::{
-    digit_count, format, round::finalise, Ctx, Decimal, Sign, BASE, LOG_BASE,
-};
+use crate::{digit_count, format, round::finalise, Ctx, Decimal, Sign, BASE, LOG_BASE};
 use core::cmp::Ordering;
 
 /// The base-10 exponent implied by a base-10⁷ exponent and a leading limb.
@@ -188,7 +186,11 @@ pub fn add(ctx: &mut Ctx, x: &Decimal, y: &Decimal) -> Decimal {
         // Adding zero: the result is whichever operand is non-zero, and if
         // both are zero it is the second operand — which carries the sign the
         // original gives to `0 + 0`.
-        let mut result = if y.digits()[0] == 0 { x.clone() } else { y.clone() };
+        let mut result = if y.digits()[0] == 0 {
+            x.clone()
+        } else {
+            y.clone()
+        };
         if ctx.external {
             finalise(ctx, &mut result, Some(pr), rm, false);
         }
@@ -432,10 +434,7 @@ pub fn mul(ctx: &mut Ctx, x: &Decimal, y: &Decimal) -> Decimal {
 
     if x.d.is_none() || x_zero || y.d.is_none() || y_zero {
         // NaN if either operand is NaN, or if a zero meets an infinity.
-        if sign == Sign::Nan
-            || (x_zero && y.d.is_none())
-            || (y_zero && x.d.is_none())
-        {
+        if sign == Sign::Nan || (x_zero && y.d.is_none()) || (y_zero && x.d.is_none()) {
             return Decimal::nan();
         }
         // Otherwise an infinity dominates, and failing that the result is a
@@ -1023,7 +1022,10 @@ mod tests {
         assert_eq!(show(&add(&mut ctx, &d("-1"), &d("1"))), "0");
         // 1e20 + 1 needs 21 significant digits, so at the default precision of
         // 20 the one is rounded away entirely.
-        assert_eq!(show(&add(&mut ctx, &d("1e20"), &d("1"))), "100000000000000000000");
+        assert_eq!(
+            show(&add(&mut ctx, &d("1e20"), &d("1"))),
+            "100000000000000000000"
+        );
     }
 
     #[test]
@@ -1101,8 +1103,8 @@ mod tests {
     #[test]
     fn addition_respects_the_working_precision() {
         let mut ctx = Ctx::default(); // precision 20
-        // The exact sum needs 21 significant digits, so the one is rounded
-        // away and the result is indistinguishable from the larger operand.
+                                      // The exact sum needs 21 significant digits, so the one is rounded
+                                      // away and the result is indistinguishable from the larger operand.
         assert_eq!(
             show(&add(&mut ctx, &d("1e20"), &d("1"))),
             "100000000000000000000"
@@ -1136,7 +1138,11 @@ mod tests {
         // Exponential notation, because the exponent 39 is past the default
         // `toExpPos` of 21 — the same string upstream produces.
         assert_eq!(
-            show(&mul(&mut ctx, &d("12345678901234567890"), &d("98765432109876543210"))),
+            show(&mul(
+                &mut ctx,
+                &d("12345678901234567890"),
+                &d("98765432109876543210")
+            )),
             "1.2193263113702179522374638011112635269e+39"
         );
     }
