@@ -1,0 +1,6 @@
+# The renderer's dependency tree and its outputs. The film's *sources* are
+# committed — the script, the timeline, the scenes, and the recording every
+# terminal in it replays — so that the claims it makes can be checked. The
+# rendered file itself is submitted, not stored here.
+node_modules/
+output/

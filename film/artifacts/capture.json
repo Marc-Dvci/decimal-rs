@@ -1,0 +1,5884 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-01T15:22:32.785Z",
+  "host": {
+    "hostname": "DESKTOP-BUS8UQQ",
+    "platform": "win32",
+    "release": "10.0.26200",
+    "cpu": "AMD Ryzen 5 7600 6-Core Processor",
+    "cores": 12,
+    "memGiB": 31
+  },
+  "git": {
+    "commit": "9bcb7d8dbaeb958c3abd2e46895c12b2a6cd75fb",
+    "branch": "main",
+    "dirty": true
+  },
+  "commands": [
+    {
+      "id": "verify",
+      "command": "node scripts/verify-tests.js",
+      "cwd": "D:\\pm\\decimal-rs",
+      "exitCode": 0,
+      "durationMs": 61,
+      "startedAt": "2026-08-01T15:06:30.562Z",
+      "lines": [
+        {
+          "t": 54,
+          "text": "  Original test suite verified: 69 files byte-identical to upstream decimal.js @ cd73a7f (0 modified, 0 added, 0 removed).",
+          "stream": "out"
+        },
+        {
+          "t": 54,
+          "text": "  Fuzzing oracle verified:      1 file byte-identical to the same commit.",
+          "stream": "out"
+        }
+      ]
+    },
+    {
+      "id": "suite",
+      "command": "node test/test.js",
+      "cwd": "D:\\pm\\decimal-rs",
+      "exitCode": 0,
+      "durationMs": 326,
+      "startedAt": "2026-08-01T15:06:30.624Z",
+      "lines": [
+        {
+          "t": 73,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 73,
+          "text": " Testing decimal.js",
+          "stream": "out"
+        },
+        {
+          "t": 73,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 76,
+          "text": " Testing absoluteValue... 100 of 100 tests passed in 1 ms",
+          "stream": "out"
+        },
+        {
+          "t": 82,
+          "text": " Testing acos... 54 of 54 tests passed in 6 ms",
+          "stream": "out"
+        },
+        {
+          "t": 85,
+          "text": " Testing acosh... 50 of 50 tests passed in 3 ms",
+          "stream": "out"
+        },
+        {
+          "t": 91,
+          "text": " Testing asin... 54 of 54 tests passed in 5 ms",
+          "stream": "out"
+        },
+        {
+          "t": 94,
+          "text": " Testing asinh... 50 of 50 tests passed in 2 ms",
+          "stream": "out"
+        },
+        {
+          "t": 98,
+          "text": " Testing atan... 50 of 50 tests passed in 4 ms",
+          "stream": "out"
+        },
+        {
+          "t": 102,
+          "text": " Testing atan2... 100 of 100 tests passed in 3 ms",
+          "stream": "out"
+        },
+        {
+          "t": 105,
+          "text": " Testing atanh... 50 of 50 tests passed in 2 ms",
+          "stream": "out"
+        },
+        {
+          "t": 107,
+          "text": " Testing cubeRoot... 50 of 50 tests passed in 1 ms",
+          "stream": "out"
+        },
+        {
+          "t": 107,
+          "text": " Testing ceil... 50 of 50 tests passed in 0 ms",
+          "stream": "out"
+        },
+        {
+          "t": 108,
+          "text": " Testing clamp... 29 of 29 tests passed in 0 ms",
+          "stream": "out"
+        },
+        {
+          "t": 109,
+          "text": " Testing clone...",
+          "stream": "out"
+        },
+        {
+          "t": 109,
+          "text": "  Test number 1 failed: assert",
+          "stream": "out"
+        },
+        {
+          "t": 109,
+          "text": "  Expected: true",
+          "stream": "out"
+        },
+        {
+          "t": 110,
+          "text": "  Actual:   false",
+          "stream": "out"
+        },
+        {
+          "t": 110,
+          "text": " 64 of 65 tests passed in 2 ms",
+          "stream": "out"
+        },
+        {
+          "t": 112,
+          "text": " Testing comparedTo... 1000 of 1000 tests passed in 2 ms",
+          "stream": "out"
+        },
+        {
+          "t": 115,
+          "text": " Testing config... 206 of 206 tests passed in 2 ms",
+          "stream": "out"
+        },
+        {
+          "t": 117,
+          "text": " Testing cos... 101 of 101 tests passed in 2 ms",
+          "stream": "out"
+        },
+        {
+          "t": 119,
+          "text": " Testing cosh... 100 of 100 tests passed in 3 ms",
+          "stream": "out"
+        },
+        {
+          "t": 123,
+          "text": " Testing Decimal... 987 of 987 tests passed in 4 ms",
+          "stream": "out"
+        },
+        {
+          "t": 130,
+          "text": " Testing dividedBy... 1000 of 1000 tests passed in 5 ms",
+          "stream": "out"
+        },
+        {
+          "t": 136,
+          "text": " Testing dividedToIntegerBy... 1000 of 1000 tests passed in 6 ms",
+          "stream": "out"
+        },
+        {
+          "t": 137,
+          "text": " Testing decimalPlaces and precision... 133 of 133 tests passed in 0 ms",
+          "stream": "out"
+        },
+        {
+          "t": 139,
+          "text": " Testing exp... 100 of 100 tests passed in 2 ms",
+          "stream": "out"
+        },
+        {
+          "t": 140,
+          "text": " Testing floor... 100 of 100 tests passed in 0 ms",
+          "stream": "out"
+        },
+        {
+          "t": 142,
+          "text": " Testing hypot... 100 of 100 tests passed in 1 ms",
+          "stream": "out"
+        },
+        {
+          "t": 156,
+          "text": " Testing immutability... 3341 of 3341 tests passed in 15 ms",
+          "stream": "out"
+        },
+        {
+          "t": 161,
+          "text": " Testing integer pow... 500 of 500 tests passed in 4 ms",
+          "stream": "out"
+        },
+        {
+          "t": 162,
+          "text": " Testing isFinite, isInteger, isNaN, isNegative, isZero, isDecimal... 214 of 214 tests passed in 0 ms",
+          "stream": "out"
+        },
+        {
+          "t": 175,
+          "text": " Testing ln... 499 of 499 tests passed in 14 ms",
+          "stream": "out"
+        },
+        {
+          "t": 185,
+          "text": " Testing log... 200 of 200 tests passed in 10 ms",
+          "stream": "out"
+        },
+        {
+          "t": 201,
+          "text": " Testing log10... 500 of 500 tests passed in 15 ms",
+          "stream": "out"
+        },
+        {
+          "t": 212,
+          "text": " Testing log2... 200 of 200 tests passed in 12 ms",
+          "stream": "out"
+        },
+        {
+          "t": 213,
+          "text": " Testing min and max... 110 of 110 tests passed in 1 ms",
+          "stream": "out"
+        },
+        {
+          "t": 218,
+          "text": " Testing minus... 1000 of 1000 tests passed in 4 ms",
+          "stream": "out"
+        },
+        {
+          "t": 225,
+          "text": " Testing modulo... 1000 of 1000 tests passed in 7 ms",
+          "stream": "out"
+        },
+        {
+          "t": 226,
+          "text": " Testing negated... 200 of 200 tests passed in 1 ms",
+          "stream": "out"
+        },
+        {
+          "t": 232,
+          "text": " Testing plus... 1000 of 1000 tests passed in 5 ms",
+          "stream": "out"
+        },
+        {
+          "t": 237,
+          "text": " Testing pow... 108 of 108 tests passed in 6 ms",
+          "stream": "out"
+        },
+        {
+          "t": 242,
+          "text": " Testing random... 1000 of 1000 tests passed in 4 ms",
+          "stream": "out"
+        },
+        {
+          "t": 244,
+          "text": " Testing round... 500 of 500 tests passed in 1 ms",
+          "stream": "out"
+        },
+        {
+          "t": 244,
+          "text": " Testing sign... 16 of 16 tests passed in 0 ms",
+          "stream": "out"
+        },
+        {
+          "t": 247,
+          "text": " Testing sin... 100 of 100 tests passed in 3 ms",
+          "stream": "out"
+        },
+        {
+          "t": 249,
+          "text": " Testing sinh... 100 of 100 tests passed in 2 ms",
+          "stream": "out"
+        },
+        {
+          "t": 259,
+          "text": " Testing sqrt... 1000 of 1000 tests passed in 9 ms",
+          "stream": "out"
+        },
+        {
+          "t": 260,
+          "text": " Testing sum... 37 of 37 tests passed in 0 ms",
+          "stream": "out"
+        },
+        {
+          "t": 264,
+          "text": " Testing tan... 100 of 100 tests passed in 4 ms",
+          "stream": "out"
+        },
+        {
+          "t": 268,
+          "text": " Testing tanh... 100 of 100 tests passed in 3 ms",
+          "stream": "out"
+        },
+        {
+          "t": 274,
+          "text": " Testing times... 1000 of 1000 tests passed in 5 ms",
+          "stream": "out"
+        },
+        {
+          "t": 278,
+          "text": " Testing toBinary... 327 of 327 tests passed in 4 ms",
+          "stream": "out"
+        },
+        {
+          "t": 281,
+          "text": " Testing toDecimalPlaces... 500 of 500 tests passed in 3 ms",
+          "stream": "out"
+        },
+        {
+          "t": 284,
+          "text": " Testing toExponential... 500 of 500 tests passed in 2 ms",
+          "stream": "out"
+        },
+        {
+          "t": 286,
+          "text": " Testing toFixed... 500 of 500 tests passed in 2 ms",
+          "stream": "out"
+        },
+        {
+          "t": 292,
+          "text": " Testing toFraction... 200 of 200 tests passed in 5 ms",
+          "stream": "out"
+        },
+        {
+          "t": 298,
+          "text": " Testing toHex... 309 of 309 tests passed in 6 ms",
+          "stream": "out"
+        },
+        {
+          "t": 299,
+          "text": " Testing toNearest... 157 of 157 tests passed in 1 ms",
+          "stream": "out"
+        },
+        {
+          "t": 300,
+          "text": " Testing toNumber... 40 of 40 tests passed in 0 ms",
+          "stream": "out"
+        },
+        {
+          "t": 302,
+          "text": " Testing toOctal... 293 of 293 tests passed in 1 ms",
+          "stream": "out"
+        },
+        {
+          "t": 304,
+          "text": " Testing toPrecision... 500 of 500 tests passed in 1 ms",
+          "stream": "out"
+        },
+        {
+          "t": 306,
+          "text": " Testing toSignificantDigits... 500 of 500 tests passed in 2 ms",
+          "stream": "out"
+        },
+        {
+          "t": 307,
+          "text": " Testing toString... 338 of 338 tests passed in 1 ms",
+          "stream": "out"
+        },
+        {
+          "t": 308,
+          "text": " Testing trunc... 100 of 100 tests passed in 0 ms",
+          "stream": "out"
+        },
+        {
+          "t": 308,
+          "text": " Testing valueOf... 40 of 40 tests passed in 0 ms",
+          "stream": "out"
+        },
+        {
+          "t": 308,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 308,
+          "text": " In total, 22657 of 22658 tests passed in 0.238 secs.",
+          "stream": "out"
+        },
+        {
+          "t": 308,
+          "text": "",
+          "stream": "out"
+        }
+      ]
+    },
+    {
+      "id": "cargo",
+      "command": "cargo test --release",
+      "cwd": "D:\\pm\\decimal-rs",
+      "exitCode": 0,
+      "durationMs": 13981,
+      "startedAt": "2026-08-01T15:06:30.950Z",
+      "lines": [
+        {
+          "t": 110,
+          "text": "   Compiling decimal-cli v0.1.0 (D:\\pm\\decimal-rs\\crates\\decimal-cli)",
+          "stream": "err"
+        },
+        {
+          "t": 110,
+          "text": "   Compiling decimal-core v0.1.0 (D:\\pm\\decimal-rs\\crates\\decimal-core)",
+          "stream": "err"
+        },
+        {
+          "t": 111,
+          "text": "   Compiling decimal-napi v0.1.0 (D:\\pm\\decimal-rs\\crates\\decimal-napi)",
+          "stream": "err"
+        },
+        {
+          "t": 12591,
+          "text": "    Finished `release` profile [optimized] target(s) in 12.50s",
+          "stream": "err"
+        },
+        {
+          "t": 12597,
+          "text": "     Running unittests src\\main.rs (target\\release\\deps\\decimal_calc-790f2401d2948575.exe)",
+          "stream": "err"
+        },
+        {
+          "t": 12670,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 12670,
+          "text": "running 3 tests",
+          "stream": "out"
+        },
+        {
+          "t": 12670,
+          "text": "test tests::it_reports_rather_than_guesses ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 12670,
+          "text": "test tests::it_computes_what_the_original_computes ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13231,
+          "text": "test tests::the_host_array_ceiling_is_reported_here_as_well ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13231,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 13231,
+          "text": "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.56s",
+          "stream": "out"
+        },
+        {
+          "t": 13231,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 13234,
+          "text": "     Running unittests src\\lib.rs (target\\release\\deps\\decimal_core-02416d628a75b9e5.exe)",
+          "stream": "err"
+        },
+        {
+          "t": 13311,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 13311,
+          "text": "running 167 tests",
+          "stream": "out"
+        },
+        {
+          "t": 13311,
+          "text": "test arith::tests::a_sum_stops_at_the_first_nan ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13311,
+          "text": "test arith::tests::a_sum_rounds_once_where_a_fold_rounds_every_step ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13311,
+          "text": "test arith::tests::addition_carries_across_limb_boundaries ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13311,
+          "text": "test arith::tests::comparison_orders_finite_values ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13311,
+          "text": "test arith::tests::addition_respects_the_working_precision ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13312,
+          "text": "test arith::tests::division_of_small_values ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13312,
+          "text": "test arith::tests::addition_of_small_values ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13312,
+          "text": "test arith::tests::division_by_a_multi_limb_divisor ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13312,
+          "text": "test arith::tests::division_by_zero_and_of_zero ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13312,
+          "text": "test arith::tests::division_rounds_a_repeating_expansion_to_the_precision ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13312,
+          "text": "test arith::tests::infinities_compare_by_sign_and_magnitude ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13312,
+          "text": "test arith::tests::division_reverses_multiplication ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13312,
+          "text": "test arith::tests::multiplication_by_zero_and_infinity ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13312,
+          "text": "test arith::tests::multiplication_of_small_values ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13312,
+          "text": "test arith::tests::multiplication_spans_many_limbs ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13312,
+          "text": "test arith::tests::nan_is_unordered_against_everything_including_itself ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13312,
+          "text": "test arith::tests::non_finite_addition_and_subtraction ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13312,
+          "text": "test arith::tests::subtracting_equal_values_gives_a_signed_zero ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13312,
+          "text": "test arith::tests::subtraction_borrows_across_limb_boundaries ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13312,
+          "text": "test arith::tests::subtraction_picks_the_sign_of_the_larger_operand ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13312,
+          "text": "test arith::tests::the_classic_floating_point_embarrassment_is_exact_here ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13312,
+          "text": "test arith::tests::the_two_zeros_are_equal ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13312,
+          "text": "test constants::tests::the_constants_are_bare_decimal_literals ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13312,
+          "text": "test constants::tests::the_constants_begin_correctly ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13312,
+          "text": "test constants::tests::the_constants_have_the_advertised_precision ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13312,
+          "text": "test decimal::tests::integrality_matches_the_digit_extent ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13312,
+          "text": "test decimal::tests::nan_is_not_negative_even_though_it_has_no_sign ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13312,
+          "text": "test decimal::tests::negative_zero_keeps_its_sign ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13312,
+          "text": "test decimal::tests::sign_products_follow_the_originals_multiplication ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13312,
+          "text": "test decimal::tests::small_integers_round_trip_through_limbs ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13313,
+          "text": "test decimal::tests::the_three_shapes_are_distinguishable ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13313,
+          "text": "test elementary::tests::a_sum_that_stops_short_still_rounds_as_if_it_had_not ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13313,
+          "text": "test elementary::tests::asking_for_more_digits_than_ln10_carries_is_an_error ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13313,
+          "text": "test elementary::tests::exponential_edge_cases ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13313,
+          "text": "test elementary::tests::logarithm_edge_cases ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13313,
+          "text": "test elementary::tests::natural_exponentials_of_familiar_values ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13313,
+          "text": "test elementary::tests::natural_logarithms_of_familiar_values ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13313,
+          "text": "test elementary::tests::the_documented_restart_counterexample_comes_out_right ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13313,
+          "text": "test elementary::tests::the_documented_logarithm_counterexample_comes_out_right ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13313,
+          "text": "test error::tests::check_int32_accepts_integers_in_range ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13313,
+          "text": "test error::tests::check_int32_rejects_non_integers_and_out_of_range ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13313,
+          "text": "test error::tests::messages_match_the_originals_text_exactly ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13313,
+          "text": "test error::tests::the_offending_value_is_interpolated_as_javascript_would ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13313,
+          "text": "test exact::tests::exact_expansion_is_exact_not_shortest ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13313,
+          "text": "test exact::tests::exact_expansion_of_simple_powers ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13313,
+          "text": "test elementary::tests::the_two_are_inverse_to_the_working_precision ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13313,
+          "text": "test exact::tests::half_even_carries_out_of_the_leading_digit ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13313,
+          "text": "test exact::tests::half_even_rounds_ties_to_the_even_digit ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13313,
+          "text": "test exact::tests::short_inputs_are_padded_rather_than_rounded ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13313,
+          "text": "test exact::tests::the_motivating_tie_resolves_the_way_ecmascript_says ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13313,
+          "text": "test exact::tests::the_smallest_denormal_expands_to_its_full_length ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13313,
+          "text": "test format::tests::digits_come_out_the_way_they_went_in ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13313,
+          "text": "test format::tests::fixed_notation_places_the_point ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13314,
+          "text": "test format::tests::interior_limbs_keep_their_leading_zeros ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13314,
+          "text": "test format::tests::non_finite_values_have_names_not_digits ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13314,
+          "text": "test format::tests::number_to_string_follows_ecmascript_not_rust ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13314,
+          "text": "test format::tests::number_to_string_switches_exactly_at_the_thresholds ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13314,
+          "text": "test format::tests::the_thresholds_switch_to_exponential_notation ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13314,
+          "text": "test format::tests::to_string_hides_the_sign_of_negative_zero_but_value_of_shows_it ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13314,
+          "text": "test format::tests::zero_prints_as_a_single_digit ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13314,
+          "text": "test fraction::tests::a_bound_that_is_not_a_positive_integer_is_rejected ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13314,
+          "text": "test fraction::tests::a_non_finite_value_is_returned_as_itself ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13314,
+          "text": "test fraction::tests::a_bounded_denominator_gives_the_nearest_approximation ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13314,
+          "text": "test fraction::tests::an_oversized_bound_is_capped_at_the_exact_denominator ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13314,
+          "text": "test fraction::tests::pi_yields_its_classical_approximations ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13314,
+          "text": "test fraction::tests::the_default_bound_gives_the_exact_fraction ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13314,
+          "text": "test inverse::tests::an_infinity_above_the_pi_table_is_an_error_and_not_a_loop ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13314,
+          "text": "test inverse::tests::arcsines_and_arccosines ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13314,
+          "text": "test inverse::tests::arctangents ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13314,
+          "text": "test inverse::tests::arguments_outside_the_domain_are_not_numbers ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13314,
+          "text": "test inverse::tests::both_infinite_gives_a_diagonal ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13314,
+          "text": "test fraction::tests::the_search_terminates_under_every_rounding_mode ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13314,
+          "text": "test inverse::tests::inverse_hyperbolics ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13314,
+          "text": "test inverse::tests::infinities_map_where_they_should ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13314,
+          "text": "test inverse::tests::the_two_zeros_land_on_opposite_sides_of_the_cut ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13314,
+          "text": "test ops::tests::absolute_value_and_negation_respect_signed_zero ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13315,
+          "text": "test inverse::tests::two_argument_arctangent_knows_its_quadrant ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13315,
+          "text": "test ops::tests::clamp_bounds_and_rejects_an_inverted_range ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13315,
+          "text": "test ops::tests::modulo_edge_cases ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13315,
+          "text": "test inverse::tests::no_cancellation_near_the_domain_boundary ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13315,
+          "text": "test ops::tests::modulo_follows_the_configured_mode ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13315,
+          "text": "test ops::tests::out_of_range_arguments_are_rejected_with_the_originals_message ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13315,
+          "text": "test ops::tests::the_exponent_limits_are_applied_when_a_value_is_used ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13315,
+          "text": "test inverse::tests::the_round_trips_hold_to_the_working_precision ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13315,
+          "text": "test ops::tests::the_four_integer_roundings_go_the_right_ways ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13315,
+          "text": "test ops::tests::to_decimal_places_rounds_the_value_the_clamp_left_behind ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13315,
+          "text": "test ops::tests::to_exponential_and_to_precision ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13315,
+          "text": "test ops::tests::to_fixed_pads_to_the_requested_places ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13315,
+          "text": "test ops::tests::to_fixed_takes_its_sign_from_before_the_rounding ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13315,
+          "text": "test ops::tests::to_nearest_rounds_to_a_multiple ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13315,
+          "text": "test parse::tests::a_hex_float_is_clamped_through_the_scale_it_divides_by ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13315,
+          "text": "test parse::tests::a_huge_exponent_saturates_rather_than_wrapping ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13315,
+          "text": "test parse::tests::decimal_literals_match_the_original_pattern ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13315,
+          "text": "test parse::tests::every_spelling_of_zero_is_zero ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13315,
+          "text": "test parse::tests::fractions_and_exponents_agree_on_the_same_value ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13315,
+          "text": "test parse::tests::integers_parse_to_the_expected_exponent_and_digits ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13315,
+          "text": "test parse::tests::leading_and_trailing_zeros_are_discarded ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13315,
+          "text": "test parse::tests::limbs_are_aligned_so_the_point_falls_on_a_boundary ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13316,
+          "text": "test parse::tests::radix_literals_match_their_patterns ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13316,
+          "text": "test parse::tests::small_negative_exponents_shift_into_the_first_limb ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13316,
+          "text": "test parse::tests::the_exponent_limits_apply_to_parsing ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13316,
+          "text": "test power::tests::a_huge_even_exponent_is_still_even ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13316,
+          "text": "test power::tests::a_negative_base_needs_an_integer_exponent ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13316,
+          "text": "test power::tests::an_underflowing_power_loses_its_sign_and_an_overflowing_one_keeps_it ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13316,
+          "text": "test power::tests::integer_powers_are_exact ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13316,
+          "text": "test power::tests::base_ten_logarithms_of_exact_powers_are_exact ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13316,
+          "text": "test power::tests::logarithm_edge_cases ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13316,
+          "text": "test power::tests::fractional_powers_go_through_exp_and_ln ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13316,
+          "text": "test power::tests::the_ieee_special_cases_come_from_double_arithmetic ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13316,
+          "text": "test radix::tests::an_explicit_digit_count_adds_a_binary_exponent ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13316,
+          "text": "test power::tests::the_documented_undecidable_case_behaves_as_the_original_does ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13316,
+          "text": "test radix::tests::fractions_go_through_the_division ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13316,
+          "text": "test power::tests::the_documented_guard_digit_counterexample_comes_out_right ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13316,
+          "text": "test radix::tests::integers_render_in_every_base ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13316,
+          "text": "test radix::tests::non_finite_values_carry_no_prefix ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13316,
+          "text": "test radix::tests::out_of_range_arguments_are_rejected ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13316,
+          "text": "test power::tests::logarithms_to_other_bases ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13316,
+          "text": "test random::tests::an_all_zero_draw_is_zero ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13316,
+          "text": "test radix::tests::round_trips_through_the_parser ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13317,
+          "text": "test random::tests::an_interior_zero_limb_is_seven_zero_digits ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13317,
+          "text": "test random::tests::every_draw_lands_in_the_unit_interval_with_no_more_digits_than_asked ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13317,
+          "text": "test random::tests::leading_zeros_push_the_exponent_down ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13317,
+          "text": "test random::tests::limbs_become_the_digits_after_the_point ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13317,
+          "text": "test random::tests::the_default_source_is_reproducible_and_not_degenerate ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13317,
+          "text": "test random::tests::the_significant_digit_count_is_validated_the_way_the_original_validates_it ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13317,
+          "text": "test random::tests::trimming_the_last_limb_does_not_shift_the_earlier_digits ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13317,
+          "text": "test roots::tests::cube_roots_of_irrationals_carry_the_full_precision ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13317,
+          "text": "test roots::tests::cube_roots_of_perfect_cubes_are_exact ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13317,
+          "text": "test roots::tests::euclidean_length_survives_operands_that_square_to_nothing ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13317,
+          "text": "test roots::tests::infinity_outranks_a_nan_that_came_first ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13317,
+          "text": "test roots::tests::roots_respect_the_configured_precision ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13317,
+          "text": "test roots::tests::square_root_edge_cases ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13317,
+          "text": "test roots::tests::square_roots_of_irrationals_carry_the_full_precision ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13317,
+          "text": "test roots::tests::square_roots_of_perfect_squares_are_exact ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13317,
+          "text": "test round::tests::a_carry_out_of_the_leading_limb_moves_the_exponent ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13317,
+          "text": "test roots::tests::very_large_and_very_small_arguments_use_the_fallback_estimate ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13317,
+          "text": "test round::tests::a_carry_propagates_across_limbs ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13317,
+          "text": "test round::tests::a_nested_suppression_leaves_the_clamps_on ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13317,
+          "text": "test round::tests::asking_for_more_digits_than_exist_leaves_the_array_alone ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13317,
+          "text": "test round::tests::directed_modes_consult_the_sign ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13317,
+          "text": "test round::tests::down_never_rounds_up_and_up_always_does ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13318,
+          "text": "test round::tests::half_even_reads_the_neighbour_across_a_limb_boundary ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13318,
+          "text": "test round::tests::half_way_modes_break_ties_as_their_names_say ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13318,
+          "text": "test round::tests::non_finite_values_pass_through_untouched ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13318,
+          "text": "test round::tests::rounding_away_every_digit_gives_zero_or_one_unit ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13318,
+          "text": "test round::tests::rounding_restores_the_no_trailing_zero_limb_invariant ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13318,
+          "text": "test round::tests::suppressing_the_clamp_lets_an_intermediate_exceed_the_limits ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13318,
+          "text": "test round::tests::the_exponent_limits_overflow_and_underflow ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13318,
+          "text": "test round::tests::truncation_flag_turns_an_exact_tie_into_a_round_up ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13318,
+          "text": "test tests::digit_count_counts_decimal_digits ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13318,
+          "text": "test tests::pow10_agrees_with_repeated_multiplication ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13318,
+          "text": "test tests::the_array_ceiling_is_the_one_the_host_enforces ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13318,
+          "text": "test tests::to_int32_wraps_where_rust_would_saturate ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13318,
+          "text": "test trig::tests::an_operand_below_min_e_reduces_to_zero ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13318,
+          "text": "test trig::tests::an_overflowing_argument_reduction_answers_nan ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13318,
+          "text": "test trig::tests::an_overflowing_series_terminates_and_leaves_clamping_on ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13318,
+          "text": "test trig::tests::asking_for_more_digits_than_pi_carries_is_an_error ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13318,
+          "text": "test trig::tests::hyperbolics ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13318,
+          "text": "test trig::tests::integers_convert_exactly_past_the_thirty_two_bit_boundary ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13318,
+          "text": "test trig::tests::non_finite_arguments ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13318,
+          "text": "test trig::tests::signed_zero_survives_the_odd_functions ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13318,
+          "text": "test trig::tests::tan_loses_all_significance_near_a_pole_exactly_as_upstream_does ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13318,
+          "text": "test trig::tests::sines_and_cosines_of_familiar_arguments ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13318,
+          "text": "test trig::tests::tangents ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13318,
+          "text": "test trig::tests::the_quadrant_reduction_carries_the_sign ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13318,
+          "text": "test trig::tests::the_pythagorean_identity_holds_to_the_working_precision ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13754,
+          "text": "test trig::tests::a_long_series_does_not_overflow_its_denominator ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13754,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 13754,
+          "text": "test result: ok. 167 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.44s",
+          "stream": "out"
+        },
+        {
+          "t": 13754,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 13756,
+          "text": "     Running tests\\number_to_string.rs (target\\release\\deps\\number_to_string-6852d2e1dbdfd239.exe)",
+          "stream": "err"
+        },
+        {
+          "t": 13824,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 13824,
+          "text": "running 2 tests",
+          "stream": "out"
+        },
+        {
+          "t": 13824,
+          "text": "test the_corpus_covers_both_notation_thresholds ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13841,
+          "text": "test matches_node_on_every_value_in_the_corpus ... ok",
+          "stream": "out"
+        },
+        {
+          "t": 13841,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 13841,
+          "text": "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s",
+          "stream": "out"
+        },
+        {
+          "t": 13841,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 13843,
+          "text": "     Running unittests src\\lib.rs (target\\release\\deps\\decimal-763fd36baabf1a0e.exe)",
+          "stream": "err"
+        },
+        {
+          "t": 13902,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 13902,
+          "text": "running 0 tests",
+          "stream": "out"
+        },
+        {
+          "t": 13902,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 13902,
+          "text": "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+          "stream": "out"
+        },
+        {
+          "t": 13902,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 13903,
+          "text": "   Doc-tests decimal_core",
+          "stream": "err"
+        },
+        {
+          "t": 13967,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 13967,
+          "text": "running 0 tests",
+          "stream": "out"
+        },
+        {
+          "t": 13967,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 13967,
+          "text": "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+          "stream": "out"
+        },
+        {
+          "t": 13967,
+          "text": "",
+          "stream": "out"
+        }
+      ]
+    },
+    {
+      "id": "campaign",
+      "command": "node fuzz/campaign.js --seconds 70",
+      "cwd": "D:\\pm\\decimal-rs",
+      "exitCode": 0,
+      "durationMs": 425660,
+      "startedAt": "2026-08-01T15:06:44.931Z",
+      "lines": [
+        {
+          "t": 44,
+          "text": "port-mortem differential fuzz campaign — decimal.js vs decimal-rs",
+          "stream": "out"
+        },
+        {
+          "t": 44,
+          "text": "oracle:  fuzz/reference/decimal.js  v10.6.0 @ cd73a7f  [vendored; not linked into the port]",
+          "stream": "out"
+        },
+        {
+          "t": 44,
+          "text": "subject: decimal.node  (crates/decimal-core + crates/decimal-napi, release)",
+          "stream": "out"
+        },
+        {
+          "t": 44,
+          "text": "host:    AMD Ryzen 5 7600 6-Core Processor / win32 10.0.26200 / node v24.13.1",
+          "stream": "out"
+        },
+        {
+          "t": 44,
+          "text": "started 2026-08-01T15:06:44.974Z   seed 0x5DD0BB14",
+          "stream": "out"
+        },
+        {
+          "t": 44,
+          "text": "budget:  70s continuous, 4 worker processes, slices of 150 sequences",
+          "stream": "out"
+        },
+        {
+          "t": 44,
+          "text": "watchdog: a slice whose sequence index has not advanced in 4.0s is killed, its input recorded by",
+          "stream": "out"
+        },
+        {
+          "t": 44,
+          "text": "         seed, and the slice resumed at the next sequence. Children are",
+          "stream": "out"
+        },
+        {
+          "t": 44,
+          "text": "         capped at 1024 MB of heap.",
+          "stream": "out"
+        },
+        {
+          "t": 44,
+          "text": "bounds:  ON — operations whose cost is proportional to the operand exponent are fuzzed for |e| < 10000 (see differential.js).",
+          "stream": "out"
+        },
+        {
+          "t": 44,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 44,
+          "text": "comparing, per operation: sign, exponent, digit array, toString, valueOf,",
+          "stream": "out"
+        },
+        {
+          "t": 44,
+          "text": "  toExponential, isFinite, isNaN, isInteger, precision, precision(true),",
+          "stream": "out"
+        },
+        {
+          "t": 44,
+          "text": "  decimalPlaces, negative-zero, thrown message, and the constructor",
+          "stream": "out"
+        },
+        {
+          "t": 44,
+          "text": "  configuration before and after.",
+          "stream": "out"
+        },
+        {
+          "t": 44,
+          "text": "excluded by rule: Decimal.random (no fixed answer — the two sides draw from",
+          "stream": "out"
+        },
+        {
+          "t": 44,
+          "text": "  different generators by design; covered by scripted-entropy unit tests in",
+          "stream": "out"
+        },
+        {
+          "t": 44,
+          "text": "  crates/decimal-core/src/random.rs).",
+          "stream": "out"
+        },
+        {
+          "t": 44,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 87,
+          "text": "[harness self-check] injected a one-ulp fault into the port's results",
+          "stream": "out"
+        },
+        {
+          "t": 87,
+          "text": "[harness self-check]   -> DETECTED at sequence 1 (comparator is live)",
+          "stream": "out"
+        },
+        {
+          "t": 87,
+          "text": "[harness self-check] fault reverted",
+          "stream": "out"
+        },
+        {
+          "t": 322,
+          "text": "[replay check] one slice run twice: identical",
+          "stream": "out"
+        },
+        {
+          "t": 322,
+          "text": "[replay check] the same slice in two halves: accounts for the whole (51 + 63 = 114 operations)",
+          "stream": "out"
+        },
+        {
+          "t": 322,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 322,
+          "text": "starting clean run",
+          "stream": "out"
+        },
+        {
+          "t": 322,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 10334,
+          "text": "seq       473  ops       4048  elapsed   10.0s  divergences 0  unrefereeable 5",
+          "stream": "out"
+        },
+        {
+          "t": 20334,
+          "text": "seq       861  ops       7267  elapsed   20.0s  divergences 0  unrefereeable 13",
+          "stream": "out"
+        },
+        {
+          "t": 30334,
+          "text": "seq      1353  ops      11414  elapsed   30.0s  divergences 0  unrefereeable 21",
+          "stream": "out"
+        },
+        {
+          "t": 40334,
+          "text": "seq      1779  ops      15044  elapsed   40.0s  divergences 0  unrefereeable 30",
+          "stream": "out"
+        },
+        {
+          "t": 50341,
+          "text": "seq      2059  ops      17398  elapsed   50.0s  divergences 0  unrefereeable 39",
+          "stream": "out"
+        },
+        {
+          "t": 60355,
+          "text": "seq      2392  ops      20160  elapsed   60.0s  divergences 0  unrefereeable 47",
+          "stream": "out"
+        },
+        {
+          "t": 70370,
+          "text": "seq      2867  ops      24281  elapsed   70.0s  divergences 0  unrefereeable 57",
+          "stream": "out"
+        },
+        {
+          "t": 74365,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 74365,
+          "text": "STOP  elapsed 74.0s  sequences 2989  operations 25269  divergences 0  unrefereeable 61",
+          "stream": "out"
+        },
+        {
+          "t": 74365,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 74365,
+          "text": "known divergences encountered (deliberate, documented, reported upstream):",
+          "stream": "out"
+        },
+        {
+          "t": 74365,
+          "text": "  BUG-002 (wider) — shared configuration leak  x4",
+          "stream": "out"
+        },
+        {
+          "t": 74365,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 74365,
+          "text": "UNREFEREEABLE INPUTS — 61 of 3050 sequences",
+          "stream": "out"
+        },
+        {
+          "t": 74365,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 74365,
+          "text": "These are inputs on which the *oracle* did not produce an answer, so there",
+          "stream": "out"
+        },
+        {
+          "t": 74365,
+          "text": "was nothing to compare the port against. Each was killed by the watchdog,",
+          "stream": "out"
+        },
+        {
+          "t": 74365,
+          "text": "recorded by seed, and re-run afterwards one side at a time to attribute the",
+          "stream": "out"
+        },
+        {
+          "t": 74365,
+          "text": "failure. Nothing here is filtered out of the counts above: the sequences",
+          "stream": "out"
+        },
+        {
+          "t": 74365,
+          "text": "they belong to are excluded from `sequences`, and they are listed",
+          "stream": "out"
+        },
+        {
+          "t": 74365,
+          "text": "individually so that the exclusion can be checked.",
+          "stream": "out"
+        },
+        {
+          "t": 74365,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 82009,
+          "text": "  slice 0x4a7f92b8  sequence   15  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 82009,
+          "text": "    step:      Decimal.atan2(x0, x2)",
+          "stream": "out"
+        },
+        {
+          "t": 82009,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 82009,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 82009,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 82009,
+          "text": "    replay:    node fuzz/differential.js --slice 1249874616 --resume 15 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 89612,
+          "text": "  slice 0xcc13e455  sequence   46  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 89612,
+          "text": "    step:      Decimal.atan2(x2, x3)",
+          "stream": "out"
+        },
+        {
+          "t": 89612,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 89612,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 89612,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 89612,
+          "text": "    replay:    node fuzz/differential.js --slice 3423855701 --resume 46 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 97235,
+          "text": "  slice 0x56072fc2  sequence   19  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 97235,
+          "text": "    step:      x3.atan()",
+          "stream": "out"
+        },
+        {
+          "t": 97235,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 97235,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 97235,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 97235,
+          "text": "    replay:    node fuzz/differential.js --slice 1443311554 --resume 19 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 102332,
+          "text": "  slice 0xd83b717f  sequence   12  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 102332,
+          "text": "    step:      x1.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 102332,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 102332,
+          "text": "    port:      returned in 47 ms",
+          "stream": "out"
+        },
+        {
+          "t": 102332,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 102332,
+          "text": "    replay:    node fuzz/differential.js --slice 3627774335 --resume 12 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 107443,
+          "text": "  slice 0x7e560596  sequence   14  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 107443,
+          "text": "    step:      x1.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 107443,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 107443,
+          "text": "    port:      returned in 71 ms",
+          "stream": "out"
+        },
+        {
+          "t": 107443,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 107443,
+          "text": "    replay:    node fuzz/differential.js --slice 2119566742 --resume 14 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 112539,
+          "text": "  slice 0xf4a233f9  sequence    3  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 112539,
+          "text": "    step:      x1.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 112539,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 112539,
+          "text": "    port:      returned in 38 ms",
+          "stream": "out"
+        },
+        {
+          "t": 112539,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 112539,
+          "text": "    replay:    node fuzz/differential.js --slice 4104270841 --resume 3 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 117630,
+          "text": "  slice 0xd83b717f  sequence   84  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 117630,
+          "text": "    step:      x2.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 117630,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 117630,
+          "text": "    port:      returned in 36 ms",
+          "stream": "out"
+        },
+        {
+          "t": 117630,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 117630,
+          "text": "    replay:    node fuzz/differential.js --slice 3627774335 --resume 84 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 122733,
+          "text": "  slice 0xc04a4f03  sequence   84  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 122733,
+          "text": "    step:      x0.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 122733,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 122733,
+          "text": "    port:      returned in 38 ms",
+          "stream": "out"
+        },
+        {
+          "t": 122733,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 122733,
+          "text": "    replay:    node fuzz/differential.js --slice 3226095363 --resume 84 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 127852,
+          "text": "  slice 0x7e560596  sequence   35  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 127852,
+          "text": "    step:      x2.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 127852,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 127852,
+          "text": "    port:      returned in 38 ms",
+          "stream": "out"
+        },
+        {
+          "t": 127852,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 127852,
+          "text": "    replay:    node fuzz/differential.js --slice 2119566742 --resume 35 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 132945,
+          "text": "  slice 0x728ee84c  sequence   57  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 132945,
+          "text": "    step:      x2.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 132945,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 132945,
+          "text": "    port:      returned in 38 ms",
+          "stream": "out"
+        },
+        {
+          "t": 132945,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 132945,
+          "text": "    replay:    node fuzz/differential.js --slice 1921968204 --resume 57 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 140563,
+          "text": "  slice 0xf4a233f9  sequence   16  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 140563,
+          "text": "    step:      Decimal.atan2(x1, x0)",
+          "stream": "out"
+        },
+        {
+          "t": 140563,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 140563,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 140563,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 140563,
+          "text": "    replay:    node fuzz/differential.js --slice 4104270841 --resume 16 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 145672,
+          "text": "  slice 0xe89aa6d7  sequence    3  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 145672,
+          "text": "    step:      x1.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 145672,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 145672,
+          "text": "    port:      returned in 40 ms",
+          "stream": "out"
+        },
+        {
+          "t": 145672,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 145672,
+          "text": "    replay:    node fuzz/differential.js --slice 3902449367 --resume 3 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 150786,
+          "text": "  slice 0x728ee84c  sequence   66  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 150786,
+          "text": "    step:      x1.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 150786,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 150786,
+          "text": "    port:      returned in 40 ms",
+          "stream": "out"
+        },
+        {
+          "t": 150786,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 150786,
+          "text": "    replay:    node fuzz/differential.js --slice 1921968204 --resume 66 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 155893,
+          "text": "  slice 0x7e560596  sequence   48  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 155893,
+          "text": "    step:      x0.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 155893,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 155893,
+          "text": "    port:      returned in 37 ms",
+          "stream": "out"
+        },
+        {
+          "t": 155893,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 155893,
+          "text": "    replay:    node fuzz/differential.js --slice 2119566742 --resume 48 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 160979,
+          "text": "  slice 0xf4a233f9  sequence   90  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 160979,
+          "text": "    step:      x3.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 160979,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 160979,
+          "text": "    port:      returned in 40 ms",
+          "stream": "out"
+        },
+        {
+          "t": 160979,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 160979,
+          "text": "    replay:    node fuzz/differential.js --slice 4104270841 --resume 90 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 166073,
+          "text": "  slice 0xe89aa6d7  sequence   21  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 166073,
+          "text": "    step:      x1.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 166073,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 166073,
+          "text": "    port:      returned in 37 ms",
+          "stream": "out"
+        },
+        {
+          "t": 166073,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 166073,
+          "text": "    replay:    node fuzz/differential.js --slice 3902449367 --resume 21 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 171177,
+          "text": "  slice 0x66e5533a  sequence    3  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 171177,
+          "text": "    step:      x1.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 171177,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 171177,
+          "text": "    port:      returned in 40 ms",
+          "stream": "out"
+        },
+        {
+          "t": 171177,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 171177,
+          "text": "    replay:    node fuzz/differential.js --slice 1726305082 --resume 3 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 178797,
+          "text": "  slice 0x9cf1098d  sequence   52  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 178797,
+          "text": "    step:      Decimal.atan2(x1, x0)",
+          "stream": "out"
+        },
+        {
+          "t": 178797,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 178797,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 178797,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 178797,
+          "text": "    replay:    node fuzz/differential.js --slice 2633042317 --resume 52 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 183898,
+          "text": "  slice 0x7e560596  sequence  120  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 183898,
+          "text": "    step:      x0.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 183898,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 183898,
+          "text": "    port:      returned in 38 ms",
+          "stream": "out"
+        },
+        {
+          "t": 183898,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 183898,
+          "text": "    replay:    node fuzz/differential.js --slice 2119566742 --resume 120 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 188996,
+          "text": "  slice 0xe89aa6d7  sequence  108  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 188996,
+          "text": "    step:      x2.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 188996,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 188996,
+          "text": "    port:      returned in 42 ms",
+          "stream": "out"
+        },
+        {
+          "t": 188996,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 188996,
+          "text": "    replay:    node fuzz/differential.js --slice 3902449367 --resume 108 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 196604,
+          "text": "  slice 0x66e5533a  sequence   11  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 196604,
+          "text": "    step:      Decimal.atan2(x0, x1)",
+          "stream": "out"
+        },
+        {
+          "t": 196604,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 196604,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 196604,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 196604,
+          "text": "    replay:    node fuzz/differential.js --slice 1726305082 --resume 11 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 204194,
+          "text": "  slice 0x9cf1098d  sequence   80  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 204194,
+          "text": "    step:      Decimal.atan2(x2, x1)",
+          "stream": "out"
+        },
+        {
+          "t": 204194,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 204194,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 204194,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 204195,
+          "text": "    replay:    node fuzz/differential.js --slice 2633042317 --resume 80 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 211786,
+          "text": "  slice 0xe89aa6d7  sequence  126  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 211786,
+          "text": "    step:      x0.atan()",
+          "stream": "out"
+        },
+        {
+          "t": 211786,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 211786,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 211786,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 211786,
+          "text": "    replay:    node fuzz/differential.js --slice 3902449367 --resume 126 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 216875,
+          "text": "  slice 0x66e5533a  sequence   30  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 216875,
+          "text": "    step:      x0.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 216875,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 216875,
+          "text": "    port:      returned in 37 ms",
+          "stream": "out"
+        },
+        {
+          "t": 216875,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 216875,
+          "text": "    replay:    node fuzz/differential.js --slice 1726305082 --resume 30 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 221968,
+          "text": "  slice 0x9cf1098d  sequence  115  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 221968,
+          "text": "    step:      x0.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 221968,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 221968,
+          "text": "    port:      returned in 39 ms",
+          "stream": "out"
+        },
+        {
+          "t": 221968,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 221968,
+          "text": "    replay:    node fuzz/differential.js --slice 2633042317 --resume 115 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 227123,
+          "text": "  slice 0x1addc610  sequence  109  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 227123,
+          "text": "    step:      x1.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 227123,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 227123,
+          "text": "    port:      returned in 68 ms",
+          "stream": "out"
+        },
+        {
+          "t": 227123,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 227123,
+          "text": "    replay:    node fuzz/differential.js --slice 450741776 --resume 109 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 232257,
+          "text": "  slice 0x9129fc7b  sequence    8  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 232258,
+          "text": "    step:      x2.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 232258,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 232258,
+          "text": "    port:      returned in 75 ms",
+          "stream": "out"
+        },
+        {
+          "t": 232258,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 232258,
+          "text": "    replay:    node fuzz/differential.js --slice 2435447931 --resume 8 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 239857,
+          "text": "  slice 0x66e5533a  sequence   35  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 239857,
+          "text": "    step:      x0.cosh()",
+          "stream": "out"
+        },
+        {
+          "t": 239857,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 239857,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 239858,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 239858,
+          "text": "    replay:    node fuzz/differential.js --slice 1726305082 --resume 35 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 244929,
+          "text": "  slice 0x9cf1098d  sequence  128  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 244929,
+          "text": "    step:      x2.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 244929,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 244929,
+          "text": "    port:      returned in 37 ms",
+          "stream": "out"
+        },
+        {
+          "t": 244930,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 244930,
+          "text": "    replay:    node fuzz/differential.js --slice 2633042317 --resume 128 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 250028,
+          "text": "  slice 0x1addc610  sequence  129  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 250028,
+          "text": "    step:      x0.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 250028,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 250028,
+          "text": "    port:      returned in 37 ms",
+          "stream": "out"
+        },
+        {
+          "t": 250028,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 250028,
+          "text": "    replay:    node fuzz/differential.js --slice 450741776 --resume 129 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 255124,
+          "text": "  slice 0x9129fc7b  sequence   30  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 255124,
+          "text": "    step:      x2.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 255124,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 255124,
+          "text": "    port:      returned in 38 ms",
+          "stream": "out"
+        },
+        {
+          "t": 255124,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 255124,
+          "text": "    replay:    node fuzz/differential.js --slice 2435447931 --resume 30 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 260202,
+          "text": "  slice 0x0f35aace  sequence   21  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 260202,
+          "text": "    step:      x0.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 260202,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 260202,
+          "text": "    port:      returned in 37 ms",
+          "stream": "out"
+        },
+        {
+          "t": 260202,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 260202,
+          "text": "    replay:    node fuzz/differential.js --slice 255175374 --resume 21 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 265295,
+          "text": "  slice 0x036c1da4  sequence   12  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 265295,
+          "text": "    step:      x3.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 265295,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 265295,
+          "text": "    port:      returned in 37 ms",
+          "stream": "out"
+        },
+        {
+          "t": 265295,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 265295,
+          "text": "    replay:    node fuzz/differential.js --slice 57417124 --resume 12 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 270403,
+          "text": "  slice 0x85006751  sequence   39  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 270403,
+          "text": "    step:      x0.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 270403,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 270403,
+          "text": "    port:      returned in 36 ms",
+          "stream": "out"
+        },
+        {
+          "t": 270403,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 270403,
+          "text": "    replay:    node fuzz/differential.js --slice 2231396177 --resume 39 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 275506,
+          "text": "  slice 0x9129fc7b  sequence   52  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 275506,
+          "text": "    step:      x0.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 275506,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 275506,
+          "text": "    port:      returned in 37 ms",
+          "stream": "out"
+        },
+        {
+          "t": 275506,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 275506,
+          "text": "    replay:    node fuzz/differential.js --slice 2435447931 --resume 52 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 283136,
+          "text": "  slice 0x0f35aace  sequence   42  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 283136,
+          "text": "    step:      Decimal.atan2(x0, x1)",
+          "stream": "out"
+        },
+        {
+          "t": 283136,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 283136,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 283136,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 283136,
+          "text": "    replay:    node fuzz/differential.js --slice 255175374 --resume 42 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 288228,
+          "text": "  slice 0x036c1da4  sequence   66  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 288228,
+          "text": "    step:      x1.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 288228,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 288228,
+          "text": "    port:      returned in 37 ms",
+          "stream": "out"
+        },
+        {
+          "t": 288228,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 288228,
+          "text": "    replay:    node fuzz/differential.js --slice 57417124 --resume 66 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 295840,
+          "text": "  slice 0x85006751  sequence   77  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 295840,
+          "text": "    step:      Decimal.atan2(x0, x1)",
+          "stream": "out"
+        },
+        {
+          "t": 295840,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 295840,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 295840,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 295840,
+          "text": "    replay:    node fuzz/differential.js --slice 2231396177 --resume 77 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 303452,
+          "text": "  slice 0x9129fc7b  sequence  109  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 303452,
+          "text": "    step:      x0.atan()",
+          "stream": "out"
+        },
+        {
+          "t": 303452,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 303452,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 303452,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 303452,
+          "text": "    replay:    node fuzz/differential.js --slice 2435447931 --resume 109 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 308574,
+          "text": "  slice 0x0f35aace  sequence   93  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 308574,
+          "text": "    step:      x2.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 308574,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 308574,
+          "text": "    port:      returned in 38 ms",
+          "stream": "out"
+        },
+        {
+          "t": 308574,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 308574,
+          "text": "    replay:    node fuzz/differential.js --slice 255175374 --resume 93 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 313672,
+          "text": "  slice 0x036c1da4  sequence   75  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 313672,
+          "text": "    step:      x1.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 313672,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 313672,
+          "text": "    port:      returned in 38 ms",
+          "stream": "out"
+        },
+        {
+          "t": 313672,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 313672,
+          "text": "    replay:    node fuzz/differential.js --slice 57417124 --resume 75 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 318778,
+          "text": "  slice 0x85006751  sequence  135  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 318778,
+          "text": "    step:      x1.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 318778,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 318778,
+          "text": "    port:      returned in 38 ms",
+          "stream": "out"
+        },
+        {
+          "t": 318778,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 318778,
+          "text": "    replay:    node fuzz/differential.js --slice 2231396177 --resume 135 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 326387,
+          "text": "  slice 0x0f35aace  sequence  143  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 326387,
+          "text": "    step:      x0.atan()",
+          "stream": "out"
+        },
+        {
+          "t": 326387,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 326387,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 326387,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 326387,
+          "text": "    replay:    node fuzz/differential.js --slice 255175374 --resume 143 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 334004,
+          "text": "  slice 0xb978ca0f  sequence   30  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 334004,
+          "text": "    step:      Decimal.atan2(x3, x0)",
+          "stream": "out"
+        },
+        {
+          "t": 334004,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 334004,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 334004,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 334005,
+          "text": "    replay:    node fuzz/differential.js --slice 3111701007 --resume 30 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 339105,
+          "text": "  slice 0x036c1da4  sequence  147  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 339105,
+          "text": "    step:      x1.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 339105,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 339105,
+          "text": "    port:      returned in 39 ms",
+          "stream": "out"
+        },
+        {
+          "t": 339105,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 339105,
+          "text": "    replay:    node fuzz/differential.js --slice 57417124 --resume 147 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 344208,
+          "text": "  slice 0x37448092  sequence    3  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 344208,
+          "text": "    step:      x1.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 344208,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 344208,
+          "text": "    port:      returned in 38 ms",
+          "stream": "out"
+        },
+        {
+          "t": 344208,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 344208,
+          "text": "    replay:    node fuzz/differential.js --slice 927236242 --resume 3 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 349296,
+          "text": "  slice 0xad50bee5  sequence    3  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 349296,
+          "text": "    step:      x3.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 349296,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 349296,
+          "text": "    port:      returned in 38 ms",
+          "stream": "out"
+        },
+        {
+          "t": 349296,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 349296,
+          "text": "    replay:    node fuzz/differential.js --slice 2907750117 --resume 3 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 354391,
+          "text": "  slice 0xb978ca0f  sequence   93  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 354391,
+          "text": "    step:      x3.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 354391,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 354391,
+          "text": "    port:      returned in 36 ms",
+          "stream": "out"
+        },
+        {
+          "t": 354391,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 354391,
+          "text": "    replay:    node fuzz/differential.js --slice 3111701007 --resume 93 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 359523,
+          "text": "  slice 0x2bbb6b48  sequence    3  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 359523,
+          "text": "    step:      x1.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 359523,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 359523,
+          "text": "    port:      returned in 43 ms",
+          "stream": "out"
+        },
+        {
+          "t": 359523,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 359523,
+          "text": "    replay:    node fuzz/differential.js --slice 733702984 --resume 3 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 364616,
+          "text": "  slice 0x37448092  sequence   84  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 364616,
+          "text": "    step:      x2.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 364616,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 364616,
+          "text": "    port:      returned in 37 ms",
+          "stream": "out"
+        },
+        {
+          "t": 364616,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 364616,
+          "text": "    replay:    node fuzz/differential.js --slice 927236242 --resume 84 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 372214,
+          "text": "  slice 0xa18721d3  sequence    0  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 372214,
+          "text": "    step:      x0.tanh()",
+          "stream": "out"
+        },
+        {
+          "t": 372214,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 372214,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 372214,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 372214,
+          "text": "    replay:    node fuzz/differential.js --slice 2709987795 --resume 0 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 377343,
+          "text": "  slice 0xad50bee5  sequence   66  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 377343,
+          "text": "    step:      x3.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 377343,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 377343,
+          "text": "    port:      returned in 67 ms",
+          "stream": "out"
+        },
+        {
+          "t": 377343,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 377343,
+          "text": "    replay:    node fuzz/differential.js --slice 2907750117 --resume 66 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 384933,
+          "text": "  slice 0x2bbb6b48  sequence   49  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 384933,
+          "text": "    step:      Decimal.atan2(x3, x2)",
+          "stream": "out"
+        },
+        {
+          "t": 384933,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 384933,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 384933,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 384933,
+          "text": "    replay:    node fuzz/differential.js --slice 733702984 --resume 49 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 390036,
+          "text": "  slice 0x37448092  sequence   93  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 390036,
+          "text": "    step:      x0.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 390036,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 390036,
+          "text": "    port:      returned in 38 ms",
+          "stream": "out"
+        },
+        {
+          "t": 390036,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 390036,
+          "text": "    replay:    node fuzz/differential.js --slice 927236242 --resume 93 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 397645,
+          "text": "  slice 0xa18721d3  sequence   17  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 397645,
+          "text": "    step:      Decimal.atan2(x0, x2)",
+          "stream": "out"
+        },
+        {
+          "t": 397645,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 397645,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 397645,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 397645,
+          "text": "    replay:    node fuzz/differential.js --slice 2709987795 --resume 17 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 402750,
+          "text": "  slice 0xad50bee5  sequence  111  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 402750,
+          "text": "    step:      x3.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 402750,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 402750,
+          "text": "    port:      returned in 37 ms",
+          "stream": "out"
+        },
+        {
+          "t": 402750,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 402750,
+          "text": "    replay:    node fuzz/differential.js --slice 2907750117 --resume 111 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 407836,
+          "text": "  slice 0x2bbb6b48  sequence  147  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 407836,
+          "text": "    step:      x2.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 407836,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 407836,
+          "text": "    port:      returned in 38 ms",
+          "stream": "out"
+        },
+        {
+          "t": 407836,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 407836,
+          "text": "    replay:    node fuzz/differential.js --slice 733702984 --resume 147 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 412996,
+          "text": "  slice 0x37448092  sequence  111  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 412996,
+          "text": "    step:      x0.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 412996,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 412996,
+          "text": "    port:      returned in 38 ms",
+          "stream": "out"
+        },
+        {
+          "t": 412996,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 412996,
+          "text": "    replay:    node fuzz/differential.js --slice 927236242 --resume 111 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 418081,
+          "text": "  slice 0xa18721d3  sequence   75  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 418081,
+          "text": "    step:      x1.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 418081,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 418081,
+          "text": "    port:      returned in 38 ms",
+          "stream": "out"
+        },
+        {
+          "t": 418081,
+          "text": "    verdict:   upstream defect — the port answers, the oracle does not",
+          "stream": "out"
+        },
+        {
+          "t": 418081,
+          "text": "    replay:    node fuzz/differential.js --slice 2709987795 --resume 75 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 425639,
+          "text": "  slice 0xdf93de26  sequence   12  (stalled)",
+          "stream": "out"
+        },
+        {
+          "t": 425639,
+          "text": "    step:      x1.toFraction()",
+          "stream": "out"
+        },
+        {
+          "t": 425639,
+          "text": "    oracle:    did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 425639,
+          "text": "    port:      did NOT return within 2.5 s",
+          "stream": "out"
+        },
+        {
+          "t": 425639,
+          "text": "    verdict:   intractable for both — they agree in not returning",
+          "stream": "out"
+        },
+        {
+          "t": 425639,
+          "text": "    replay:    node fuzz/differential.js --slice 3751009830 --resume 12 --sequences 1",
+          "stream": "out"
+        },
+        {
+          "t": 425639,
+          "text": "  … and 1 more, not diagnosed (--diagnose 60)",
+          "stream": "out"
+        },
+        {
+          "t": 425639,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 425639,
+          "text": "  by operation                      upstream  intractable   PORT DEFECT",
+          "stream": "out"
+        },
+        {
+          "t": 425639,
+          "text": "    toFraction            43            42            1             0",
+          "stream": "out"
+        },
+        {
+          "t": 425639,
+          "text": "    atan2                 11             0           11             0",
+          "stream": "out"
+        },
+        {
+          "t": 425639,
+          "text": "    atan                   4             0            4             0",
+          "stream": "out"
+        },
+        {
+          "t": 425639,
+          "text": "    cosh                   1             0            1             0",
+          "stream": "out"
+        },
+        {
+          "t": 425639,
+          "text": "    tanh                   1             0            1             0",
+          "stream": "out"
+        },
+        {
+          "t": 425639,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 425650,
+          "text": "SUMMARY: 25,269 refereed operations over 2,989 stateful sequences,",
+          "stream": "out"
+        },
+        {
+          "t": 425650,
+          "text": "         across 61 API entry points and all 9 rounding modes,",
+          "stream": "out"
+        },
+        {
+          "t": 425650,
+          "text": "         in 74.0 continuous seconds on 4 worker processes.",
+          "stream": "out"
+        },
+        {
+          "t": 425650,
+          "text": "         Zero undocumented divergences.",
+          "stream": "out"
+        },
+        {
+          "t": 425650,
+          "text": "         61 input(s) could not be refereed, named above. Of the 60 diagnosed:",
+          "stream": "out"
+        },
+        {
+          "t": 425650,
+          "text": "             42  the port answered and the oracle did not  (upstream defects)",
+          "stream": "out"
+        },
+        {
+          "t": 425650,
+          "text": "             18  neither returned                          (agreement, no answer available)",
+          "stream": "out"
+        },
+        {
+          "t": 425650,
+          "text": "              0  neither reproduced it in isolation        (inconclusive)",
+          "stream": "out"
+        },
+        {
+          "t": 425650,
+          "text": "              0  the oracle answered and the port did not  (none — the claim that matters)",
+          "stream": "out"
+        },
+        {
+          "t": 425650,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 425650,
+          "text": "log written to D:\\pm\\decimal-rs\\fuzz\\log.txt",
+          "stream": "out"
+        }
+      ]
+    },
+    {
+      "id": "clamp",
+      "command": "node scripts/clamp-conformance.js",
+      "cwd": "D:\\pm\\decimal-rs",
+      "exitCode": 0,
+      "durationMs": 166691,
+      "startedAt": "2026-08-01T15:13:50.591Z",
+      "lines": [
+        {
+          "t": 43,
+          "text": "exponent-clamp conformance — decimal-rs against decimal.js v10.6.0 @ cd73a7f",
+          "stream": "out"
+        },
+        {
+          "t": 43,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 43,
+          "text": "Operands built with minE/maxE wide, then the limits narrowed, then the",
+          "stream": "out"
+        },
+        {
+          "t": 43,
+          "text": "method called — the only arrangement in which the original's `new Ctor(x)`",
+          "stream": "out"
+        },
+        {
+          "t": 43,
+          "text": "is observable. 67 methods x 6 operands x 4 limit pairs, the 10 methods that take a rounding",
+          "stream": "out"
+        },
+        {
+          "t": 43,
+          "text": "mode across all 9 of them = 3528 calls.",
+          "stream": "out"
+        },
+        {
+          "t": 43,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 265,
+          "text": "  abs                  ok",
+          "stream": "out"
+        },
+        {
+          "t": 485,
+          "text": "  neg                  ok",
+          "stream": "out"
+        },
+        {
+          "t": 733,
+          "text": "  ceil                 ok",
+          "stream": "out"
+        },
+        {
+          "t": 962,
+          "text": "  floor                ok",
+          "stream": "out"
+        },
+        {
+          "t": 1193,
+          "text": "  round                ok",
+          "stream": "out"
+        },
+        {
+          "t": 1413,
+          "text": "  trunc                ok",
+          "stream": "out"
+        },
+        {
+          "t": 1634,
+          "text": "  sqrt                 ok",
+          "stream": "out"
+        },
+        {
+          "t": 1857,
+          "text": "  cbrt                 ok",
+          "stream": "out"
+        },
+        {
+          "t": 2095,
+          "text": "  sin                  ok (4 documented)",
+          "stream": "out"
+        },
+        {
+          "t": 2326,
+          "text": "  cos                  ok (4 documented)",
+          "stream": "out"
+        },
+        {
+          "t": 2598,
+          "text": "  tan                  ok (4 documented)",
+          "stream": "out"
+        },
+        {
+          "t": 22783,
+          "text": "  sinh                 ok   [16/24 — 1.5e300 at maxE=100 and 1 more did not return in 10 s, in either implementation]",
+          "stream": "out"
+        },
+        {
+          "t": 62940,
+          "text": "  tanh                 ok   [10/24 — 1.5e300 at maxE=100 and 3 more did not return in 10 s, in either implementation]",
+          "stream": "out"
+        },
+        {
+          "t": 73139,
+          "text": "  asin                 ok   [22/24 — -0.125 at maxE=3 did not return in 10 s, in either implementation]",
+          "stream": "out"
+        },
+        {
+          "t": 113320,
+          "text": "  atan                 ok   [10/24 — 1.5e300 at maxE=100 and 3 more did not return in 10 s, in either implementation]",
+          "stream": "out"
+        },
+        {
+          "t": 113557,
+          "text": "  acos                 ok",
+          "stream": "out"
+        },
+        {
+          "t": 113825,
+          "text": "  acosh                ok",
+          "stream": "out"
+        },
+        {
+          "t": 114198,
+          "text": "  asinh                ok",
+          "stream": "out"
+        },
+        {
+          "t": 114458,
+          "text": "  atanh                ok",
+          "stream": "out"
+        },
+        {
+          "t": 154652,
+          "text": "  cosh                 ok (2 documented)   [12/24 — 1.5e300 at maxE=9000000000000000 and 3 more did not return in 10 s, in either implementation]",
+          "stream": "out"
+        },
+        {
+          "t": 154879,
+          "text": "  exp                  ok",
+          "stream": "out"
+        },
+        {
+          "t": 155140,
+          "text": "  ln                   ok",
+          "stream": "out"
+        },
+        {
+          "t": 155376,
+          "text": "  log(2)               ok",
+          "stream": "out"
+        },
+        {
+          "t": 155635,
+          "text": "  plus                 ok",
+          "stream": "out"
+        },
+        {
+          "t": 155857,
+          "text": "  minus                ok",
+          "stream": "out"
+        },
+        {
+          "t": 156110,
+          "text": "  times                ok",
+          "stream": "out"
+        },
+        {
+          "t": 156348,
+          "text": "  div                  ok",
+          "stream": "out"
+        },
+        {
+          "t": 156611,
+          "text": "  mod                  ok",
+          "stream": "out"
+        },
+        {
+          "t": 156836,
+          "text": "  divToInt             ok",
+          "stream": "out"
+        },
+        {
+          "t": 157089,
+          "text": "  pow                  ok (4 documented)",
+          "stream": "out"
+        },
+        {
+          "t": 157313,
+          "text": "  clamp                ok",
+          "stream": "out"
+        },
+        {
+          "t": 157571,
+          "text": "  toNearest            ok",
+          "stream": "out"
+        },
+        {
+          "t": 157805,
+          "text": "  toNearest(1,rm)      ok",
+          "stream": "out"
+        },
+        {
+          "t": 158058,
+          "text": "  toDP                 ok",
+          "stream": "out"
+        },
+        {
+          "t": 158285,
+          "text": "  toDP(0,rm)           ok",
+          "stream": "out"
+        },
+        {
+          "t": 158545,
+          "text": "  toDP(2,rm)           ok",
+          "stream": "out"
+        },
+        {
+          "t": 158784,
+          "text": "  toSD(4,rm)           ok",
+          "stream": "out"
+        },
+        {
+          "t": 159038,
+          "text": "  toExponential        ok",
+          "stream": "out"
+        },
+        {
+          "t": 159267,
+          "text": "  toExponential(3,rm)  ok",
+          "stream": "out"
+        },
+        {
+          "t": 159524,
+          "text": "  toFixed              ok",
+          "stream": "out"
+        },
+        {
+          "t": 159762,
+          "text": "  toFixed(2,rm)        ok",
+          "stream": "out"
+        },
+        {
+          "t": 160019,
+          "text": "  toPrecision          ok",
+          "stream": "out"
+        },
+        {
+          "t": 160251,
+          "text": "  toPrecision(4,rm)    ok",
+          "stream": "out"
+        },
+        {
+          "t": 160516,
+          "text": "  toFraction           ok",
+          "stream": "out"
+        },
+        {
+          "t": 160772,
+          "text": "  toString             ok",
+          "stream": "out"
+        },
+        {
+          "t": 161002,
+          "text": "  valueOf              ok",
+          "stream": "out"
+        },
+        {
+          "t": 161263,
+          "text": "  toJSON               ok",
+          "stream": "out"
+        },
+        {
+          "t": 161521,
+          "text": "  toNumber             ok",
+          "stream": "out"
+        },
+        {
+          "t": 161761,
+          "text": "  toHex                ok",
+          "stream": "out"
+        },
+        {
+          "t": 162210,
+          "text": "  toHex(4,rm)          ok",
+          "stream": "out"
+        },
+        {
+          "t": 162628,
+          "text": "  toBinary(4,rm)       ok",
+          "stream": "out"
+        },
+        {
+          "t": 163050,
+          "text": "  toOctal(4,rm)        ok",
+          "stream": "out"
+        },
+        {
+          "t": 163314,
+          "text": "  sd                   ok",
+          "stream": "out"
+        },
+        {
+          "t": 163539,
+          "text": "  dp                   ok",
+          "stream": "out"
+        },
+        {
+          "t": 163793,
+          "text": "  isInteger            ok",
+          "stream": "out"
+        },
+        {
+          "t": 164016,
+          "text": "  arg → plus           ok",
+          "stream": "out"
+        },
+        {
+          "t": 164272,
+          "text": "  arg → minus          ok",
+          "stream": "out"
+        },
+        {
+          "t": 164494,
+          "text": "  arg → times          ok",
+          "stream": "out"
+        },
+        {
+          "t": 164746,
+          "text": "  arg → div            ok",
+          "stream": "out"
+        },
+        {
+          "t": 164991,
+          "text": "  arg → mod            ok",
+          "stream": "out"
+        },
+        {
+          "t": 165215,
+          "text": "  arg → divToInt       ok",
+          "stream": "out"
+        },
+        {
+          "t": 165473,
+          "text": "  arg → pow            ok",
+          "stream": "out"
+        },
+        {
+          "t": 165732,
+          "text": "  arg → log base       ok",
+          "stream": "out"
+        },
+        {
+          "t": 165953,
+          "text": "  arg → toNearest      ok",
+          "stream": "out"
+        },
+        {
+          "t": 166207,
+          "text": "  arg → clamp min      ok",
+          "stream": "out"
+        },
+        {
+          "t": 166433,
+          "text": "  arg → clamp max      ok",
+          "stream": "out"
+        },
+        {
+          "t": 166684,
+          "text": "  arg → cmp            ok",
+          "stream": "out"
+        },
+        {
+          "t": 166684,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 166684,
+          "text": "Every method agrees with the oracle under narrowed exponent limits.",
+          "stream": "out"
+        },
+        {
+          "t": 166684,
+          "text": "18 documented divergence(s) encountered: upstream dereferences null on a value the clamps made infinite; the port answers (D-13, D-17).",
+          "stream": "out"
+        },
+        {
+          "t": 166684,
+          "text": "5 method(s) had a case that neither implementation returns from; the rest of their cases were checked.",
+          "stream": "out"
+        }
+      ]
+    },
+    {
+      "id": "unsafe",
+      "command": "node scripts/unsafe-report.js",
+      "cwd": "D:\\pm\\decimal-rs",
+      "exitCode": 0,
+      "durationMs": 63,
+      "startedAt": "2026-08-01T15:16:37.282Z",
+      "lines": [
+        {
+          "t": 55,
+          "text": "unsafe report — decimal-rs",
+          "stream": "out"
+        },
+        {
+          "t": 55,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 55,
+          "text": "crate            files   lines  unsafe   compiler-enforced?",
+          "stream": "out"
+        },
+        {
+          "t": 55,
+          "text": "------------------------------------------------------------------------",
+          "stream": "out"
+        },
+        {
+          "t": 55,
+          "text": "decimal-core        19    9913       0   yes, via Cargo.toml [lints.rust]",
+          "stream": "out"
+        },
+        {
+          "t": 56,
+          "text": "decimal-napi         2    2581      93   no — see below",
+          "stream": "out"
+        },
+        {
+          "t": 56,
+          "text": "decimal-cli          1     296       0   yes, via Cargo.toml [lints.rust]",
+          "stream": "out"
+        },
+        {
+          "t": 56,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 56,
+          "text": "method",
+          "stream": "out"
+        },
+        {
+          "t": 56,
+          "text": "  decimal-core sets unsafe_code = \"forbid\". `forbid` is not a lint level an",
+          "stream": "out"
+        },
+        {
+          "t": 56,
+          "text": "  inner `allow` can turn off, so the crate does not compile if an unsafe",
+          "stream": "out"
+        },
+        {
+          "t": 56,
+          "text": "  block appears anywhere in it — including one produced by a macro. The",
+          "stream": "out"
+        },
+        {
+          "t": 56,
+          "text": "  declaration is the evidence and a successful `cargo build` is the check;",
+          "stream": "out"
+        },
+        {
+          "t": 56,
+          "text": "  the counts above are only a textual cross-check of it, taken after",
+          "stream": "out"
+        },
+        {
+          "t": 56,
+          "text": "  comments and string literals have been removed. Grepping for the word",
+          "stream": "out"
+        },
+        {
+          "t": 56,
+          "text": "  would not do: this repository discusses unsafety at length in prose.",
+          "stream": "out"
+        },
+        {
+          "t": 56,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 56,
+          "text": "  decimal-napi is the Node-API adapter and cannot be safe: every call into",
+          "stream": "out"
+        },
+        {
+          "t": 56,
+          "text": "  the Node-API is an `extern \"C\"` function over raw pointers supplied by",
+          "stream": "out"
+        },
+        {
+          "t": 56,
+          "text": "  V8. Its 93 uses are the boundary and nothing else — the adapter",
+          "stream": "out"
+        },
+        {
+          "t": 56,
+          "text": "  contains no arithmetic. All of it is in 2581 lines against",
+          "stream": "out"
+        },
+        {
+          "t": 56,
+          "text": "  9913 lines of arithmetic in decimal-core, which has none.",
+          "stream": "out"
+        },
+        {
+          "t": 56,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 56,
+          "text": "  Dependencies: decimal-core has none at all. The workspace depends on",
+          "stream": "out"
+        },
+        {
+          "t": 56,
+          "text": "  napi-sys, which is bindings only. `cargo geiger` will report unsafe inside",
+          "stream": "out"
+        },
+        {
+          "t": 56,
+          "text": "  it, and that is unsafe in Node itself reached through a binding, not code",
+          "stream": "out"
+        },
+        {
+          "t": 56,
+          "text": "  this project wrote.",
+          "stream": "out"
+        }
+      ]
+    },
+    {
+      "id": "repro",
+      "command": "node fuzz/repro-upstream.js",
+      "cwd": "D:\\pm\\decimal-rs",
+      "exitCode": 0,
+      "durationMs": 45161,
+      "startedAt": "2026-08-01T15:16:37.345Z",
+      "lines": [
+        {
+          "t": 42,
+          "text": "upstream defects found by the decimal-rs differential campaign",
+          "stream": "out"
+        },
+        {
+          "t": 42,
+          "text": "  decimal.js v10.6.0 @ cd73a7f  ·  node v24.13.1  ·  timeout 20 s per case",
+          "stream": "out"
+        },
+        {
+          "t": 42,
+          "text": "  write-ups in docs/upstream/",
+          "stream": "out"
+        },
+        {
+          "t": 42,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 42,
+          "text": "BUG-004  toFraction never returns under ROUND_FLOOR",
+          "stream": "out"
+        },
+        {
+          "t": 42,
+          "text": "  ------------------------------------------------------------------------",
+          "stream": "out"
+        },
+        {
+          "t": 20055,
+          "text": "  decimal.js  DID NOT RETURN within 20 s                          20008 ms",
+          "stream": "out"
+        },
+        {
+          "t": 20093,
+          "text": "  decimal-rs  1,1                                                     0 ms",
+          "stream": "out"
+        },
+        {
+          "t": 20093,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 20093,
+          "text": "BUG-005  taylorSeries dereferences null and leaves the clamps off",
+          "stream": "out"
+        },
+        {
+          "t": 20093,
+          "text": "  ------------------------------------------------------------------------",
+          "stream": "out"
+        },
+        {
+          "t": 20163,
+          "text": "  decimal.js  THROW TypeError: Cannot read properties of null (reading '30')      0 ms",
+          "stream": "out"
+        },
+        {
+          "t": 20163,
+          "text": "              clamps still applied afterwards: false",
+          "stream": "out"
+        },
+        {
+          "t": 20200,
+          "text": "  decimal-rs  Infinity                                                0 ms",
+          "stream": "out"
+        },
+        {
+          "t": 20200,
+          "text": "              clamps still applied afterwards: true",
+          "stream": "out"
+        },
+        {
+          "t": 20200,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 20200,
+          "text": "BUG-006  the argument reduction of sin/cos/tan dereferences null",
+          "stream": "out"
+        },
+        {
+          "t": 20200,
+          "text": "  ------------------------------------------------------------------------",
+          "stream": "out"
+        },
+        {
+          "t": 20239,
+          "text": "  decimal.js  THROW TypeError: Cannot read properties of null (reading 'length')      0 ms",
+          "stream": "out"
+        },
+        {
+          "t": 20311,
+          "text": "  decimal-rs  NaN                                                     0 ms",
+          "stream": "out"
+        },
+        {
+          "t": 20311,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 20311,
+          "text": "BUG-003  toPower dereferences null when the clamp made the base infinite",
+          "stream": "out"
+        },
+        {
+          "t": 20311,
+          "text": "  ------------------------------------------------------------------------",
+          "stream": "out"
+        },
+        {
+          "t": 20350,
+          "text": "  decimal.js  THROW TypeError: Cannot read properties of null (reading 'length')      0 ms",
+          "stream": "out"
+        },
+        {
+          "t": 20387,
+          "text": "  decimal-rs  Infinity                                                0 ms",
+          "stream": "out"
+        },
+        {
+          "t": 20387,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 20387,
+          "text": "BUG-008  atan(Infinity) dereferences null above the pi constant's precision",
+          "stream": "out"
+        },
+        {
+          "t": 20387,
+          "text": "  ------------------------------------------------------------------------",
+          "stream": "out"
+        },
+        {
+          "t": 20456,
+          "text": "  decimal.js  THROW TypeError: Cannot read properties of null (reading '148')      0 ms",
+          "stream": "out"
+        },
+        {
+          "t": 20491,
+          "text": "  decimal-rs  THROW Error: [DecimalError] Precision limit exceeded      0 ms",
+          "stream": "out"
+        },
+        {
+          "t": 20491,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 20491,
+          "text": "BUG-002  acosh leaks precision and rounding when it throws",
+          "stream": "out"
+        },
+        {
+          "t": 20491,
+          "text": "  ------------------------------------------------------------------------",
+          "stream": "out"
+        },
+        {
+          "t": 23342,
+          "text": "  decimal.js  THROW RangeError: Invalid array length               2783 ms",
+          "stream": "out"
+        },
+        {
+          "t": 23342,
+          "text": "              precision left at 8999999999999024; the next 1/3 took 1794 ms and gave THROW RangeError: Invalid array length",
+          "stream": "out"
+        },
+        {
+          "t": 23378,
+          "text": "  decimal-rs  THROW RangeError: Invalid array length                  0 ms",
+          "stream": "out"
+        },
+        {
+          "t": 23378,
+          "text": "              precision left at 20; the next 1/3 took 0 ms and gave 0.33333333333333333333",
+          "stream": "out"
+        },
+        {
+          "t": 23378,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 23378,
+          "text": "—        cbrt does not return near the exponent floor",
+          "stream": "out"
+        },
+        {
+          "t": 23378,
+          "text": "  ------------------------------------------------------------------------",
+          "stream": "out"
+        },
+        {
+          "t": 43422,
+          "text": "  decimal.js  DID NOT RETURN within 20 s                          20009 ms",
+          "stream": "out"
+        },
+        {
+          "t": 43461,
+          "text": "  decimal-rs  -1.8191373764994663229e-2999999999999991                0 ms",
+          "stream": "out"
+        },
+        {
+          "t": 43461,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 43461,
+          "text": "—        the hyperbolic fold is chosen by digit count, not magnitude",
+          "stream": "out"
+        },
+        {
+          "t": 43461,
+          "text": "  ------------------------------------------------------------------------",
+          "stream": "out"
+        },
+        {
+          "t": 44819,
+          "text": "  decimal.js  1.5166076984010437725e+434294                        1312 ms",
+          "stream": "out"
+        },
+        {
+          "t": 45154,
+          "text": "  decimal-rs  1.5166076984010437725e+434294                         298 ms",
+          "stream": "out"
+        },
+        {
+          "t": 45154,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 45154,
+          "text": "Every case above is an input on which the original produces no usable",
+          "stream": "out"
+        },
+        {
+          "t": 45154,
+          "text": "answer. Where this port differs, the difference is recorded in DECISIONS.md",
+          "stream": "out"
+        },
+        {
+          "t": 45154,
+          "text": "(D-11, D-13, D-14, D-16, D-17, D-20) and is always the same judgement:",
+          "stream": "out"
+        },
+        {
+          "t": 45154,
+          "text": "reproduce what the original computes, decline what merely breaks it.",
+          "stream": "out"
+        }
+      ]
+    },
+    {
+      "id": "hostlimits",
+      "command": "node scripts/host-limits.js",
+      "cwd": "D:\\pm\\decimal-rs",
+      "exitCode": 0,
+      "durationMs": 306331,
+      "startedAt": "2026-08-01T15:17:22.506Z",
+      "lines": [
+        {
+          "t": 1339,
+          "text": "host array ceiling",
+          "stream": "out"
+        },
+        {
+          "t": 1339,
+          "text": "  measured on this host   134217728 = 2^27",
+          "stream": "out"
+        },
+        {
+          "t": 1339,
+          "text": "  compiled into the port  134217728",
+          "stream": "out"
+        },
+        {
+          "t": 1339,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 3604,
+          "text": "  ok    div at the largest documented precision",
+          "stream": "out"
+        },
+        {
+          "t": 3604,
+          "text": "        precision 1e9 asks divide for 1e9/7 + 2 limbs, which is above the ceiling",
+          "stream": "out"
+        },
+        {
+          "t": 3604,
+          "text": "        reference  threw RangeError: Invalid array length",
+          "stream": "out"
+        },
+        {
+          "t": 3604,
+          "text": "        port       threw RangeError: Invalid array length",
+          "stream": "out"
+        },
+        {
+          "t": 3604,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 5804,
+          "text": "  ok    sinh one exponent below the ceiling",
+          "stream": "out"
+        },
+        {
+          "t": 5804,
+          "text": "        sinh raises the precision by the operand exponent; the limb target then wraps negative",
+          "stream": "out"
+        },
+        {
+          "t": 5804,
+          "text": "        reference  threw RangeError: Invalid array length",
+          "stream": "out"
+        },
+        {
+          "t": 5804,
+          "text": "        port       threw RangeError: Invalid array length",
+          "stream": "out"
+        },
+        {
+          "t": 5804,
+          "text": "        precision afterwards: reference 8999999999999967, port 5  (D-11, the leak the port declines to reproduce)",
+          "stream": "out"
+        },
+        {
+          "t": 5804,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 7063,
+          "text": "  ok    asinh near the exponent ceiling",
+          "stream": "out"
+        },
+        {
+          "t": 7063,
+          "text": "        the alignment inside plus wants 2.6e15 leading zeros — the case that found this class",
+          "stream": "out"
+        },
+        {
+          "t": 7063,
+          "text": "        reference  threw RangeError: Invalid array length",
+          "stream": "out"
+        },
+        {
+          "t": 7063,
+          "text": "        port       threw RangeError: Invalid array length",
+          "stream": "out"
+        },
+        {
+          "t": 7063,
+          "text": "        precision afterwards: reference 18000000000000024, port 20  (D-11, the leak the port declines to reproduce)",
+          "stream": "out"
+        },
+        {
+          "t": 7063,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 8373,
+          "text": "  ok    acosh near the exponent ceiling",
+          "stream": "out"
+        },
+        {
+          "t": 8373,
+          "text": "        the same, through minus rather than plus",
+          "stream": "out"
+        },
+        {
+          "t": 8373,
+          "text": "        reference  threw RangeError: Invalid array length",
+          "stream": "out"
+        },
+        {
+          "t": 8373,
+          "text": "        port       threw RangeError: Invalid array length",
+          "stream": "out"
+        },
+        {
+          "t": 8373,
+          "text": "        precision afterwards: reference 8999999999999024, port 20  (D-11, the leak the port declines to reproduce)",
+          "stream": "out"
+        },
+        {
+          "t": 8373,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 8512,
+          "text": "  ok    div at a precision that fits — the control",
+          "stream": "out"
+        },
+        {
+          "t": 8512,
+          "text": "        must return; a ceiling set too low would fail here and only here",
+          "stream": "out"
+        },
+        {
+          "t": 8512,
+          "text": "        reference  returned sd=1000000 e=-1 first limb 3333333",
+          "stream": "out"
+        },
+        {
+          "t": 8512,
+          "text": "        port       returned sd=1000000 e=-1 first limb 3333333",
+          "stream": "out"
+        },
+        {
+          "t": 8512,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 22184,
+          "text": "  ok    div at the largest precision that still fits, 939_524_081",
+          "stream": "out"
+        },
+        {
+          "t": 22184,
+          "text": "        one below the threshold — the last precision at which the original divides",
+          "stream": "out"
+        },
+        {
+          "t": 22184,
+          "text": "        reference  returned sd=939524081 e=-1 first limb 3333333",
+          "stream": "out"
+        },
+        {
+          "t": 22184,
+          "text": "        port       returned sd=939524081 e=-1 first limb 3333333",
+          "stream": "out"
+        },
+        {
+          "t": 22184,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 24387,
+          "text": "  ok    div at the smallest precision that does not, 939_524_082",
+          "stream": "out"
+        },
+        {
+          "t": 24387,
+          "text": "        one above the threshold — the first precision at which it does not",
+          "stream": "out"
+        },
+        {
+          "t": 24387,
+          "text": "        reference  threw RangeError: Invalid array length",
+          "stream": "out"
+        },
+        {
+          "t": 24387,
+          "text": "        port       threw RangeError: Invalid array length",
+          "stream": "out"
+        },
+        {
+          "t": 24387,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 24387,
+          "text": "the sweep — every routine that can reach the ceiling, at precision 1000000000",
+          "stream": "out"
+        },
+        {
+          "t": 24387,
+          "text": "  both implementations must terminate with an outcome; the two",
+          "stream": "out"
+        },
+        {
+          "t": 24387,
+          "text": "  errors need not be the same one, and where they are it is noted.",
+          "stream": "out"
+        },
+        {
+          "t": 24387,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 26561,
+          "text": "  ok    div          reference: threw RangeError: Invalid array length  (1307 ms)",
+          "stream": "out"
+        },
+        {
+          "t": 26561,
+          "text": "                     port:      threw RangeError: Invalid array length  (542 ms)",
+          "stream": "out"
+        },
+        {
+          "t": 61273,
+          "text": "  ok    sqrt         reference: threw RangeError: Invalid array length  (19399 ms)",
+          "stream": "out"
+        },
+        {
+          "t": 61273,
+          "text": "                     port:      threw RangeError: Invalid array length  (15182 ms)",
+          "stream": "out"
+        },
+        {
+          "t": 110248,
+          "text": "  ok    cbrt         reference: threw RangeError: Invalid array length  (31723 ms)",
+          "stream": "out"
+        },
+        {
+          "t": 110248,
+          "text": "                     port:      threw RangeError: Invalid array length  (17085 ms)",
+          "stream": "out"
+        },
+        {
+          "t": 139719,
+          "text": "  ok*   ln           reference: threw RangeError: Invalid array length  (16417 ms)",
+          "stream": "out"
+        },
+        {
+          "t": 139719,
+          "text": "                     port:      threw Error: [DecimalError] Precision limit exceeded  (12889 ms)",
+          "stream": "out"
+        },
+        {
+          "t": 142805,
+          "text": "  ok    exp          reference: threw RangeError: Invalid array length  (1722 ms)",
+          "stream": "out"
+        },
+        {
+          "t": 142805,
+          "text": "                     port:      threw RangeError: Invalid array length  (936 ms)",
+          "stream": "out"
+        },
+        {
+          "t": 142892,
+          "text": "  ok    sin          reference: threw Error: [DecimalError] Precision limit exceeded  (0 ms)",
+          "stream": "out"
+        },
+        {
+          "t": 142892,
+          "text": "                     port:      threw Error: [DecimalError] Precision limit exceeded  (0 ms)",
+          "stream": "out"
+        },
+        {
+          "t": 185054,
+          "text": "  ok    atan         reference: threw RangeError: Invalid array length  (25558 ms)",
+          "stream": "out"
+        },
+        {
+          "t": 185054,
+          "text": "                     port:      threw RangeError: Invalid array length  (16444 ms)",
+          "stream": "out"
+        },
+        {
+          "t": 222873,
+          "text": "  ok    asin         reference: threw RangeError: Invalid array length  (22223 ms)",
+          "stream": "out"
+        },
+        {
+          "t": 222873,
+          "text": "                     port:      threw RangeError: Invalid array length  (15389 ms)",
+          "stream": "out"
+        },
+        {
+          "t": 225922,
+          "text": "  ok    sinh         reference: threw RangeError: Invalid array length  (1720 ms)",
+          "stream": "out"
+        },
+        {
+          "t": 225922,
+          "text": "                     port:      threw RangeError: Invalid array length  (913 ms)",
+          "stream": "out"
+        },
+        {
+          "t": 259498,
+          "text": "  ok*   pow          reference: threw RangeError: Invalid array length  (18359 ms)",
+          "stream": "out"
+        },
+        {
+          "t": 259498,
+          "text": "                     port:      threw Error: [DecimalError] Precision limit exceeded  (15015 ms)",
+          "stream": "out"
+        },
+        {
+          "t": 290618,
+          "text": "  ok*   log          reference: threw RangeError: Invalid array length  (17420 ms)",
+          "stream": "out"
+        },
+        {
+          "t": 290618,
+          "text": "                     port:      threw Error: [DecimalError] Precision limit exceeded  (13516 ms)",
+          "stream": "out"
+        },
+        {
+          "t": 290703,
+          "text": "  ok    mod          reference: returned sd=1  (1 ms)",
+          "stream": "out"
+        },
+        {
+          "t": 290703,
+          "text": "                     port:      returned sd=1  (1 ms)",
+          "stream": "out"
+        },
+        {
+          "t": 290791,
+          "text": "  ok    toFraction   reference: returned 2 values  (1 ms)",
+          "stream": "out"
+        },
+        {
+          "t": 290791,
+          "text": "                     port:      returned 2 values  (1 ms)",
+          "stream": "out"
+        },
+        {
+          "t": 290877,
+          "text": "  ok    toNearest    reference: returned sd=1  (1 ms)",
+          "stream": "out"
+        },
+        {
+          "t": 290877,
+          "text": "                     port:      returned sd=1  (1 ms)",
+          "stream": "out"
+        },
+        {
+          "t": 306322,
+          "text": "  ok    toBinary     reference: threw RangeError: Invalid array length  (7323 ms)",
+          "stream": "out"
+        },
+        {
+          "t": 306322,
+          "text": "                     port:      threw RangeError: Invalid array length  (7929 ms)",
+          "stream": "out"
+        },
+        {
+          "t": 306322,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 306322,
+          "text": "  ok* means both refused and named different limits — the host's",
+          "stream": "out"
+        },
+        {
+          "t": 306322,
+          "text": "  array ceiling against the library's own 1025-digit constants. See D-19.",
+          "stream": "out"
+        },
+        {
+          "t": 306322,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 306322,
+          "text": "SUMMARY: 7 threshold cases and 15 swept routines, 0 failing.",
+          "stream": "out"
+        },
+        {
+          "t": 306322,
+          "text": "         3 documented divergence(s) in the configuration left behind (D-11).",
+          "stream": "out"
+        },
+        {
+          "t": 306322,
+          "text": "         the sweep: every routine terminated; 12 identical outcomes, 3 refused naming different limits.",
+          "stream": "out"
+        }
+      ]
+    },
+    {
+      "id": "calc-sqrt",
+      "command": "target\\release\\decimal-calc.exe 2 sqrt --precision 40",
+      "cwd": "D:\\pm\\decimal-rs",
+      "exitCode": 0,
+      "durationMs": 77,
+      "startedAt": "2026-08-01T15:22:28.837Z",
+      "lines": [
+        {
+          "t": 73,
+          "text": "1.41421356237309504880168872420969807857",
+          "stream": "out"
+        }
+      ]
+    },
+    {
+      "id": "calc-div",
+      "command": "target\\release\\decimal-calc.exe 355 div 113",
+      "cwd": "D:\\pm\\decimal-rs",
+      "exitCode": 0,
+      "durationMs": 30,
+      "startedAt": "2026-08-01T15:22:28.914Z",
+      "lines": [
+        {
+          "t": 25,
+          "text": "3.1415929203539823009",
+          "stream": "out"
+        }
+      ]
+    },
+    {
+      "id": "calc-hex",
+      "command": "target\\release\\decimal-calc.exe 0x1.8p3 add 1",
+      "cwd": "D:\\pm\\decimal-rs",
+      "exitCode": 0,
+      "durationMs": 39,
+      "startedAt": "2026-08-01T15:22:28.945Z",
+      "lines": [
+        {
+          "t": 33,
+          "text": "13",
+          "stream": "out"
+        }
+      ]
+    },
+    {
+      "id": "docker-build",
+      "command": "docker build -t decimal-rs .",
+      "cwd": "D:\\pm\\decimal-rs",
+      "exitCode": 0,
+      "durationMs": 2767,
+      "startedAt": "2026-08-01T15:22:28.984Z",
+      "lines": [
+        {
+          "t": 582,
+          "text": "#0 building with \"desktop-linux\" instance using docker driver",
+          "stream": "err"
+        },
+        {
+          "t": 582,
+          "text": "",
+          "stream": "err"
+        },
+        {
+          "t": 582,
+          "text": "#1 [internal] load build definition from Dockerfile",
+          "stream": "err"
+        },
+        {
+          "t": 582,
+          "text": "#1 transferring dockerfile: 3.15kB done",
+          "stream": "err"
+        },
+        {
+          "t": 582,
+          "text": "#1 DONE 0.0s",
+          "stream": "err"
+        },
+        {
+          "t": 582,
+          "text": "",
+          "stream": "err"
+        },
+        {
+          "t": 582,
+          "text": "#2 [internal] load metadata for docker.io/library/rust:1-slim-bookworm",
+          "stream": "err"
+        },
+        {
+          "t": 960,
+          "text": "#2 ...",
+          "stream": "err"
+        },
+        {
+          "t": 960,
+          "text": "",
+          "stream": "err"
+        },
+        {
+          "t": 960,
+          "text": "#3 [auth] library/node:pull token for registry-1.docker.io",
+          "stream": "err"
+        },
+        {
+          "t": 960,
+          "text": "#3 DONE 0.0s",
+          "stream": "err"
+        },
+        {
+          "t": 960,
+          "text": "",
+          "stream": "err"
+        },
+        {
+          "t": 960,
+          "text": "#4 [auth] library/rust:pull token for registry-1.docker.io",
+          "stream": "err"
+        },
+        {
+          "t": 960,
+          "text": "#4 DONE 0.0s",
+          "stream": "err"
+        },
+        {
+          "t": 1109,
+          "text": "",
+          "stream": "err"
+        },
+        {
+          "t": 1109,
+          "text": "#5 [internal] load metadata for docker.io/library/node:24-slim",
+          "stream": "err"
+        },
+        {
+          "t": 1227,
+          "text": "#5 DONE 0.8s",
+          "stream": "err"
+        },
+        {
+          "t": 1227,
+          "text": "",
+          "stream": "err"
+        },
+        {
+          "t": 1227,
+          "text": "#2 [internal] load metadata for docker.io/library/rust:1-slim-bookworm",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#2 DONE 0.8s",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#6 [internal] load .dockerignore",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#6 transferring context: 1.21kB done",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#6 DONE 0.0s",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#7 [stage-1  1/11] FROM docker.io/library/node:24-slim@sha256:235600a8101ab264e117b1768e925532262668dc9b581ef1dd7d96ced463b8e7",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#7 resolve docker.io/library/node:24-slim@sha256:235600a8101ab264e117b1768e925532262668dc9b581ef1dd7d96ced463b8e7 0.0s done",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#7 DONE 0.0s",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#8 [build 1/7] FROM docker.io/library/rust:1-slim-bookworm@sha256:99e09cb2284e2ddbb73a995deee3e91783fd04d177602ccf6eab326d778ee777",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#8 resolve docker.io/library/rust:1-slim-bookworm@sha256:99e09cb2284e2ddbb73a995deee3e91783fd04d177602ccf6eab326d778ee777 0.0s done",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#8 DONE 0.0s",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#9 [internal] load build context",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#9 transferring context: 25.54kB 0.0s done",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#9 DONE 0.0s",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#10 [build 7/7] RUN cargo build --release --locked -p decimal-napi -p decimal-cli",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#10 CACHED",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#11 [build 5/7] COPY Cargo.toml Cargo.lock ./",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#11 CACHED",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#12 [stage-1  6/11] COPY tests ./tests",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#12 CACHED",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#13 [build 6/7] COPY crates ./crates",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#13 CACHED",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#14 [stage-1  5/11] COPY test ./test",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#14 CACHED",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#15 [stage-1  2/11] WORKDIR /app",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#15 CACHED",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#16 [build 2/7] WORKDIR /src",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#16 CACHED",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#17 [build 4/7] RUN rustup show",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#17 CACHED",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#18 [build 3/7] COPY rust-toolchain.toml ./",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#18 CACHED",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#19 [stage-1  3/11] COPY --from=build /src/target/release/libdecimal.so ./decimal.node",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#19 CACHED",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#20 [stage-1  4/11] COPY --from=build /src/target/release/decimal-calc ./bin/decimal-calc",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#20 CACHED",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "",
+          "stream": "err"
+        },
+        {
+          "t": 1332,
+          "text": "#21 [stage-1  7/11] COPY scripts ./scripts",
+          "stream": "err"
+        },
+        {
+          "t": 1464,
+          "text": "#21 CACHED",
+          "stream": "err"
+        },
+        {
+          "t": 1464,
+          "text": "",
+          "stream": "err"
+        },
+        {
+          "t": 1464,
+          "text": "#22 [stage-1  8/11] COPY package.json Makefile DECISIONS.md README.md .port-mortem.toml ./",
+          "stream": "err"
+        },
+        {
+          "t": 1464,
+          "text": "#22 DONE 0.1s",
+          "stream": "err"
+        },
+        {
+          "t": 1464,
+          "text": "",
+          "stream": "err"
+        },
+        {
+          "t": 1464,
+          "text": "#23 [stage-1  9/11] COPY fuzz/reference ./fuzz/reference",
+          "stream": "err"
+        },
+        {
+          "t": 1464,
+          "text": "#23 DONE 0.1s",
+          "stream": "err"
+        },
+        {
+          "t": 1693,
+          "text": "",
+          "stream": "err"
+        },
+        {
+          "t": 1693,
+          "text": "#24 [stage-1 10/11] COPY crates ./crates",
+          "stream": "err"
+        },
+        {
+          "t": 1693,
+          "text": "#24 DONE 0.1s",
+          "stream": "err"
+        },
+        {
+          "t": 1693,
+          "text": "",
+          "stream": "err"
+        },
+        {
+          "t": 1693,
+          "text": "#25 [stage-1 11/11] RUN node scripts/verify-tests.js",
+          "stream": "err"
+        },
+        {
+          "t": 2296,
+          "text": "#25 0.753   Original test suite verified: 69 files byte-identical to upstream decimal.js @ cd73a7f (0 modified, 0 added, 0 removed).",
+          "stream": "err"
+        },
+        {
+          "t": 2425,
+          "text": "#25 0.753   Fuzzing oracle verified:      1 file byte-identical to the same commit.",
+          "stream": "err"
+        },
+        {
+          "t": 2425,
+          "text": "#25 DONE 0.8s",
+          "stream": "err"
+        },
+        {
+          "t": 2425,
+          "text": "",
+          "stream": "err"
+        },
+        {
+          "t": 2425,
+          "text": "#26 exporting to image",
+          "stream": "err"
+        },
+        {
+          "t": 2425,
+          "text": "#26 exporting layers 0.1s done",
+          "stream": "err"
+        },
+        {
+          "t": 2563,
+          "text": "#26 exporting manifest sha256:b1658c8a9def28433e59f3e67516abad45554ba1817cbab351b4e249c3947c64 done",
+          "stream": "err"
+        },
+        {
+          "t": 2563,
+          "text": "#26 exporting config sha256:03a11b43b7159aa59da2aa775dd5ef78776bf1479a4555a4cc22d53c9daba746 done",
+          "stream": "err"
+        },
+        {
+          "t": 2563,
+          "text": "#26 exporting attestation manifest sha256:806284fa1d668e34d99799655faddd26867907541a3742607a09bfaaed5ac050 0.0s done",
+          "stream": "err"
+        },
+        {
+          "t": 2563,
+          "text": "#26 exporting manifest list sha256:09c73c87c2032e30d17a7e53489650d12367d8a59d170f3733d11dbc46d7ed03 done",
+          "stream": "err"
+        },
+        {
+          "t": 2563,
+          "text": "#26 naming to docker.io/library/decimal-rs:latest done",
+          "stream": "err"
+        },
+        {
+          "t": 2563,
+          "text": "#26 unpacking to docker.io/library/decimal-rs:latest 0.1s done",
+          "stream": "err"
+        },
+        {
+          "t": 2743,
+          "text": "#26 DONE 0.3s",
+          "stream": "err"
+        }
+      ]
+    },
+    {
+      "id": "docker-run",
+      "command": "docker run --rm decimal-rs",
+      "cwd": "D:\\pm\\decimal-rs",
+      "exitCode": 0,
+      "durationMs": 1033,
+      "startedAt": "2026-08-01T15:22:31.751Z",
+      "lines": [
+        {
+          "t": 399,
+          "text": "  Original test suite verified: 69 files byte-identical to upstream decimal.js @ cd73a7f (0 modified, 0 added, 0 removed).",
+          "stream": "out"
+        },
+        {
+          "t": 399,
+          "text": "  Fuzzing oracle verified:      1 file byte-identical to the same commit.",
+          "stream": "out"
+        },
+        {
+          "t": 405,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 434,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 434,
+          "text": " Testing decimal.js",
+          "stream": "out"
+        },
+        {
+          "t": 434,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 443,
+          "text": " Testing absoluteValue... 100 of 100 tests passed in 1 ms",
+          "stream": "out"
+        },
+        {
+          "t": 450,
+          "text": " Testing acos... 54 of 54 tests passed in 6 ms",
+          "stream": "out"
+        },
+        {
+          "t": 452,
+          "text": " Testing acosh... 50 of 50 tests passed in 2 ms",
+          "stream": "out"
+        },
+        {
+          "t": 457,
+          "text": " Testing asin... 54 of 54 tests passed in 4 ms",
+          "stream": "out"
+        },
+        {
+          "t": 460,
+          "text": " Testing asinh... 50 of 50 tests passed in 2 ms",
+          "stream": "out"
+        },
+        {
+          "t": 466,
+          "text": " Testing atan... 50 of 50 tests passed in 4 ms",
+          "stream": "out"
+        },
+        {
+          "t": 470,
+          "text": " Testing atan2... 100 of 100 tests passed in 2 ms",
+          "stream": "out"
+        },
+        {
+          "t": 473,
+          "text": " Testing atanh... 50 of 50 tests passed in 2 ms",
+          "stream": "out"
+        },
+        {
+          "t": 475,
+          "text": " Testing cubeRoot... 50 of 50 tests passed in 2 ms",
+          "stream": "out"
+        },
+        {
+          "t": 475,
+          "text": " Testing ceil... 50 of 50 tests passed in 1 ms",
+          "stream": "out"
+        },
+        {
+          "t": 476,
+          "text": " Testing clamp... 29 of 29 tests passed in 0 ms",
+          "stream": "out"
+        },
+        {
+          "t": 478,
+          "text": " Testing clone...",
+          "stream": "out"
+        },
+        {
+          "t": 478,
+          "text": "  Test number 1 failed: assert",
+          "stream": "out"
+        },
+        {
+          "t": 478,
+          "text": "  Expected: true",
+          "stream": "out"
+        },
+        {
+          "t": 479,
+          "text": "  Actual:   false",
+          "stream": "out"
+        },
+        {
+          "t": 479,
+          "text": " 64 of 65 tests passed in 4 ms",
+          "stream": "out"
+        },
+        {
+          "t": 483,
+          "text": " Testing comparedTo... 1000 of 1000 tests passed in 3 ms",
+          "stream": "out"
+        },
+        {
+          "t": 486,
+          "text": " Testing config... 206 of 206 tests passed in 2 ms",
+          "stream": "out"
+        },
+        {
+          "t": 489,
+          "text": " Testing cos... 101 of 101 tests passed in 3 ms",
+          "stream": "out"
+        },
+        {
+          "t": 492,
+          "text": " Testing cosh... 100 of 100 tests passed in 2 ms",
+          "stream": "out"
+        },
+        {
+          "t": 503,
+          "text": " Testing Decimal... 987 of 987 tests passed in 11 ms",
+          "stream": "out"
+        },
+        {
+          "t": 512,
+          "text": " Testing dividedBy... 1000 of 1000 tests passed in 8 ms",
+          "stream": "out"
+        },
+        {
+          "t": 519,
+          "text": " Testing dividedToIntegerBy... 1000 of 1000 tests passed in 6 ms",
+          "stream": "out"
+        },
+        {
+          "t": 520,
+          "text": " Testing decimalPlaces and precision... 133 of 133 tests passed in 1 ms",
+          "stream": "out"
+        },
+        {
+          "t": 523,
+          "text": " Testing exp... 100 of 100 tests passed in 3 ms",
+          "stream": "out"
+        },
+        {
+          "t": 524,
+          "text": " Testing floor... 100 of 100 tests passed in 0 ms",
+          "stream": "out"
+        },
+        {
+          "t": 527,
+          "text": " Testing hypot... 100 of 100 tests passed in 2 ms",
+          "stream": "out"
+        },
+        {
+          "t": 541,
+          "text": " Testing immutability... 3371 of 3371 tests passed in 14 ms",
+          "stream": "out"
+        },
+        {
+          "t": 547,
+          "text": " Testing integer pow... 500 of 500 tests passed in 4 ms",
+          "stream": "out"
+        },
+        {
+          "t": 547,
+          "text": " Testing isFinite, isInteger, isNaN, isNegative, isZero, isDecimal... 214 of 214 tests passed in 0 ms",
+          "stream": "out"
+        },
+        {
+          "t": 562,
+          "text": " Testing ln... 499 of 499 tests passed in 11 ms",
+          "stream": "out"
+        },
+        {
+          "t": 570,
+          "text": " Testing log... 200 of 200 tests passed in 8 ms",
+          "stream": "out"
+        },
+        {
+          "t": 584,
+          "text": " Testing log10... 500 of 500 tests passed in 12 ms",
+          "stream": "out"
+        },
+        {
+          "t": 595,
+          "text": " Testing log2... 200 of 200 tests passed in 11 ms",
+          "stream": "out"
+        },
+        {
+          "t": 596,
+          "text": " Testing min and max... 110 of 110 tests passed in 1 ms",
+          "stream": "out"
+        },
+        {
+          "t": 602,
+          "text": " Testing minus... 1000 of 1000 tests passed in 5 ms",
+          "stream": "out"
+        },
+        {
+          "t": 610,
+          "text": " Testing modulo... 1000 of 1000 tests passed in 7 ms",
+          "stream": "out"
+        },
+        {
+          "t": 611,
+          "text": " Testing negated... 200 of 200 tests passed in 1 ms",
+          "stream": "out"
+        },
+        {
+          "t": 619,
+          "text": " Testing plus... 1000 of 1000 tests passed in 7 ms",
+          "stream": "out"
+        },
+        {
+          "t": 624,
+          "text": " Testing pow... 108 of 108 tests passed in 5 ms",
+          "stream": "out"
+        },
+        {
+          "t": 630,
+          "text": " Testing random... 1000 of 1000 tests passed in 6 ms",
+          "stream": "out"
+        },
+        {
+          "t": 634,
+          "text": " Testing round... 500 of 500 tests passed in 2 ms",
+          "stream": "out"
+        },
+        {
+          "t": 634,
+          "text": " Testing sign... 16 of 16 tests passed in 0 ms",
+          "stream": "out"
+        },
+        {
+          "t": 638,
+          "text": " Testing sin... 100 of 100 tests passed in 3 ms",
+          "stream": "out"
+        },
+        {
+          "t": 640,
+          "text": " Testing sinh... 100 of 100 tests passed in 2 ms",
+          "stream": "out"
+        },
+        {
+          "t": 649,
+          "text": " Testing sqrt... 1000 of 1000 tests passed in 8 ms",
+          "stream": "out"
+        },
+        {
+          "t": 650,
+          "text": " Testing sum... 37 of 37 tests passed in 0 ms",
+          "stream": "out"
+        },
+        {
+          "t": 653,
+          "text": " Testing tan... 100 of 100 tests passed in 3 ms",
+          "stream": "out"
+        },
+        {
+          "t": 656,
+          "text": " Testing tanh... 100 of 100 tests passed in 3 ms",
+          "stream": "out"
+        },
+        {
+          "t": 663,
+          "text": " Testing times... 1000 of 1000 tests passed in 6 ms",
+          "stream": "out"
+        },
+        {
+          "t": 667,
+          "text": " Testing toBinary... 327 of 327 tests passed in 3 ms",
+          "stream": "out"
+        },
+        {
+          "t": 671,
+          "text": " Testing toDecimalPlaces... 500 of 500 tests passed in 3 ms",
+          "stream": "out"
+        },
+        {
+          "t": 685,
+          "text": " Testing toExponential... 500 of 500 tests passed in 12 ms",
+          "stream": "out"
+        },
+        {
+          "t": 688,
+          "text": " Testing toFixed... 500 of 500 tests passed in 3 ms",
+          "stream": "out"
+        },
+        {
+          "t": 700,
+          "text": " Testing toFraction... 200 of 200 tests passed in 11 ms",
+          "stream": "out"
+        },
+        {
+          "t": 703,
+          "text": " Testing toHex... 309 of 309 tests passed in 2 ms",
+          "stream": "out"
+        },
+        {
+          "t": 704,
+          "text": " Testing toNearest... 157 of 157 tests passed in 1 ms",
+          "stream": "out"
+        },
+        {
+          "t": 705,
+          "text": " Testing toNumber... 40 of 40 tests passed in 0 ms",
+          "stream": "out"
+        },
+        {
+          "t": 707,
+          "text": " Testing toOctal... 293 of 293 tests passed in 2 ms",
+          "stream": "out"
+        },
+        {
+          "t": 715,
+          "text": " Testing toPrecision... 500 of 500 tests passed in 7 ms",
+          "stream": "out"
+        },
+        {
+          "t": 718,
+          "text": " Testing toSignificantDigits... 500 of 500 tests passed in 2 ms",
+          "stream": "out"
+        },
+        {
+          "t": 719,
+          "text": " Testing toString... 338 of 338 tests passed in 1 ms",
+          "stream": "out"
+        },
+        {
+          "t": 720,
+          "text": " Testing trunc... 100 of 100 tests passed in 0 ms",
+          "stream": "out"
+        },
+        {
+          "t": 720,
+          "text": " Testing valueOf... 40 of 40 tests passed in 0 ms",
+          "stream": "out"
+        },
+        {
+          "t": 720,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 720,
+          "text": " In total, 22687 of 22688 tests passed in 0.292 secs.",
+          "stream": "out"
+        },
+        {
+          "t": 720,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 736,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 788,
+          "text": "unsafe report — decimal-rs",
+          "stream": "out"
+        },
+        {
+          "t": 788,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 788,
+          "text": "crate            files   lines  unsafe   compiler-enforced?",
+          "stream": "out"
+        },
+        {
+          "t": 788,
+          "text": "------------------------------------------------------------------------",
+          "stream": "out"
+        },
+        {
+          "t": 788,
+          "text": "decimal-core        19    9913       0   yes, via Cargo.toml [lints.rust]",
+          "stream": "out"
+        },
+        {
+          "t": 788,
+          "text": "decimal-napi         2    2581      93   no — see below",
+          "stream": "out"
+        },
+        {
+          "t": 788,
+          "text": "decimal-cli          1     296       0   yes, via Cargo.toml [lints.rust]",
+          "stream": "out"
+        },
+        {
+          "t": 788,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 788,
+          "text": "method",
+          "stream": "out"
+        },
+        {
+          "t": 788,
+          "text": "  decimal-core sets unsafe_code = \"forbid\". `forbid` is not a lint level an",
+          "stream": "out"
+        },
+        {
+          "t": 788,
+          "text": "  inner `allow` can turn off, so the crate does not compile if an unsafe",
+          "stream": "out"
+        },
+        {
+          "t": 788,
+          "text": "  block appears anywhere in it — including one produced by a macro. The",
+          "stream": "out"
+        },
+        {
+          "t": 788,
+          "text": "  declaration is the evidence and a successful `cargo build` is the check;",
+          "stream": "out"
+        },
+        {
+          "t": 788,
+          "text": "  the counts above are only a textual cross-check of it, taken after",
+          "stream": "out"
+        },
+        {
+          "t": 788,
+          "text": "  comments and string literals have been removed. Grepping for the word",
+          "stream": "out"
+        },
+        {
+          "t": 788,
+          "text": "  would not do: this repository discusses unsafety at length in prose.",
+          "stream": "out"
+        },
+        {
+          "t": 788,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 788,
+          "text": "  decimal-napi is the Node-API adapter and cannot be safe: every call into",
+          "stream": "out"
+        },
+        {
+          "t": 788,
+          "text": "  the Node-API is an `extern \"C\"` function over raw pointers supplied by",
+          "stream": "out"
+        },
+        {
+          "t": 788,
+          "text": "  V8. Its 93 uses are the boundary and nothing else — the adapter",
+          "stream": "out"
+        },
+        {
+          "t": 788,
+          "text": "  contains no arithmetic. All of it is in 2581 lines against",
+          "stream": "out"
+        },
+        {
+          "t": 788,
+          "text": "  9913 lines of arithmetic in decimal-core, which has none.",
+          "stream": "out"
+        },
+        {
+          "t": 788,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 788,
+          "text": "  Dependencies: decimal-core has none at all. The workspace depends on",
+          "stream": "out"
+        },
+        {
+          "t": 788,
+          "text": "  napi-sys, which is bindings only. `cargo geiger` will report unsafe inside",
+          "stream": "out"
+        },
+        {
+          "t": 788,
+          "text": "  it, and that is unsafe in Node itself reached through a binding, not code",
+          "stream": "out"
+        },
+        {
+          "t": 788,
+          "text": "  this project wrote.",
+          "stream": "out"
+        }
+      ]
+    }
+  ]
+}

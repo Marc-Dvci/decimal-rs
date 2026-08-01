@@ -24,3 +24,9 @@ fuzz/log.txt
 fuzz/log-limits.txt
 bench/
 docs/
+
+# The submission film: its own dependency tree, its own renderer, and nothing
+# the port builds from. It is in the repository so that the claims the film
+# makes can be checked against the recording it was built from, not because
+# anything compiles it.
+film/

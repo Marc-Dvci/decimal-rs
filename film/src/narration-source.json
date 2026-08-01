@@ -1,0 +1,127 @@
+[
+  {
+    "id": "open",
+    "file": "audio/01-open.mp3",
+    "script": "decimal.js is five thousand lines of JavaScript for arbitrary-precision arithmetic — the library you reach for when a floating-point error is not acceptable. This is a port of it to Rust, in seventy-two hours, solo. Everything you are about to see is a recording of a command that really ran.",
+    "captions": [
+      "decimal.js — 5,000 lines of arbitrary-precision arithmetic in JavaScript.",
+      "This is a port of it to Rust. 72 hours, solo.",
+      "Everything here is a recording of a command that really ran."
+    ]
+  },
+  {
+    "id": "one-command",
+    "file": "audio/02-one-command.mp3",
+    "script": "The rule is that one command builds. This one compiles the Rust from source, verifies that all sixty-nine files of the original test suite are byte-identical to upstream, and runs that unmodified suite against the compiled artifact.",
+    "captions": [
+      "The rule is that one command builds.",
+      "It compiles the Rust, checks all 69 test files against upstream's hashes,",
+      "and runs that unmodified suite against the compiled artifact."
+    ]
+  },
+  {
+    "id": "suite",
+    "file": "audio/03-suite.mp3",
+    "script": "Twenty-two thousand six hundred and twenty-eight assertions, and one failure. It is the same failure every time — an assertion about prototype identity that the Node-API's signature check will not let me satisfy, written up as decision eight. Zero test files were modified. Read the failure count, not the ratio: six thousand of these assertions are generated randomly, so the denominator moves between runs.",
+    "captions": [
+      "22,628 assertions. One failure.",
+      "The same one every time: prototype identity, blocked by the Node-API signature check.",
+      "Zero test files modified.",
+      "Read the failure count, not the ratio — 6,000 assertions are randomly generated."
+    ]
+  },
+  {
+    "id": "fuzz",
+    "file": "audio/04-fuzz.mp3",
+    "script": "A test suite proves the port agrees with what its author thought to write down. The differential campaign checks the rest. Seventy continuous seconds, four processes, both implementations on the same values, in sequences where every operation inherits the state the last one left. Results are compared on every observable channel — the digit array, all three renderings, the exact thrown message — with no tolerance anywhere.",
+    "captions": [
+      "A test suite proves the port agrees with what its author thought to write down.",
+      "The differential campaign checks the rest.",
+      "70 seconds, 4 processes, stateful sequences on shared values.",
+      "Every observable channel compared. No tolerance anywhere."
+    ]
+  },
+  {
+    "id": "selftest",
+    "file": "audio/05-selftest.mp3",
+    "script": "And each run begins by corrupting the port's own answers by one unit in the last place, and refuses to start until the comparator catches it. A log that says zero divergences, from a harness with no demonstrated ability to see one, proves nothing.",
+    "captions": [
+      "Each run first corrupts the port by one unit in the last place —",
+      "and refuses to start until the comparator catches it.",
+      "A clean log from a harness that cannot see a fault proves nothing."
+    ]
+  },
+  {
+    "id": "port-defect",
+    "file": "audio/06-port-defect.mp3",
+    "script": "The last row is the one that matters. When neither side can be refereed, the harness diagnoses the input afterwards, one implementation at a time. The port answering where upstream cannot is how eight upstream defects were found. Upstream answering where the port cannot is a port defect, and that number must be zero.",
+    "captions": [
+      "When an input cannot be refereed, it is diagnosed afterwards, one side at a time.",
+      "The port answering where upstream cannot is how the upstream defects were found.",
+      "The reverse is a PORT DEFECT — and that number must be zero."
+    ]
+  },
+  {
+    "id": "todp",
+    "file": "audio/07-todp.mp3",
+    "script": "Here is a defect it caught. Upstream, round reads the exponent of the receiver, and toDecimalPlaces reads the exponent of a rebound copy. Ten lines apart, opposite in effect, and only distinguishable when the exponent clamps actually fire. The port had transcribed the first form into both.",
+    "captions": [
+      "One it caught, on day three.",
+      "round reads the receiver's exponent. toDP reads the rebound copy's.",
+      "Ten lines apart upstream, opposite in effect.",
+      "The port had transcribed the first form into both."
+    ]
+  },
+  {
+    "id": "axis",
+    "file": "audio/08-axis.mp3",
+    "script": "The conformance check that exists to cover exactly this family was green — because it called the method at the default rounding mode, where a clamped-away value rounds to zero either way. Adding the rounding mode as an axis found a second defect, in toFixed, within a minute. A check is silent about every axis it holds still.",
+    "captions": [
+      "The check written to cover this family was green.",
+      "It called the method at the default rounding mode, where the difference vanishes.",
+      "Adding the mode as an axis found a second defect, in toFixed, within a minute.",
+      "A check is silent about every axis it holds still."
+    ]
+  },
+  {
+    "id": "upstream",
+    "file": "audio/09-upstream.mp3",
+    "script": "Eight defects in the original: four crashes, two hangs. toFraction under ROUND_FLOOR never returns, for every finite value. Five of the eight are one mistake in different clothes — a value the exponent clamps turned into infinity, then used as though it still had digits. Each has a write-up and a runnable reproduction.",
+    "captions": [
+      "Eight defects in the original. Four crashes, two hangs.",
+      "toFraction under ROUND_FLOOR never returns — for every finite value.",
+      "Five of the eight are one mistake: an infinity used as though it had digits.",
+      "Each has a write-up and a runnable reproduction."
+    ]
+  },
+  {
+    "id": "safety",
+    "file": "audio/10-safety.mp3",
+    "script": "Zero unsafe in the core, and compiler-enforced rather than counted: forbid is not a level an inner allow can switch off. Zero dependencies — the limb arithmetic is written here. The unsafe is at the Node-API boundary, where the rules say it belongs.",
+    "captions": [
+      "Zero unsafe in the core — compiler-enforced, not counted.",
+      "forbid is not a level an inner allow can switch off.",
+      "Zero dependencies. The unsafe is at the Node-API boundary, where it belongs."
+    ]
+  },
+  {
+    "id": "bench",
+    "file": "audio/11-bench.mp3",
+    "script": "On speed, both directions are reported. Two point nine times faster at a hundred digits, and eight point six at ten thousand — but slower below about forty, where crossing the Node-API boundary costs more than the arithmetic underneath it.",
+    "captions": [
+      "On speed, both directions are reported.",
+      "2.9× faster at 100 digits, 8.6× at 10,000.",
+      "Slower below ~40 digits: the boundary costs more than the arithmetic."
+    ]
+  },
+  {
+    "id": "close",
+    "file": "audio/12-close.mp3",
+    "script": "Twenty-two decisions, each written when it was made. Three and a half thousand conformance calls, a hash-pinned suite, and a public repository where every number here is a row in an artifact you can regenerate.",
+    "captions": [
+      "22 decisions, each written when it was made.",
+      "3,528 conformance calls. A hash-pinned suite.",
+      "Every number here is a row in an artifact you can regenerate."
+    ]
+  }
+]
