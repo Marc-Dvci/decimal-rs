@@ -961,6 +961,41 @@ a raised precision also show the configuration leak the port declines to
 reproduce (D-11), and the script names that divergence rather than tolerating a
 mismatch.
 
+**What abandoning a calculation actually costs, which took three attempts.**
+The original abandons by *throwing*: the stack unwinds and nothing further runs.
+This crate has no exception, so `divide` returns and the routine that called it —
+`sqrt`'s Newton iteration, a Taylor series, an argument reduction — keeps
+running. Each attempt at a placeholder failed differently, and each failure is
+worth recording because the next port to reproduce a host limit will meet them
+in the same order:
+
+1. **NaN.** `digits()` panics on a non-finite value, and with `panic = "unwind"`
+   but no `catch_unwind` at the `extern "C"` boundary, a panic there aborts the
+   process. Nine methods died. Strictly worse than the exception being
+   reproduced — D-17's lesson, met again from the other side.
+2. **Zero.** Finite, so no panic; but the next `x / r` is an infinity and the
+   panic arrives one frame later instead.
+3. **One, plus a short circuit in every primitive.** Finite, non-zero, and
+   because every operation after the abandonment returns the *same* value, no
+   convergence test comparing successive iterates can ever fire — so `atan`,
+   `asin` and `sinh` stopped aborting and started hanging.
+4. **One, plus the short circuit, plus a guard in every loop.** Nine loops in
+   `roots`, `elementary`, `trig`, `inverse`, `power`, `fraction` and `radix` now
+   break on the flag, exactly as `taylor_series` already broke on a partial sum
+   that stopped being finite (D-16). Everything terminates.
+
+And then a fifth thing, which the sweep found only after it was fixed: the flag
+was consumed in `make`, and **`make` only handles results that are Decimals.**
+`toBinary` returns a string, so at precision 939,524,081 the port rendered the
+placeholder and answered `0b1` where the original raises. Every return path
+consumes the flag now, not only the one that builds a value.
+
+That last one is worth a sentence on its own. The sweep did not catch it at
+first either: it fingerprinted results by calling `sd()` on them, so a string
+result and a refusal both came back as the same `TypeError` from the harness and
+compared equal. A check whose failure mode is *looking like a pass* is the one
+kind worth re-reading.
+
 **The general point, which is D-10's restated and sharpened.** Where the original
 depends on its host refusing something, the port has to refuse it too — and it
 has to refuse it *at the size the host actually refuses*, which is a property of
@@ -968,6 +1003,17 @@ V8 and not of ECMA-262. D-10 got the mechanism right and the number wrong, and
 the wrong number survived because the only case that had ever exercised it
 overshot both ceilings by seven orders of magnitude. A limit that is only ever
 tested far beyond itself is not tested.
+
+**Where the two still differ, and why that is left.** Above the threshold neither
+implementation can compute anything, and which refusal arrives first depends on
+the order in which two different limits are met: the host's array ceiling, and
+the library's own 1025-digit constants for π and ln 10. `ln`, `log` and `pow`
+reach the constants first here and the array first upstream. Both refuse; the
+words differ. Reproducing the order would mean reproducing where V8 runs out of
+backing store inside a series, at precisions the original cannot serve at all
+(BUG-007) — so the sweep requires termination and an outcome, counts the three
+that differ, and says so rather than quietly relaxing the comparison the
+threshold cases make.
 
 ---
 

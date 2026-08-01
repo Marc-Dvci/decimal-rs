@@ -158,9 +158,18 @@ the largest single family of defect in the port ([D-18](DECISIONS.md)). All
 [`scripts/host-limits.js`](scripts/host-limits.js) covers the opposite hazard —
 where the original is stopped by *its host* and Rust would not be. It measures
 the array ceiling V8 enforces on this machine, checks it against the constant
-compiled into the port, and compares five cases on both implementations
-including the type of the error thrown. One of the five is required **not** to
-throw, because a ceiling set far too low would otherwise pass the whole file.
+compiled into the port, and compares seven cases on both implementations
+including the type of the error thrown — two of them the precisions immediately
+either side of the threshold at which division stops working, which the two
+implementations turn over between *to the digit*. One case is required **not**
+to throw, because a ceiling set far too low would otherwise pass the whole file.
+
+It then sweeps fifteen routines above that threshold, where the requirement is
+weaker and more important: that the port **stops**. Abandoning a calculation
+without an exception to unwind means the caller keeps running on a placeholder,
+and getting that wrong does not produce a wrong answer — it produces a dead
+process, or a live one that never returns. Three of these hung and nine aborted
+before the protocol in [D-19](DECISIONS.md) was written down.
 
 [D-19](DECISIONS.md) is the entry to read if you read one: the ceiling had been
 set to the specification's 2³² − 1 rather than the 2²⁷ V8 actually enforces, and
