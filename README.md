@@ -239,9 +239,9 @@ node scripts/unsafe-report.js
 
 | crate | lines | unsafe | |
 |---|---:|---:|---|
-| `decimal-core` | 9,636 | **0** | `unsafe_code = "forbid"`, compiler-enforced |
-| `decimal-cli` | 10 | **0** | same |
-| `decimal-napi` | 2,531 | 90 | the Node-API boundary; no arithmetic |
+| `decimal-core` | 9,719 | **0** | `unsafe_code = "forbid"`, compiler-enforced |
+| `decimal-cli` | 296 | **0** | same |
+| `decimal-napi` | 2,515 | 90 | the Node-API boundary; no arithmetic |
 
 `forbid` is not a lint level an inner `allow` can turn off, so `decimal-core`
 does not compile if an unsafe block appears anywhere in it, including one
