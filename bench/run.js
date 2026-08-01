@@ -235,9 +235,20 @@ scenario('exp, precision 20', 16, (D) => {
 });
 
 /* Scaling with operand size: the graph that says whether limb arithmetic is
- * actually better or merely differently constant-factored. */
+ * actually better or merely differently constant-factored.
+ *
+ * The sizes between 10 and 100 are here to locate the crossover rather than to
+ * fill the table. Below it the port loses to its own boundary crossing and the
+ * arithmetic underneath is irrelevant; above it the arithmetic is all that
+ * matters. Knowing *where* is the difference between "this port is faster" and
+ * a statement someone can act on. The port's cost is nearly flat across the
+ * lower half of this range, which is what identifies the loss as fixed
+ * overhead rather than slow multiplication. */
 for (const [label, source] of [
   ['10 digits', corpus(10, 32, 0x1010)],
+  ['30 digits', corpus(30, 32, 0x1030)],
+  ['50 digits', corpus(50, 32, 0x1050)],
+  ['60 digits', corpus(60, 32, 0x1060)],
   ['100 digits', corpus(100, 32, 0x1100)],
   ['1000 digits', LARGE],
   ['10000 digits', HUGE],
@@ -352,6 +363,29 @@ function formatRatio(ratio) {
     : (1 / ratio).toFixed(2) + '× SLOWER';
 }
 
+/*
+ * A verdict, or the honest refusal to give one.
+ *
+ * A ratio computed from two medians says nothing on its own. Where the two
+ * medians are closer together than the runs' own spread, the ordering between
+ * them is a property of this afternoon and not of the two implementations —
+ * printing "1.07× faster" there would be a claim the data does not support, and
+ * would be found out by anyone who ran it twice.
+ *
+ * The test is deliberately crude and deliberately conservative: if the gap
+ * between the medians is smaller than their mean interquartile range, there is
+ * no result. Most of the small-operation rows fail it, which is itself the
+ * finding — at twenty digits these two implementations are the same speed, and
+ * the port's advantage is entirely in operand size.
+ */
+function verdict(result) {
+  const spread = (result.reference.iqr + result.port.iqr) / 2;
+  if (Math.abs(result.reference.ns - result.port.ns) < spread) {
+    return 'no measurable difference';
+  }
+  return formatRatio(result.ratio);
+}
+
 function main() {
   const started = new Date();
   const results = [];
@@ -376,7 +410,7 @@ function main() {
       result.name.padEnd(nameWidth) +
       formatNs(result.reference.ns).padStart(14) +
       formatNs(result.port.ns).padStart(14) +
-      '   ' + formatRatio(result.ratio) + '\n');
+      '   ' + verdict(result) + '\n');
   }
 
   // -- latency ------------------------------------------------------------
@@ -454,7 +488,9 @@ function main() {
       repetitions: REPETITIONS,
       statistic: 'median of repetitions, IQR reported',
     },
-    throughput: results,
+    // The verdict travels with the numbers. A consumer reading only the ratio
+    // would reach conclusions the dispersion does not support.
+    throughput: results.map((r) => Object.assign({}, r, { verdict: verdict(r) })),
     latencyNs: latencyRows,
     startupNs: {
       reference: { median: median(startupSamples.reference), iqr: iqr(startupSamples.reference) },

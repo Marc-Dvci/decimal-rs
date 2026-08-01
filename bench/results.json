@@ -1,0 +1,404 @@
+{
+  "generated": "2026-08-01T08:19:48.307Z",
+  "host": {
+    "cpu": "AMD Ryzen 5 7600 6-Core Processor",
+    "platform": "win32",
+    "release": "10.0.26200",
+    "node": "v24.13.1",
+    "boostClocksDisabled": false
+  },
+  "protocol": {
+    "interleaved": true,
+    "warmupBatches": 3,
+    "repetitions": 11,
+    "statistic": "median of repetitions, IQR reported"
+  },
+  "throughput": [
+    {
+      "name": "parse, 20 digits",
+      "note": "",
+      "batch": 64,
+      "reference": {
+        "ns": 1259.375,
+        "iqr": 1216.40625
+      },
+      "port": {
+        "ns": 893.75,
+        "iqr": 633.59375
+      },
+      "ratio": 1.4090909090909092,
+      "verdict": "no measurable difference"
+    },
+    {
+      "name": "parse, 200 digits",
+      "note": "",
+      "batch": 32,
+      "reference": {
+        "ns": 1843.75,
+        "iqr": 403.125
+      },
+      "port": {
+        "ns": 1334.375,
+        "iqr": 248.4375
+      },
+      "ratio": 1.3817330210772834,
+      "verdict": "1.38× faster"
+    },
+    {
+      "name": "parse, 1000 digits",
+      "note": "",
+      "batch": 16,
+      "reference": {
+        "ns": 11043.75,
+        "iqr": 3790.625
+      },
+      "port": {
+        "ns": 4450,
+        "iqr": 1271.875
+      },
+      "ratio": 2.481741573033708,
+      "verdict": "2.48× faster"
+    },
+    {
+      "name": "toString, 20 digits",
+      "note": "",
+      "batch": 64,
+      "reference": {
+        "ns": 592.1875,
+        "iqr": 355.46875
+      },
+      "port": {
+        "ns": 587.5,
+        "iqr": 256.25
+      },
+      "ratio": 1.0079787234042554,
+      "verdict": "no measurable difference"
+    },
+    {
+      "name": "toString, 1000 digits",
+      "note": "",
+      "batch": 16,
+      "reference": {
+        "ns": 3200,
+        "iqr": 1396.875
+      },
+      "port": {
+        "ns": 4837.5,
+        "iqr": 1250
+      },
+      "ratio": 0.661498708010336,
+      "verdict": "1.51× SLOWER"
+    },
+    {
+      "name": "add, precision 20",
+      "note": "",
+      "batch": 63,
+      "reference": {
+        "ns": 1055.5555555555557,
+        "iqr": 599.2063492063492
+      },
+      "port": {
+        "ns": 1026.984126984127,
+        "iqr": 366.66666666666686
+      },
+      "ratio": 1.027820710973725,
+      "verdict": "no measurable difference"
+    },
+    {
+      "name": "multiply, precision 20",
+      "note": "",
+      "batch": 63,
+      "reference": {
+        "ns": 1311.111111111111,
+        "iqr": 128.57142857142844
+      },
+      "port": {
+        "ns": 1261.904761904762,
+        "iqr": 199.20634920634893
+      },
+      "ratio": 1.038993710691824,
+      "verdict": "no measurable difference"
+    },
+    {
+      "name": "divide, precision 20",
+      "note": "",
+      "batch": 63,
+      "reference": {
+        "ns": 2192.063492063492,
+        "iqr": 725.3968253968255
+      },
+      "port": {
+        "ns": 1552.3809523809523,
+        "iqr": 188.09523809523807
+      },
+      "ratio": 1.4120654396728016,
+      "verdict": "1.41× faster"
+    },
+    {
+      "name": "add, precision 200",
+      "note": "",
+      "batch": 31,
+      "reference": {
+        "ns": 535.483870967742,
+        "iqr": 393.54838709677426
+      },
+      "port": {
+        "ns": 1177.4193548387098,
+        "iqr": 725.8064516129032
+      },
+      "ratio": 0.45479452054794517,
+      "verdict": "2.20× SLOWER"
+    },
+    {
+      "name": "multiply, precision 200",
+      "note": "",
+      "batch": 31,
+      "reference": {
+        "ns": 12622.58064516129,
+        "iqr": 1072.5806451612898
+      },
+      "port": {
+        "ns": 2270.967741935484,
+        "iqr": 975.806451612903
+      },
+      "ratio": 5.558238636363636,
+      "verdict": "5.56× faster"
+    },
+    {
+      "name": "divide, precision 200",
+      "note": "",
+      "batch": 31,
+      "reference": {
+        "ns": 20412.90322580645,
+        "iqr": 2629.032258064515
+      },
+      "port": {
+        "ns": 7403.225806451613,
+        "iqr": 2080.645161290323
+      },
+      "ratio": 2.7572984749455336,
+      "verdict": "2.76× faster"
+    },
+    {
+      "name": "sqrt, precision 20",
+      "note": "",
+      "batch": 64,
+      "reference": {
+        "ns": 6739.0625,
+        "iqr": 2407.03125
+      },
+      "port": {
+        "ns": 5000,
+        "iqr": 953.90625
+      },
+      "ratio": 1.3478125,
+      "verdict": "1.35× faster"
+    },
+    {
+      "name": "sqrt, precision 200",
+      "note": "",
+      "batch": 32,
+      "reference": {
+        "ns": 105675,
+        "iqr": 6820.3125
+      },
+      "port": {
+        "ns": 41218.75,
+        "iqr": 1951.5625
+      },
+      "ratio": 2.5637604245640637,
+      "verdict": "2.56× faster"
+    },
+    {
+      "name": "pow (integer exponent)",
+      "note": "",
+      "batch": 16,
+      "reference": {
+        "ns": 8018.75,
+        "iqr": 1168.75
+      },
+      "port": {
+        "ns": 2787.5,
+        "iqr": 834.375
+      },
+      "ratio": 2.876681614349776,
+      "verdict": "2.88× faster"
+    },
+    {
+      "name": "ln, precision 20",
+      "note": "",
+      "batch": 16,
+      "reference": {
+        "ns": 43787.5,
+        "iqr": 15512.5
+      },
+      "port": {
+        "ns": 20656.25,
+        "iqr": 6368.75
+      },
+      "ratio": 2.1198184568835097,
+      "verdict": "2.12× faster"
+    },
+    {
+      "name": "exp, precision 20",
+      "note": "",
+      "batch": 16,
+      "reference": {
+        "ns": 82050,
+        "iqr": 10368.75
+      },
+      "port": {
+        "ns": 32631.25,
+        "iqr": 1903.125
+      },
+      "ratio": 2.5144608312583796,
+      "verdict": "2.51× faster"
+    },
+    {
+      "name": "multiply, 10 digits",
+      "note": "",
+      "batch": 31,
+      "reference": {
+        "ns": 393.5483870967742,
+        "iqr": 48.38709677419354
+      },
+      "port": {
+        "ns": 951.6129032258065,
+        "iqr": 33.870967741935374
+      },
+      "ratio": 0.41355932203389834,
+      "verdict": "2.42× SLOWER"
+    },
+    {
+      "name": "multiply, 30 digits",
+      "note": "",
+      "batch": 31,
+      "reference": {
+        "ns": 651.6129032258065,
+        "iqr": 9.677419354838776
+      },
+      "port": {
+        "ns": 858.0645161290323,
+        "iqr": 38.70967741935499
+      },
+      "ratio": 0.7593984962406015,
+      "verdict": "1.32× SLOWER"
+    },
+    {
+      "name": "multiply, 50 digits",
+      "note": "",
+      "batch": 31,
+      "reference": {
+        "ns": 1225.8064516129032,
+        "iqr": 9.677419354838776
+      },
+      "port": {
+        "ns": 951.6129032258065,
+        "iqr": 27.41935483870975
+      },
+      "ratio": 1.2881355932203389,
+      "verdict": "1.29× faster"
+    },
+    {
+      "name": "multiply, 60 digits",
+      "note": "",
+      "batch": 31,
+      "reference": {
+        "ns": 1574.1935483870968,
+        "iqr": 11.290322580644897
+      },
+      "port": {
+        "ns": 996.7741935483871,
+        "iqr": 67.74193548387086
+      },
+      "ratio": 1.5792880258899678,
+      "verdict": "1.58× faster"
+    },
+    {
+      "name": "multiply, 100 digits",
+      "note": "",
+      "batch": 31,
+      "reference": {
+        "ns": 3422.5806451612902,
+        "iqr": 140.322580645161
+      },
+      "port": {
+        "ns": 1170.967741935484,
+        "iqr": 316.1290322580644
+      },
+      "ratio": 2.9228650137741043,
+      "verdict": "2.92× faster"
+    },
+    {
+      "name": "multiply, 1000 digits",
+      "note": "",
+      "batch": 15,
+      "reference": {
+        "ns": 261713.33333333334,
+        "iqr": 2010
+      },
+      "port": {
+        "ns": 31146.666666666668,
+        "iqr": 823.3333333333358
+      },
+      "ratio": 8.402611301369863,
+      "verdict": "8.40× faster"
+    },
+    {
+      "name": "multiply, 10000 digits",
+      "note": "",
+      "batch": 3,
+      "reference": {
+        "ns": 26576933.333333332,
+        "iqr": 1258600
+      },
+      "port": {
+        "ns": 2913166.6666666665,
+        "iqr": 98149.99999999953
+      },
+      "ratio": 9.123039075461984,
+      "verdict": "9.12× faster"
+    }
+  ],
+  "latencyNs": [
+    {
+      "which": "clock",
+      "p50": 0,
+      "p90": 100,
+      "p99": 100,
+      "max": 58600
+    },
+    {
+      "which": "reference",
+      "p50": 100,
+      "p90": 200,
+      "p99": 200,
+      "max": 199400
+    },
+    {
+      "which": "port",
+      "p50": 800,
+      "p90": 900,
+      "p99": 1200,
+      "max": 4965700
+    }
+  ],
+  "startupNs": {
+    "reference": {
+      "median": 4997100,
+      "iqr": 206600
+    },
+    "port": {
+      "median": 3698600,
+      "iqr": 337200
+    }
+  },
+  "peakRssBytes": {
+    "reference": 45531136,
+    "port": 174514176
+  },
+  "artifactBytes": {
+    "sourceBytes": 131800,
+    "binaryBytes": 506368
+  }
+}
