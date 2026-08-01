@@ -37,7 +37,7 @@ after them. Individual cases:
 node fuzz/repro-case.js <case> <reference|port>
 ```
 
-## Two families, not six unrelated defects
+## Two families, not eight unrelated defects
 
 **Five of the eight are the same mistake.** A value with no digit array is used
 as though it had one. BUG-003 in `toPower`, BUG-005 in `taylorSeries`, BUG-006 in
@@ -83,13 +83,24 @@ BUG-001 came from scoring **error in ulps** against mpmath at 500 bits, sampling
 trigonometric inputs *relative to the poles*. The port reproduces it exactly, so
 no comparison between the two implementations could have seen it.
 
-The other five came from [`fuzz/campaign.js`](../../fuzz/campaign.js), which runs
+BUG-007 came from reproducing the host's array ceiling in Rust — which is a
+limit the original inherits rather than one it wrote, and which turns out to bite
+inside the precision range the library documents.
+[`scripts/host-limits.js`](../../scripts/host-limits.js) is the instrument.
+
+The other six came from [`fuzz/campaign.js`](../../fuzz/campaign.js), which runs
 the differential harness in child processes and kills any slice that stops
 making progress. An input the oracle cannot answer is recorded by seed and
 re-run afterwards one implementation at a time — so a hang is *attributed*
 rather than merely noticed, and "the oracle stopped answering and the port did
 not" is a category the campaign reports on its own. That category is where all
-five of these came from. See [`fuzz/log-limits.txt`](../../fuzz/log-limits.txt).
+six of these came from. See [`fuzz/log-limits.txt`](../../fuzz/log-limits.txt).
+
+BUG-008 arrived through that mechanism's mirror image — the row that must read
+zero, *the port* stopped answering — because the port's own guard against this
+family of defect had turned upstream's crash into a hang here. Two of the eight
+findings were reached that way, which is the strongest argument in this
+repository for reporting the category rather than only the count.
 
 ## Filing status
 
