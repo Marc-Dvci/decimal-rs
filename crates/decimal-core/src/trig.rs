@@ -252,10 +252,38 @@ pub fn taylor_series(
     t
 }
 
+/// What `sine` and `cosine` answer when the argument reduction has overflowed.
+///
+/// `to_less_than_half_pi` subtracts a whole multiple of π from its operand, and
+/// forms that multiple with the exponent clamps in force. Above `maxE` the
+/// multiple is Infinity, so the reduced argument is ∓Infinity and no series can
+/// be summed on it. `x.cos()` with `maxE` at 104 and `x` around 1e809 gets
+/// there in one call.
+///
+/// The original does not test for it. `cosine` reads `x.d.length` on its first
+/// working line and `sine` on its very first, so both raise
+///
+/// ```text
+/// TypeError: Cannot read properties of null (reading 'length')
+/// ```
+///
+/// which is BUG-006 — the same shape as BUG-003 and BUG-005, in a third place.
+/// This port panicked instead, which is worse: a Rust panic unwinding across
+/// the Node-API boundary. D-17 declines both, and answers with the rule the
+/// original's *own first line* applies to a non-finite argument,
+/// `if (!x.d) return new Ctor(NaN)`. The reduction produced no number, so
+/// there is no angle to take a sine of.
+fn non_finite_after_reduction() -> Decimal {
+    Decimal::nan()
+}
+
 /// `cos(x)` for an argument already reduced below π/2.
 pub fn cosine(ctx: &mut Ctx, x: &Decimal) -> Decimal {
     if x.is_zero() {
         return x.clone();
+    }
+    if !x.is_finite() {
+        return non_finite_after_reduction();
     }
 
     // Estimate how many times to apply cos(x) = 8(cos⁴(x/4) − cos²(x/4)) + 1.
@@ -290,6 +318,9 @@ pub fn cosine(ctx: &mut Ctx, x: &Decimal) -> Decimal {
 
 /// `sin(x)` for an argument already reduced below π/2.
 pub fn sine(ctx: &mut Ctx, x: &Decimal) -> Decimal {
+    if !x.is_finite() {
+        return non_finite_after_reduction();
+    }
     let len = x.digits().len() as i64;
 
     if len < 3 {
@@ -351,6 +382,15 @@ pub fn to_less_than_half_pi(ctx: &mut Ctx, x: &Decimal) -> Result<Decimal> {
     }
 
     let t = div_to_int(ctx, &x, &pi);
+
+    // The multiple of π to subtract is itself measured against `maxE`, and
+    // above it there is no multiple — only Infinity. The reduction cannot be
+    // performed and there is no quadrant to record. See
+    // `non_finite_after_reduction`: the original reaches `isOdd(t)`, reads
+    // `t.d.length` with `t.d` null, and raises. BUG-006 / D-17.
+    if !t.is_finite() {
+        return Ok(Decimal::nan());
+    }
 
     let x = if t.is_zero() {
         ctx.quadrant = if is_negative { 3 } else { 2 };
@@ -623,6 +663,41 @@ mod tests {
             parse_decimal(&ctx, Sign::Neg, rest)
         } else {
             parse_decimal(&ctx, Sign::Pos, text)
+        }
+    }
+
+    /// An argument reduction that overflows answers rather than crashing.
+    ///
+    /// `to_less_than_half_pi` subtracts ⌊|x|/π⌋·π, and forms that multiple with
+    /// the exponent clamps in force — so above `maxE` the multiple is Infinity
+    /// and there is nothing to reduce. The original walks straight into it:
+    /// `isOdd(t)` reads `t.d.length`, `cosine` reads `x.d.length`, `sine` reads
+    /// it on its first line. All three raise `TypeError: Cannot read properties
+    /// of null`. BUG-006; D-17 is the decision to answer NaN instead, which is
+    /// the rule the original's own first line applies to a non-finite argument.
+    ///
+    /// This port previously panicked here, which is worse than the TypeError:
+    /// a Rust panic unwinding across the Node-API boundary.
+    #[test]
+    fn an_overflowing_argument_reduction_answers_nan() {
+        for (name, f) in [
+            ("sin", sin as fn(&mut Ctx, &Decimal) -> Result<Decimal>),
+            ("cos", cos),
+            ("tan", tan),
+        ] {
+            let mut ctx = Ctx::default();
+            let x = d("-4.9481810070120303e809");
+
+            ctx.cfg.precision = 20;
+            ctx.cfg.rounding = 7;
+            ctx.cfg.max_e = 104;
+
+            let value = f(&mut ctx, &x).expect("no error is raised");
+            assert!(
+                value.is_nan(),
+                "{name} of a value whose reduction overflows should be NaN, got {}",
+                to_string(&value, &ctx.cfg)
+            );
         }
     }
 

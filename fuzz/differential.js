@@ -227,7 +227,34 @@ function readConfig(D) {
   const out = {};
   for (const name of SETTINGS) out[name] = D[name];
   out.crypto = D.crypto;
+  out.clamps = clampsStillApplied(D);
   return JSON.stringify(out);
+}
+
+/*
+ * Whether the library is still enforcing its own exponent limits.
+ *
+ * There is a tenth setting, and it is not a property. `external` is a
+ * module-level flag that the internals clear around any computation whose
+ * intermediates may legitimately leave the representable range, and set again
+ * afterwards. Nothing exposes it — but its effect is exposed, because the
+ * constructor only clamps to `maxE` while it is set. So: construct a value one
+ * decade above `maxE` and ask whether it came back infinite.
+ *
+ * This is worth a probe per operation because the flag is *set* rather than
+ * restored in several places, and because an operation that throws part-way
+ * through leaves it cleared for the rest of the process. When that happens the
+ * library silently stops obeying `minE` and `maxE` — and, more to the point
+ * here, the oracle stops being an oracle. Without this the damage first shows
+ * up several operations later, on some unrelated call, as an inexplicable
+ * difference in a value.
+ */
+function clampsStillApplied(D) {
+  try {
+    return !new D('1e' + (D.maxE + 1)).isFinite();
+  } catch (error) {
+    return 'threw: ' + error.message;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -501,8 +528,10 @@ const EXCLUDED = ['random (no fixed answer; covered by scripted-entropy unit tes
  */
 const KNOWN_DIVERGENCES = [
   {
-    tag: 'D-13 / BUG-003',
-    what: 'upstream dereferences null in toPower when the base was clamped to Infinity',
+    tag: 'D-13, D-17 / BUG-003, BUG-006',
+    what: 'upstream dereferences null where a value the exponent clamps turned into ' +
+      'Infinity is then used as if it had digits — in toPower, and in the argument ' +
+      'reduction of sin/cos/tan. The port answers instead of raising V8\'s TypeError',
     matches: (d) =>
       d.expected.indexOf('THROW Cannot read properties of null') === 0 &&
       d.actual.indexOf('THROW') !== 0,
@@ -513,6 +542,14 @@ const KNOWN_DIVERGENCES = [
     matches: (d) =>
       d.expected.indexOf('"precision":') !== -1 && d.actual.indexOf('"precision":') !== -1 &&
       d.expected !== d.actual,
+  },
+  {
+    tag: 'D-16 / BUG-005',
+    what: 'upstream threw out of taylorSeries and left its exponent clamps disabled ' +
+      'for the rest of the process; the port answered and left them in force. ' +
+      'Everything after this point in the sequence would be refereed by a library ' +
+      'that no longer obeys its own minE/maxE, so the sequence stops here',
+    matches: (d) => d.kind === 'oracle-clamps-lost',
   },
   {
     tag: 'BUG-002 (wider) — shared configuration leak',
@@ -697,8 +734,20 @@ function runSequence(steps, seed, options) {
     else if (op.name === 'atan2') count = 2;
     else count = 1 + rng.below(4);
 
+    // The pool position of each operand is kept, not just the operand. The
+    // expression below is the only record of what a failing sequence did, and
+    // naming the operands by their position in the *argument list* rather than
+    // in the pool would make every line of it a different statement from the
+    // one that ran — `x0.sinh()` when the receiver was the pool's third value.
+    // `rng.pick` is inlined here rather than called so that the generator is
+    // drawn from identically; the index is what it always was.
     const chosen = [];
-    for (let i = 0; i < count; i++) chosen.push(rng.pick(pool));
+    const chosenAt = [];
+    for (let i = 0; i < count; i++) {
+      const at = rng.below(pool.length);
+      chosen.push(pool[at]);
+      chosenAt.push(at);
+    }
 
     // An operation with a guard that its operand fails is not run at all, and
     // the step is spent. Substituting a different operand instead would bias
@@ -712,8 +761,9 @@ function runSequence(steps, seed, options) {
       : null;
 
     const expression = useStatic
-      ? 'Decimal.' + op.name + '(' + chosen.map((_, i) => 'x' + i).join(', ') + ')'
-      : 'x0.' + op.name + '(' + chosen.slice(1).map((_, i) => 'x' + (i + 1)).join(', ') + ')';
+      ? 'Decimal.' + op.name + '(' + chosenAt.map((at) => 'x' + at).join(', ') + ')'
+      : 'x' + chosenAt[0] + '.' + op.name +
+        '(' + chosenAt.slice(1).map((at) => 'x' + at).join(', ') + ')';
 
     // Logged *before* it is attempted, so that an operation which never
     // returns still names itself under `--trace`. Logging afterwards means the
@@ -773,7 +823,7 @@ function runSequence(steps, seed, options) {
       const nowR = describe(R, chosen[i].r);
       const nowP = describe(P, chosen[i].p);
       if (nowR !== operandsBefore[i][0] || nowP !== operandsBefore[i][1]) {
-        return report(log, expression + '  [operand x' + i + ' after the call]',
+        return report(log, expression + '  [operand x' + chosenAt[i] + ' after the call]',
           operandsBefore[i][0] + ' -> ' + nowR,
           operandsBefore[i][1] + ' -> ' + nowP);
       }
@@ -795,10 +845,18 @@ function runSequence(steps, seed, options) {
         configBefore[0] !== configAfter[0] ||
         configBefore[1] !== configAfter[1]) {
       const shared = configAfter[0] === configAfter[1] && configBefore[0] === configBefore[1];
+      // The one asymmetry that is not a port defect: the oracle has disabled
+      // its own exponent clamps and the port has not. From here on the two are
+      // not being asked the same question — one of them is obeying `maxE` and
+      // the other is not — so the sequence ends rather than reporting the
+      // difference again on every operation that follows.
+      const clampsLost = !shared &&
+        JSON.parse(configAfter[0]).clamps !== true &&
+        JSON.parse(configAfter[1]).clamps === true;
       return report(log, expression + '  [configuration across the call]',
         configBefore[0] + ' -> ' + configAfter[0],
         configBefore[1] + ' -> ' + configAfter[1],
-        shared ? 'shared-config-leak' : null);
+        clampsLost ? 'oracle-clamps-lost' : (shared ? 'shared-config-leak' : null));
     }
   }
 

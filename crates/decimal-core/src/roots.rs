@@ -362,26 +362,37 @@ pub(crate) fn difference(ctx: &mut Ctx, x: &Decimal, y: &Decimal) -> Decimal {
 /// original's loop exactly; `hypot(NaN, Infinity)` is Infinity and
 /// `hypot(Infinity, NaN)` is Infinity, but `hypot(NaN, 1)` is NaN.
 pub fn hypot(ctx: &mut Ctx, values: &[Decimal]) -> Decimal {
-    let total = ctx.without_clamping(|ctx| {
-        let mut t = Decimal::zero(Sign::Pos);
-        for n in values {
-            if !n.is_finite() {
-                if !n.is_nan() {
-                    return Err(Decimal::infinity(Sign::Pos));
-                }
-                t = n.clone();
-            } else if t.is_finite() {
-                let square = mul(ctx, n, n);
-                t = add(ctx, &t, &square);
+    // Clamping is off for the accumulation and *set* — not restored — on both
+    // exits, as the original does it.
+    //
+    // The caller must have suppressed it before coercing the arguments too:
+    // `external = false` precedes `new this(arguments[i++])` in the original,
+    // so an operand whose exponent lies outside `minE`/`maxE` reaches the sum
+    // intact rather than as Infinity. That is observable, and not subtly.
+    // `Decimal.hypot(x, NaN)` with `x` above `maxE` is NaN, because `x` stays
+    // finite and the NaN poisons the accumulator; clamp `x` on the way in and
+    // it is Infinity instead, which returns early and never sees the NaN.
+    ctx.external = false;
+    let mut t = Decimal::zero(Sign::Pos);
+    let mut infinite = false;
+    for n in values {
+        if !n.is_finite() {
+            if !n.is_nan() {
+                infinite = true;
+                break;
             }
+            t = n.clone();
+        } else if t.is_finite() {
+            let square = mul(ctx, n, n);
+            t = add(ctx, &t, &square);
         }
-        Ok(t)
-    });
-
-    match total {
-        Ok(t) => sqrt(ctx, &t),
-        Err(infinite) => infinite,
     }
+    ctx.external = true;
+
+    if infinite {
+        return Decimal::infinity(Sign::Pos);
+    }
+    sqrt(ctx, &t)
 }
 
 #[cfg(test)]

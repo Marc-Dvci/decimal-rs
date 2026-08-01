@@ -245,6 +245,17 @@ pub fn modulo(ctx: &mut Ctx, x: &Decimal, y: &Decimal) -> Decimal {
         mul(ctx, &q, y)
     });
 
+    // `return x.minus(q)` in the original, and `P.minus` opens with
+    // `y = new Ctor(y)` — a clamping copy, not a clone (D-12). So the product is
+    // measured against `minE`/`maxE` *here*, with the clamps back on, even
+    // though it was formed with them off.
+    //
+    // It routinely exceeds them, because the product is the same size as `x`
+    // while the remainder is not. Narrow `maxE` below `x`'s exponent and the
+    // subtrahend becomes Infinity, so `x.mod(y)` is ∓Infinity where the true
+    // remainder is a perfectly ordinary small number. Reproduced: this is a
+    // value the original computes, not a way to break it.
+    let product = clamped_copy(ctx, &product);
     sub(ctx, x, &product)
 }
 

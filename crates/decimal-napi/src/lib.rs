@@ -1261,6 +1261,13 @@ unsafe extern "C" fn s_hypot(
     // SAFETY: `data` is the leaked ConstructorState for this class.
     let st = unsafe { state(data) };
 
+    // `external = false` comes *before* the first `new this(arguments[i++])` in
+    // the original, so no operand is measured against `minE`/`maxE` on the way
+    // in. Coercing first and suppressing the clamps afterwards would turn an
+    // operand above `maxE` into Infinity and short-circuit the whole call.
+    // `roots::hypot` sets the flag back on, as the original does.
+    st.ctx.external = false;
+
     let mut values = Vec::with_capacity(args.len());
     for index in 0..args.len() {
         match argument(env, st, &args, index) {
@@ -1271,7 +1278,13 @@ unsafe extern "C" fn s_hypot(
                     break;
                 }
             }
-            Err(e) => return fail(env, e),
+            Err(e) => {
+                // The original throws from here with the flag still cleared and
+                // nothing to restore it, so the library stops clamping for the
+                // rest of the process. Declined, as in D-11 and D-16.
+                st.ctx.external = true;
+                return fail(env, e);
+            }
         }
     }
 
@@ -1298,6 +1311,16 @@ unsafe extern "C" fn s_sum(
     let count = args.len().max(1);
     let mut values = Vec::with_capacity(count);
     for index in 0..count {
+        // The first argument is coerced under the clamps and the rest are not.
+        // The original's `x = new this(args[i])` sits one line *above* its
+        // `external = false`, and every later argument is coerced inside
+        // `x.plus(args[i])`, which is below it. So `Decimal.sum(a, b)` measures
+        // `a` against `maxE` and does not measure `b`. Asymmetric, and easy to
+        // read as an oversight — but it is what the library does, and `hypot`
+        // three functions above puts the same line on the other side.
+        if index == 1 {
+            st.ctx.external = false;
+        }
         match argument(env, st, &args, index) {
             Ok(v) => {
                 let is_nan = v.is_nan();
@@ -1306,9 +1329,13 @@ unsafe extern "C" fn s_sum(
                     break;
                 }
             }
-            Err(e) => return fail(env, e),
+            Err(e) => {
+                st.ctx.external = true;
+                return fail(env, e);
+            }
         }
     }
+    st.ctx.external = true;
 
     let value = arith::sum(&mut st.ctx, &values);
     make(env, st, value)
