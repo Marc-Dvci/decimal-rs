@@ -173,6 +173,13 @@ pub fn to_fraction(
         let (mut p0, mut q0) = (Decimal::zero(Sign::Pos), one.clone());
 
         loop {
+            // An abandoned calculation must not keep iterating: every operation
+            // above now returns the same placeholder, so no convergence test can
+            // ever fire. The flag is turned into the thrown error at the
+            // boundary. See `arith::abandoned`, D-10 and D-19.
+            if ctx.array_limit_exceeded {
+                break;
+            }
             // The next partial quotient: ⌊numerator / denominator⌋.
             let a = divide(ctx, &n, &den, Some(0), rounding::DOWN, true, None);
 

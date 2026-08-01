@@ -236,6 +236,14 @@ pub fn taylor_series(
         // break the library rather than a way to compute a number. D-16.
         // Without this line the port has the same non-answer in worse clothes —
         // it does not crash, so it simply never leaves this loop.
+        // Abandoned, for the same reason one line lower and by a different
+        // road: the host refused an array, every operation from here returns
+        // the same placeholder, and no convergence test can fire again. The
+        // flag becomes the thrown error at the boundary. `arith::abandoned`.
+        if ctx.array_limit_exceeded {
+            break;
+        }
+
         if !t.is_finite() {
             break;
         }

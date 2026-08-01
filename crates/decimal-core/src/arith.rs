@@ -61,6 +61,42 @@ pub(crate) fn base10_exponent(digits: &[u32], e: i64) -> i64 {
     e * LOG_BASE + digit_count(digits[0]) - 1
 }
 
+/// What an abandoned calculation returns, and what every operation after it
+/// returns until the boundary throws.
+///
+/// # Why there is a placeholder at all
+///
+/// When [`Ctx::array_limit_exceeded`] is set, the calculation is over: the
+/// original would be unwinding a `RangeError` from here and nothing further
+/// would run. This crate has no exception to unwind, so the routine that called
+/// `divide` — `sqrt`'s Newton iteration, a Taylor series, the argument
+/// reduction — keeps running with whatever it was handed, and it will index
+/// digit arrays and divide by things.
+///
+/// So the placeholder has to be a value that cannot break the code still
+/// executing above it. **One** is the only interesting choice:
+///
+/// - it is finite, so `digits()` does not panic — which is what NaN did, and a
+///   panic crossing the Node-API boundary is strictly worse than the exception
+///   it fails to reproduce (D-17, learnt again the hard way in D-19);
+/// - it is non-zero, so nothing downstream divides by it into an infinity and
+///   panics one frame later instead;
+/// - and because every primitive below short-circuits to it once the flag is
+///   set, no arithmetic after the abandonment can produce a *different* value —
+///   so a convergence test comparing successive iterates sees them equal and
+///   the loop ends rather than spinning.
+///
+/// # It is never observed
+///
+/// Every value the port returns passes through the boundary — `make` in the
+/// Node binding, the flag check in `decimal-calc` — which converts the flag
+/// into the thrown error and discards the value. A caller cannot see a 1 here
+/// any more than a JavaScript caller can see what `plus` was holding when it
+/// threw.
+fn abandoned() -> Decimal {
+    Decimal::from_integer(1)
+}
+
 /// `⌈a / b⌉` for non-negative `a` and positive `b`.
 fn ceil_div(a: i64, b: i64) -> i64 {
     if a <= 0 {
@@ -188,6 +224,9 @@ fn orient(greater: bool) -> Ordering {
 /// method that does is `P.dividedBy`, which the adapter reaches through
 /// `coerce`.
 pub fn add(ctx: &mut Ctx, x: &Decimal, y: &Decimal) -> Decimal {
+    if ctx.array_limit_exceeded {
+        return abandoned();
+    }
     let y = &crate::ops::clamped_copy(ctx, y);
 
     // Non-finite operands.
@@ -261,7 +300,7 @@ pub fn add(ctx: &mut Ctx, x: &Decimal, y: &Decimal) -> Decimal {
         // twice the operand's exponent. See `Ctx::array_limit_exceeded`.
         if shift + target.len() as i64 > crate::MAX_ARRAY_LENGTH {
             ctx.array_limit_exceeded = true;
-            return Decimal::nan();
+            return abandoned();
         }
         prepend_zeros(target, shift);
     }
@@ -302,6 +341,9 @@ pub fn add(ctx: &mut Ctx, x: &Decimal, y: &Decimal) -> Decimal {
 /// `x − y`. The argument is re-judged against the exponent limits first; see
 /// [`add`].
 pub fn sub(ctx: &mut Ctx, x: &Decimal, y: &Decimal) -> Decimal {
+    if ctx.array_limit_exceeded {
+        return abandoned();
+    }
     let y = &crate::ops::clamped_copy(ctx, y);
 
     // Non-finite operands.
@@ -376,7 +418,7 @@ pub fn sub(ctx: &mut Ctx, x: &Decimal, y: &Decimal) -> Decimal {
         // have raised past anything allocatable.
         if shift + target.len() as i64 > crate::MAX_ARRAY_LENGTH {
             ctx.array_limit_exceeded = true;
-            return Decimal::nan();
+            return abandoned();
         }
         prepend_zeros(target, shift);
         skip = shift;
@@ -464,6 +506,9 @@ pub fn negated(x: &Decimal) -> Decimal {
 /// `x × y`, by long multiplication. The argument is re-judged against the
 /// exponent limits first; see [`add`].
 pub fn mul(ctx: &mut Ctx, x: &Decimal, y: &Decimal) -> Decimal {
+    if ctx.array_limit_exceeded {
+        return abandoned();
+    }
     let y = &crate::ops::clamped_copy(ctx, y);
     let sign = x.s.product(y.s);
 
@@ -627,6 +672,9 @@ pub fn divide(
     dp: bool,
     base: Option<u32>,
 ) -> Decimal {
+    if ctx.array_limit_exceeded {
+        return abandoned();
+    }
     let sign = if x.s == y.s { Sign::Pos } else { Sign::Neg };
 
     let x_zero = x.d.as_deref().map(|d| d[0] == 0).unwrap_or(false);
@@ -727,7 +775,7 @@ pub fn divide(
                 sd -= 1;
                 let t = k * u64::from(base) + u64::from(xd.get(i).copied().unwrap_or(0));
                 if push_limb(ctx, &mut qd, (t / divisor) as u32).is_none() {
-                    return Decimal::nan();
+                    return abandoned();
                 }
                 k = t % divisor;
                 i += 1;
@@ -838,7 +886,7 @@ pub fn divide(
                 // in a `push`, and it is read nowhere else in this branch —
                 // unlike the single-limb one above, where it also walks `xd`.
                 if push_limb(ctx, &mut qd, k).is_none() {
-                    return Decimal::nan();
+                    return abandoned();
                 }
 
                 // Bring down the next digit of the dividend. When the dividend

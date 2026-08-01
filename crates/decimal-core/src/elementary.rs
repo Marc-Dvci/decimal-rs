@@ -231,6 +231,13 @@ pub fn natural_exponential(ctx: &mut Ctx, x: &Decimal, sd: Option<i64>) -> Decim
     let mut k: i64 = 0;
     let thirty_second = crate::parse::parse_decimal(ctx, Sign::Pos, "0.03125");
     while x.e > -2 {
+        // An abandoned calculation must not keep iterating: every operation
+        // above now returns the same placeholder, so no convergence test can
+        // ever fire. The flag is turned into the thrown error at the
+        // boundary. See `arith::abandoned`, D-10 and D-19.
+        if ctx.array_limit_exceeded {
+            break;
+        }
         x = mul(ctx, &x, &thirty_second);
         k += 5;
     }
@@ -346,6 +353,13 @@ pub fn natural_logarithm(ctx: &mut Ctx, y: &Decimal, sd: Option<i64>) -> Result<
         // times so the sum can be divided by it afterwards.
         let mut work = y.clone();
         while (c0 < 7 && c0 != 1) || (c0 == 1 && c.as_bytes().get(1).is_some_and(|&b| b > b'3')) {
+            // An abandoned calculation must not keep iterating: every operation
+            // above now returns the same placeholder, so no convergence test can
+            // ever fire. The flag is turned into the thrown error at the
+            // boundary. See `arith::abandoned`, D-10 and D-19.
+            if ctx.array_limit_exceeded {
+                break;
+            }
             work = mul(ctx, &work, y);
             c = digits_to_string(work.digits());
             c0 = c.as_bytes()[0] - b'0';

@@ -224,17 +224,8 @@ fn decimal_of(env: Env, value: Value) -> Option<Decimal> {
 /// one mutable cell, and when they did not, every method failed with the
 /// constructor's own "Invalid argument: undefined".
 fn make(env: Env, st: &mut ConstructorState, value: Decimal) -> Value {
-    // An abandoned calculation reaches here holding a placeholder. Every method
-    // that returns a Decimal comes through this function, so this is the one
-    // place the condition has to be checked.
-    //
-    // The original fails the same operations, in the same place, with
-    // `RangeError: Invalid array length` — thrown by JavaScript itself when the
-    // alignment inside `plus` tries to prepend more zeros than an array can
-    // hold. The message is reproduced exactly; see `Ctx::array_limit_exceeded`.
-    if st.ctx.take_array_limit_exceeded() {
-        env.throw_range_error("Invalid array length");
-        return env.undefined();
+    if let Some(thrown) = abandoned(env, st) {
+        return thrown;
     }
 
     let ctor = env.reference_value(st.ctor);
@@ -244,6 +235,33 @@ fn make(env: Env, st: &mut ConstructorState, value: Decimal) -> Value {
         *slot = value;
     }
     object
+}
+
+/// Turn an abandoned calculation into the error the original raises, if one
+/// happened; `None` if the result is a real one.
+///
+/// A routine that asked for a digit array larger than the original's host will
+/// build sets a flag and returns a placeholder (`decimal_core::arith`'s
+/// `abandoned`). The placeholder means nothing, so **every** path that returns a
+/// result to JavaScript has to consume the flag before it hands anything back —
+/// not only the one that builds a Decimal.
+///
+/// That distinction is not hypothetical. This check lived inside [`make`] alone,
+/// and `toBinary` returns a *string*: at precision 939,524,081 the port answered
+/// `0b1` — the placeholder, rendered — where the original raises `RangeError:
+/// Invalid array length`. Found by the sweep in `scripts/host-limits.js`, and
+/// only after that script stopped fingerprinting results in a way that could not
+/// tell a string from a Decimal.
+///
+/// The message is JavaScript's own, thrown with `napi_throw_range_error` so that
+/// `err instanceof RangeError` is true on both implementations. See
+/// `Ctx::array_limit_exceeded` and DECISIONS.md D-10, D-19.
+fn abandoned(env: Env, st: &mut ConstructorState) -> Option<Value> {
+    if st.ctx.take_array_limit_exceeded() {
+        env.throw_range_error("Invalid array length");
+        return Some(env.undefined());
+    }
+    None
 }
 
 /// Throw `error` and return `undefined`, the shape every failing callback
@@ -409,7 +427,14 @@ macro_rules! stringify {
             let b = optional_number(env, &args, 1);
             let f: fn(&mut Ctx, &Decimal, Option<f64>, Option<f64>) -> Result<String, Error> =
                 $body;
-            match f(&mut st.ctx, &x, a, b) {
+            let outcome = f(&mut st.ctx, &x, a, b);
+            // Before the string, not after: a rendering that reached the host's
+            // array ceiling is holding a placeholder, and `toBinary` at
+            // precision 939,524,081 rendered it as `0b1`. See `abandoned`.
+            if let Some(thrown) = abandoned(env, st) {
+                return thrown;
+            }
+            match outcome {
                 Ok(text) => env.string(&text),
                 Err(e) => fail(env, e),
             }
@@ -581,7 +606,15 @@ unsafe extern "C" fn m_to_fraction(
         },
     };
 
-    match fraction::to_fraction(&mut st.ctx, &x, given.as_ref()) {
+    let outcome = fraction::to_fraction(&mut st.ctx, &x, given.as_ref());
+    // Checked once, here, rather than being left to the two `make` calls below:
+    // the first would throw and the second would then build a Decimal with an
+    // exception already pending. See `abandoned`.
+    if let Some(thrown) = abandoned(env, st) {
+        return thrown;
+    }
+
+    match outcome {
         Ok(fraction::Fractional::Ratio(f)) => {
             let numerator = make(env, st, f.numerator);
             let denominator = make(env, st, f.denominator);

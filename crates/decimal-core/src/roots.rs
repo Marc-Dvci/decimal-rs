@@ -141,6 +141,13 @@ pub fn sqrt(ctx: &mut Ctx, x: &Decimal) -> Decimal {
         let mut repeated = false;
 
         loop {
+            // An abandoned calculation must not keep iterating: every operation
+            // above now returns the same placeholder, so no convergence test can
+            // ever fire. The flag is turned into the thrown error at the
+            // boundary. See `arith::abandoned`, D-10 and D-19.
+            if ctx.array_limit_exceeded {
+                break;
+            }
             let t = r.clone();
 
             // r = (t + x/t) / 2
@@ -258,6 +265,13 @@ pub fn cbrt(ctx: &mut Ctx, x: &Decimal) -> Decimal {
         let mut repeated = false;
 
         loop {
+            // An abandoned calculation must not keep iterating: every operation
+            // above now returns the same placeholder, so no convergence test can
+            // ever fire. The flag is turned into the thrown error at the
+            // boundary. See `arith::abandoned`, D-10 and D-19.
+            if ctx.array_limit_exceeded {
+                break;
+            }
             let t = r.clone();
 
             // Halley's method for the cube root:

@@ -169,6 +169,13 @@ pub fn to_string_binary(
             // The carry can cascade all the way out of the leading digit.
             let mut i = at;
             loop {
+                // An abandoned calculation must not keep iterating: every operation
+                // above now returns the same placeholder, so no convergence test can
+                // ever fire. The flag is turned into the thrown error at the
+                // boundary. See `arith::abandoned`, D-10 and D-19.
+                if ctx.array_limit_exceeded {
+                    break;
+                }
                 if i == 0 {
                     e += 1;
                     xd.insert(0, 1);

@@ -141,6 +141,13 @@ pub fn logarithm(ctx: &mut Ctx, arg: &Decimal, base: Option<&Decimal>) -> Result
         let mut k = pr;
         if check_rounding_digits(r.digits(), k, rm, None) {
             loop {
+                // An abandoned calculation must not keep iterating: every operation
+                // above now returns the same placeholder, so no convergence test can
+                // ever fire. The flag is turned into the thrown error at the
+                // boundary. See `arith::abandoned`, D-10 and D-19.
+                if ctx.array_limit_exceeded {
+                    break;
+                }
                 sd += 10;
                 numerator = natural_logarithm(ctx, arg, Some(sd))?;
                 denominator = if is_base10 {

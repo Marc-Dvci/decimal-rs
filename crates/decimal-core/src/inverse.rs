@@ -141,6 +141,13 @@ pub fn atan(ctx: &mut Ctx, x: &Decimal) -> Result<Decimal> {
     // partial sum against the one two terms behind it.
     let mut converged = false;
     while !converged {
+        // An abandoned calculation must not keep iterating: every operation
+        // above now returns the same placeholder, so no convergence test can
+        // ever fire. The flag is turned into the thrown error at the
+        // boundary. See `arith::abandoned`, D-10 and D-19.
+        if ctx.array_limit_exceeded {
+            break;
+        }
         px = mul(ctx, &px, &x2);
         n += 2;
         let term = divide(
