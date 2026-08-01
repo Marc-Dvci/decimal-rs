@@ -13,6 +13,18 @@ Upstream: [MikeMcl/decimal.js](https://github.com/MikeMcl/decimal.js) @ [`cd73a7
 | **JavaScript in the port** | **none** — Node's own resolver loads the Rust binary |
 | **Defects found in the original** | **8**, four of them crashes, two of them hangs |
 
+## The demo film
+
+Four minutes, and **no terminal in it was typed**. Every command shown was run
+by [`film/scripts/capture.ts`](film/scripts/capture.ts), which records each line
+of output with the millisecond it arrived; the scenes read that recording and
+cannot supply text of their own. Where a recording is replayed faster than it
+ran, the factor and the real elapsed time are both on screen.
+
+The capture the film was built from is committed at
+[`film/artifacts/capture.json`](film/artifacts/capture.json) — the same suite
+run, the same campaign, the same conformance output the sections below describe.
+
 ## Build and verify — one command
 
 ```
@@ -69,15 +81,15 @@ port; nothing in `crates/` can reach it. See
 
 ## Performance, in one paragraph
 
-On CPU-bound arbitrary-precision arithmetic the port is **1.4× to 8.5× faster**,
-and the advantage is almost entirely a function of operand size: 2.6× at 100
-digits, 8.1× at 1 000, 8.5× at 10 000. Below about **40 significant digits it is
+On CPU-bound arbitrary-precision arithmetic the port is **1.2× to 8.6× faster**,
+and the advantage is almost entirely a function of operand size: 2.9× at 100
+digits, 8.2× at 1 000, 8.6× at 10 000. Below about **40 significant digits it is
 slower**, and at the library's default precision of twenty there is **no
 measurable difference** on most operations — the port's per-multiply cost barely
-moves from 30 digits to 100, 871 ns to 1.33 µs, because across that range it is
+moves from 30 digits to 100, 926 ns to 1.17 µs, because across that range it is
 paying to cross the Node-API boundary and the arithmetic underneath is lost in
 it. Called one small operation at a time it is slower still, ~900 ns against
-~200 ns. Startup is 1.5 ms faster; the compiled artifact is 3.8× larger than the
+~100 ns. Startup is 0.9 ms faster; the compiled artifact is 4.7× larger than the
 original's source. Full table, methodology and the losses in
 [`bench/`](bench/README.md) — every number in this paragraph is a row of
 [`bench/results.json`](bench/results.json).

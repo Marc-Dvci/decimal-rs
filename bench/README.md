@@ -12,16 +12,16 @@ Run: `node bench/run.js` · Host: AMD Ryzen 5 7600 / Windows 11 / Node v24.13.1
 
 ## The short version
 
-> On CPU-bound arbitrary-precision arithmetic the Rust port is **1.4× to 8.5×
+> On CPU-bound arbitrary-precision arithmetic the Rust port is **1.2× to 8.6×
 > faster**, and the advantage is almost entirely a function of operand size:
-> 2.6× at 100 digits, 8.1× at 1 000, 8.5× at 10 000. Below about **40
+> 2.9× at 100 digits, 8.2× at 1 000, 8.6× at 10 000. Below about **40
 > significant digits it is slower**, and at the library's default precision of
 > twenty there is **no measurable difference** on most operations. Called one
 > small operation at a time from JavaScript it is slower still — ~900 ns against
-> ~200 ns — because crossing the Node-API boundary costs more than a twenty-digit
-> addition. Startup is 1.5 ms faster. Resident memory is within 12% of the
-> original's, but a *synchronous* burst of work peaks at 3.8× it, for a reason
-> worth understanding. The compiled artifact is 3.8× larger than the original's
+> ~100 ns — because crossing the Node-API boundary costs more than a twenty-digit
+> addition. Startup is 0.9 ms faster. Resident memory is within 10% of the
+> original's, but a *synchronous* burst of work peaks at 3.9× it, for a reason
+> worth understanding. The compiled artifact is 4.7× larger than the original's
 > source.
 >
 > If your operands are twenty digits and you call one at a time, this port is
@@ -37,22 +37,22 @@ It is applied mechanically, including where it erases a win.
 
 | Operation | decimal.js | decimal-rs | Verdict |
 |---|---:|---:|---|
-| parse, 20 digits | 1.57 µs | 1.16 µs | **1.35× faster** |
-| parse, 200 digits | 3.00 µs | 2.19 µs | **1.37× faster** |
-| parse, 1000 digits | 7.85 µs | 3.66 µs | **2.14× faster** |
-| toString, 20 digits | 589.1 ns | 651.6 ns | no measurable difference |
-| toString, 1000 digits | 2.51 µs | 4.63 µs | **1.84× SLOWER** |
-| add, precision 20 | 1.07 µs | 1.11 µs | no measurable difference |
-| multiply, precision 20 | 1.07 µs | 976.2 ns | no measurable difference |
-| divide, precision 20 | 2.18 µs | 1.64 µs | no measurable difference |
-| add, precision 200 | 687.1 ns | 1.76 µs | **2.56× SLOWER** |
-| multiply, precision 200 | 12.09 µs | 2.78 µs | **4.35× faster** |
-| divide, precision 200 | 20.95 µs | 9.19 µs | **2.28× faster** |
-| sqrt, precision 20 | 7.70 µs | 4.86 µs | **1.59× faster** |
-| sqrt, precision 200 | 120.42 µs | 43.90 µs | **2.74× faster** |
-| pow (integer exponent) | 7.58 µs | 2.88 µs | **2.63× faster** |
-| ln, precision 20 | 45.86 µs | 21.11 µs | **2.17× faster** |
-| exp, precision 20 | 98.35 µs | 39.66 µs | **2.48× faster** |
+| parse, 20 digits | 1.10 µs | 710.9 ns | no measurable difference |
+| parse, 200 digits | 1.63 µs | 1.32 µs | **1.23× faster** |
+| parse, 1000 digits | 7.65 µs | 3.31 µs | **2.31× faster** |
+| toString, 20 digits | 459.4 ns | 645.3 ns | no measurable difference |
+| toString, 1000 digits | 2.47 µs | 4.73 µs | **1.92× SLOWER** |
+| add, precision 20 | 795.2 ns | 1.14 µs | no measurable difference |
+| multiply, precision 20 | 885.7 ns | 960.3 ns | no measurable difference |
+| divide, precision 20 | 2.13 µs | 1.63 µs | **1.31× faster** |
+| add, precision 200 | 541.9 ns | 1.14 µs | **2.11× SLOWER** |
+| multiply, precision 200 | 11.99 µs | 2.62 µs | **4.57× faster** |
+| divide, precision 200 | 19.61 µs | 7.06 µs | **2.78× faster** |
+| sqrt, precision 20 | 5.75 µs | 5.22 µs | no measurable difference |
+| sqrt, precision 200 | 105.67 µs | 44.54 µs | **2.37× faster** |
+| pow (integer exponent) | 6.27 µs | 2.41 µs | **2.60× faster** |
+| ln, precision 20 | 35.52 µs | 22.86 µs | **1.55× faster** |
+| exp, precision 20 | 80.14 µs | 37.79 µs | **2.12× faster** |
 
 ## Where the crossover is
 
@@ -61,16 +61,16 @@ size, everything else held constant.
 
 | Operand size | decimal.js | decimal-rs | Verdict |
 |---|---:|---:|---|
-| 10 digits | 545.2 ns | 1.55 µs | **2.83× SLOWER** |
-| 30 digits | 635.5 ns | 871.0 ns | **1.37× SLOWER** |
-| 50 digits | 1.17 µs | 951.6 ns | **1.23× faster** |
-| 60 digits | 1.50 µs | 967.7 ns | **1.55× faster** |
-| 100 digits | 3.47 µs | 1.33 µs | **2.62× faster** |
-| 1 000 digits | 267.88 µs | 32.95 µs | **8.13× faster** |
-| 10 000 digits | 26.02 ms | 3.07 ms | **8.47× faster** |
+| 10 digits | 406.5 ns | 1.06 µs | **2.61× SLOWER** |
+| 30 digits | 654.8 ns | 925.8 ns | **1.41× SLOWER** |
+| 50 digits | 1.22 µs | 961.3 ns | **1.27× faster** |
+| 60 digits | 1.56 µs | 1.03 µs | **1.52× faster** |
+| 100 digits | 3.37 µs | 1.17 µs | **2.88× faster** |
+| 1 000 digits | 263.51 µs | 32.07 µs | **8.22× faster** |
+| 10 000 digits | 25.67 ms | 2.98 ms | **8.60× faster** |
 
-**The port's column is nearly flat from 10 to 60 digits** — 1.55 µs, 871 ns,
-952 ns, 968 ns — and only then starts to climb. That flatness is the finding.
+**The port's column is nearly flat from 10 to 60 digits** — 1.06 µs, 926 ns,
+961 ns, 1.03 µs — and only then starts to climb. That flatness is the finding.
 Across that whole range the port is not doing enough arithmetic for it to show;
 it is paying a fixed cost of roughly 900 ns to cross the Node-API boundary, and
 the multiplication underneath is lost in it. decimal.js has no boundary to cross
@@ -82,15 +82,15 @@ arithmetic to matter at all.
 
 ## Reading the other losses
 
-**`toString, 1000 digits` — 1.84× slower.** decimal.js builds its output by
+**`toString, 1000 digits` — 1.92× slower.** decimal.js builds its output by
 JavaScript string concatenation, and V8 implements that with ropes: each append
 is O(1) and the flattening happens once, in C++, at the end. The port pushes
 digits into a `String`. At twenty digits this is invisible; at a thousand it is
 most of the time. A genuine loss to a better data structure, and closing it
 would take a rope or a preallocated digit buffer.
 
-**`add, precision 200` — 2.56× slower.** The oddity in the table: decimal.js
-adds *faster* at precision 200 (687 ns) than at precision 20 (1.07 µs). The two
+**`add, precision 200` — 2.11× slower.** The oddity in the table: decimal.js
+adds *faster* at precision 200 (542 ns) than at precision 20 (795 ns). The two
 scenarios use different operands, and the precision-200 pair happens to share an
 exponent — so the original's alignment loop does nothing and the call reduces to
 a limb-wise add of two short arrays. Against something that cheap, the port's
@@ -103,12 +103,12 @@ One small `plus` at a time, 100 000 samples.
 
 | | p50 | p90 | p99 | max |
 |---|---:|---:|---:|---:|
-| the clock itself | 0 ns | 100 ns | 100 ns | 108.4 µs |
-| decimal.js | 200 ns | 300 ns | 300 ns | 255.1 µs |
-| decimal-rs | 900 ns | 1.60 µs | 2.30 µs | 9.85 ms |
+| the clock itself | 0.0 ns | 100.0 ns | 100.0 ns | 142.40 µs |
+| decimal.js | 100.0 ns | 200.0 ns | 300.0 ns | 312.50 µs |
+| decimal-rs | 900.0 ns | 1.40 µs | 1.90 µs | 6.78 ms |
 
 **The instrument is in the table because it has to be.** Windows' clock ticks at
-100 ns, and decimal.js's whole distribution spans two of those ticks — so that
+100 ns, and decimal.js's whole distribution spans three of those ticks — so that
 row does not say "decimal.js takes 200 ns", it says "decimal.js is near the
 resolution of this timer". The port's 900 ns is nine ticks and is measured
 properly. Read it as: the port is slower per call by about the cost of one
@@ -123,8 +123,8 @@ instrument.
 
 | | synchronous burst | yielding |
 |---|---:|---:|
-| decimal.js | 43.3 MiB | 42.2 MiB |
-| decimal-rs | 165.1 MiB | 47.2 MiB |
+| decimal.js | 43.0 MiB | 42.8 MiB |
+| decimal-rs | 165.3 MiB | 46.9 MiB |
 
 Two numbers because for a native addon they measure genuinely different things,
 and either alone would mislead.
@@ -133,7 +133,7 @@ Node runs Node-API finalizers **from the event loop**, not from the allocation
 that triggered collection. So a tight synchronous loop defers every finalizer to
 the end of it, and the addon's native allocations pile up behind a JavaScript
 heap that looks perfectly comfortable — 165 MiB, against the original's 43. Give
-the loop a turn and the same work settles at 47 MiB, twelve per cent above the
+the loop a turn and the same work settles at 47 MiB, ten per cent above the
 original. The right-hand column is the resident footprint; the gap between the
 columns is the price of the deferral, and it is a real cost for anyone who does
 run a tight loop.
@@ -155,11 +155,11 @@ Nine fresh processes each, `require()` plus one construction, timed externally.
 
 | | median | IQR |
 |---|---:|---:|
-| decimal.js | 6.02 ms | 433 µs |
-| decimal-rs | 4.47 ms | 234 µs |
+| decimal.js | 4.65 ms | 46.00 µs |
+| decimal-rs | 3.74 ms | 218.50 µs |
 
-**1.55 ms faster.** Loading a 4 952-line JavaScript file costs more than loading
-a 494 KiB DLL: V8 must parse and compile the source, while the addon is mapped
+**0.91 ms faster.** Loading a 4 952-line JavaScript file costs more than loading
+a 609 KiB DLL: V8 must parse and compile the source, while the addon is mapped
 and its relocations resolved. Both figures include process creation, which is
 common to both — the difference is the number to read, not the totals.
 
@@ -168,8 +168,8 @@ common to both — the difference is the number to read, not the totals.
 | | |
 |---|---:|
 | `decimal.js` (source) | 128.7 KiB |
-| `decimal.node` (compiled, release + LTO) | 494.0 KiB |
-| | **3.84× larger** |
+| `decimal.node` (compiled, release + LTO) | 609.0 KiB |
+| | **4.73× larger** |
 
 Expected, and not really improvable: the binary carries its own parsing,
 formatting and transcendental code where the original leans on V8's.
