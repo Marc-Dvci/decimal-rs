@@ -26,6 +26,15 @@ suite against the compiled Rust artifact.
 Without Docker: `make` (requires Rust 1.97.1 — pinned in `rust-toolchain.toml` —
 and Node 24).
 
+The image carries the vendored oracle and the standalone binary too, so the rest
+of the evidence is reproducible in it without a local toolchain:
+
+```
+docker run --rm decimal-rs node scripts/clamp-conformance.js
+docker run --rm decimal-rs node scripts/host-limits.js
+docker run --rm decimal-rs ./bin/decimal-calc 2 sqrt --precision 40
+```
+
 **Read the failure count, not the ratio.** About 6,000 of the suite's assertions
 are generated with `Math.random()`, so the denominator moves from run to run —
 22,628 and 22,688 in two consecutive runs here. The number that does not move is
@@ -248,9 +257,9 @@ node scripts/unsafe-report.js
 
 | crate | lines | unsafe | |
 |---|---:|---:|---|
-| `decimal-core` | 9,719 | **0** | `unsafe_code = "forbid"`, compiler-enforced |
+| `decimal-core` | 9,831 | **0** | `unsafe_code = "forbid"`, compiler-enforced |
 | `decimal-cli` | 296 | **0** | same |
-| `decimal-napi` | 2,515 | 90 | the Node-API boundary; no arithmetic |
+| `decimal-napi` | 2,548 | 90 | the Node-API boundary; no arithmetic |
 
 `forbid` is not a lint level an inner `allow` can turn off, so `decimal-core`
 does not compile if an unsafe block appears anywhere in it, including one
