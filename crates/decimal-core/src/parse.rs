@@ -140,6 +140,31 @@ fn eat(s: &[u8], at: &mut usize, c: u8) -> bool {
 
 use crate::{Ctx, Decimal, Sign, LOG_BASE};
 
+/// The constructor's string path, whole: strip a leading sign, then dispatch on
+/// whether what remains is a plain decimal literal or one of the radix forms.
+///
+/// This is the original's `new Decimal(string)` less the type test, and it lives
+/// here rather than in the Node binding because it is not a Node concept — the
+/// binding and the standalone CLI both need it, and a second transcription of a
+/// two-branch dispatch is a second place for the branches to drift apart.
+///
+/// Note that `+` and `-` are stripped here and nowhere else: `parse_decimal` and
+/// [`parse_other`] both take an already-signed body, because the original's
+/// constructor removes the sign before it decides which of them to call.
+pub fn from_str(ctx: &mut Ctx, text: &str) -> crate::Result<Decimal> {
+    let (sign, body) = match text.as_bytes().first() {
+        Some(b'-') => (Sign::Neg, &text[1..]),
+        Some(b'+') => (Sign::Pos, &text[1..]),
+        _ => (Sign::Pos, text),
+    };
+
+    if is_decimal_literal(body.as_bytes()) {
+        Ok(parse_decimal(ctx, sign, body))
+    } else {
+        parse_other(ctx, sign, body)
+    }
+}
+
 /// Parse a decimal literal — one that [`is_decimal_literal`] accepts — into a
 /// value with the given sign.
 ///

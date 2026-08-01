@@ -121,7 +121,7 @@ fn coerce(env: Env, st: &mut ConstructorState, value: Value) -> Result<Decimal, 
         }
         JsType::String => {
             let text = env.as_string(value).unwrap_or_default();
-            from_str(&mut st.ctx, &text)
+            parse::from_str(&mut st.ctx, &text)
         }
         // The fourth accepted type, and the one easiest to forget: the
         // original's constructor has a `t === 'bigint'` branch, and its
@@ -168,22 +168,6 @@ fn from_f64(ctx: &Ctx, v: f64) -> Decimal {
     // The original goes through `v.toString()` for everything that is not a
     // small integer, so the ECMAScript number-to-string rules apply here too.
     parse::parse_decimal(ctx, sign, &format::number_to_string(v.abs()))
-}
-
-/// A value from a string, following the original's constructor: strip a
-/// leading sign, then dispatch on whether the remainder is a decimal literal.
-fn from_str(ctx: &mut Ctx, text: &str) -> Result<Decimal, Error> {
-    let (sign, body) = match text.as_bytes().first() {
-        Some(b'-') => (Sign::Neg, &text[1..]),
-        Some(b'+') => (Sign::Pos, &text[1..]),
-        _ => (Sign::Pos, text),
-    };
-
-    if parse::is_decimal_literal(body.as_bytes()) {
-        Ok(parse::parse_decimal(ctx, sign, body))
-    } else {
-        parse::parse_other(ctx, sign, body)
-    }
 }
 
 /// How JavaScript would render `value` when it is interpolated into an error
