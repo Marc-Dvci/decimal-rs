@@ -265,9 +265,9 @@ node scripts/unsafe-report.js
 
 | crate | lines | unsafe | |
 |---|---:|---:|---|
-| `decimal-core` | 9,831 | **0** | `unsafe_code = "forbid"`, compiler-enforced |
+| `decimal-core` | 9,913 | **0** | `unsafe_code = "forbid"`, compiler-enforced |
 | `decimal-cli` | 296 | **0** | same |
-| `decimal-napi` | 2,548 | 90 | the Node-API boundary; no arithmetic |
+| `decimal-napi` | 2,581 | 93 | the Node-API boundary; no arithmetic |
 
 `forbid` is not a lint level an inner `allow` can turn off, so `decimal-core`
 does not compile if an unsafe block appears anywhere in it, including one
@@ -278,6 +278,14 @@ literals are stripped.
 `decimal-core` has **no dependencies at all** — the limb arithmetic is written
 here rather than taken from a bignum crate, for reasons in
 [D-02](DECISIONS.md).
+
+A panic cannot take the host down either. Every callback is a plain Rust
+function wrapped in one `extern "C"` shim that catches unwinds and throws a
+JavaScript `Error` instead — deliberately *not* wearing the library's
+`[DecimalError]` prefix, so a `catch` written for the library's own errors
+cannot swallow a bug in the port. Verified by injecting a panic and watching it
+arrive as a catchable error with the process still running; the first version of
+the guard failed that test, and [D-22](DECISIONS.md) says why.
 
 ## The port without Node
 

@@ -78,7 +78,7 @@ host_note    = "DECISIONS.md D-10, D-19"
 [safety]
 unsafe_core           = 0
 unsafe_cli            = 0
-unsafe_adapter        = 90
+unsafe_adapter        = 93
 method                = "unsafe_code = \"forbid\" in decimal-core and decimal-cli, compiler-enforced; textual cross-check in scripts/unsafe-report.js"
 command               = "node scripts/unsafe-report.js"
 dependencies_core     = 0
