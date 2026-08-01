@@ -970,3 +970,79 @@ overshot both ceilings by seven orders of magnitude. A limit that is only ever
 tested far beyond itself is not tested.
 
 ---
+
+### D-20 · `atan(±∞)` above the π table: the fourth null dereference, and the guard that skipped the error
+
+**Context.** The bounded campaign reported a `PORT DEFECT` at 31,597 refereed
+operations: `x1.atan()` where the oracle answered in 554 ms and the port did not
+answer in 90 seconds.
+
+What made it hard to see is that the receiver's configuration was not the
+current one. `x1` belonged to a *previous* constructor — the sequence had called
+`Decimal.clone()` and then `Decimal.set({ precision: 2 })` on the clone — and a
+method reads its settings through `this.constructor`, exactly as the original
+does. So the call that looked like `atan(∞)` at precision 2 was `atan(∞)` at
+**precision 1130**.
+
+**Why that matters.** `inverseTangent` opens with
+
+```js
+if (!x.isFinite()) {
+  if (!x.s) return new Ctor(NaN);
+  if (pr + 4 <= PI_PRECISION) { r = getPi(Ctor, pr + 4, rm).times(0.5); … return r; }
+}
+```
+
+`PI_PRECISION` is 1025. Above it the guard fails, nothing returns, and control
+**falls through to the series** with `x` infinite. Every term is infinite, no two
+partial sums ever differ, and the convergence test is `r.d[j] !== void 0` on a
+value whose `d` is null:
+
+```
+TypeError: Cannot read properties of null (reading '163')
+```
+
+The fourth instance of the family already reported as BUG-003, BUG-005 and
+BUG-006. This port, which checks finiteness before indexing — the D-16 lesson —
+did not crash and therefore never left the loop. The same non-answer in better
+clothes, again.
+
+**Decision.** Call `get_pi` unguarded in that branch. `±∞` is `±π/2` and nothing
+else; if π is unavailable at the requested precision then the answer is
+unavailable, and `get_pi` already says so with the library's own
+`[DecimalError] Precision limit exceeded`.
+
+This is not an invention. It is what every other member of the family already
+does at these precisions, on *both* implementations — measured, not assumed:
+
+| at precision 1130 | upstream | this port |
+|---|---|---|
+| `asin(1)`, `asin(-1)` | Precision limit exceeded | Precision limit exceeded |
+| `acos(0)`, `acos(-1)` | Precision limit exceeded | Precision limit exceeded |
+| `atan2(1, -1)` | Precision limit exceeded | Precision limit exceeded |
+| `sin(1e9)` | Precision limit exceeded | Precision limit exceeded |
+| `atan(1)`, `acos(0.5)` | answers | answers, identically |
+| **`atan(±∞)`** | **TypeError** | **was: no answer at all** |
+
+`atan` of an infinity was the single member that did not raise it, and only
+because its guard skipped the call to `getPi` rather than letting the call fail.
+
+**What is deliberately *not* changed.** The identical guard on the
+`|x| == 1` branch stays. There the fall-through is not a defect: the series
+converges for `|x| = 1`, and `atan(±1)` at precision 1130 returns the same
+digits on both sides. Removing that guard too would turn a working computation
+into an error, which is the opposite mistake.
+
+**Consequence.** 90 seconds becomes 0 ms. The sixth deliberate divergence,
+recognised by name in the harness so that it is counted rather than reported.
+Reported upstream as BUG-008, and it is the fourth report in one family — which
+is now the strongest argument in `docs/upstream/README.md` for the sweep it
+suggests rather than for four separate patches.
+
+**The lesson, which is not about `atan`.** D-16 taught the port to check
+finiteness before indexing a digit array, and that check is what converted a
+crash into a hang. A guard that makes the port survive a state the original
+cannot survive is only half a fix: the other half is deciding what the surviving
+code should *answer*, and "keep going" is never that answer.
+
+---

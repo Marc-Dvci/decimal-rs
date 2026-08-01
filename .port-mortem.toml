@@ -94,8 +94,8 @@ data    = "bench/soak.json"
 [findings]
 # Defects found in the original. Write-ups in docs/upstream/, all reproducible
 # with `node fuzz/repro-upstream.js`.
-count       = 7
-crashes     = 3
+count       = 8
+crashes     = 4
 hangs       = 2
 index       = "docs/upstream/README.md"
 repro       = "node fuzz/repro-upstream.js"

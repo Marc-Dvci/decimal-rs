@@ -11,7 +11,7 @@ Upstream: [MikeMcl/decimal.js](https://github.com/MikeMcl/decimal.js) @ [`cd73a7
 | **Unsafe in `decimal-core`** | **0**, compiler-enforced (`unsafe_code = "forbid"`) |
 | **Dependencies of `decimal-core`** | **0** |
 | **JavaScript in the port** | **none** — Node's own resolver loads the Rust binary |
-| **Defects found in the original** | **7**, three of them crashes, two of them hangs |
+| **Defects found in the original** | **8**, four of them crashes, two of them hangs |
 
 ## Build and verify — one command
 
@@ -168,9 +168,9 @@ the consequence was a divergence three lines long at the library's largest
 documented precision. It was live until the unbounded campaign's `PORT DEFECT`
 row stopped being zero.
 
-## Seven defects in the original
+## Eight defects in the original
 
-Five of the seven are crashes or hangs. Three of those leave the library in a
+Six of the eight are crashes or hangs. Three of those leave the library in a
 state it cannot recover from: afterwards, either every subsequent operation
 takes minutes, or the documented `minE`/`maxE` limits silently stop applying to
 anything at all. Each is reproducible in two to five lines with no unusual
@@ -185,6 +185,7 @@ operand.
 | [BUG-005](docs/upstream/BUG-005-taylorseries-null-dereference.md) | `taylorSeries` dereferences null, and leaves the exponent clamps off | `TypeError` + silent loss of `minE`/`maxE` |
 | [BUG-006](docs/upstream/BUG-006-argument-reduction-null-dereference.md) | the argument reduction of `sin`/`cos`/`tan` dereferences null | `TypeError` |
 | [BUG-007](docs/upstream/BUG-007-precision-above-939524081.md) | `precision` is documented to 1e9 and division fails above 939,524,081 | host `RangeError`, not `[DecimalError]` |
+| [BUG-008](docs/upstream/BUG-008-atan-infinity-null-dereference.md) | `atan(±Infinity)` dereferences null above the π constant's precision | `TypeError` |
 
 BUG-004 is three lines:
 
@@ -200,7 +201,7 @@ timeout:
 node fuzz/repro-upstream.js
 ```
 
-Four of the seven are one mistake wearing different hats, and two are one
+Five of the eight are one mistake wearing different hats, and two are one
 missing `finally`; both families, and the suggested sweeps, are in
 [`docs/upstream/README.md`](docs/upstream/README.md). BUG-007 is in neither
 family and is the only one that is not a mistake in the arithmetic — it is a

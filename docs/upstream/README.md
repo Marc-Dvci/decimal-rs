@@ -1,9 +1,9 @@
 # Defects found in the original
 
-Seven defects in [decimal.js](https://github.com/MikeMcl/decimal.js) v10.6.0
+Eight defects in [decimal.js](https://github.com/MikeMcl/decimal.js) v10.6.0
 (`cd73a7f`), plus two findings that are cost rather than correctness.
 
-Five of the seven are crashes or hangs. Three of those five leave the library in
+Six of the eight are crashes or hangs. Three of those six leave the library in
 a state it cannot recover from: after them, either every subsequent operation
 takes minutes, or the documented `minE`/`maxE` limits silently stop applying to
 anything.
@@ -19,6 +19,7 @@ Every one is reproducible in two to five lines with no unusual operand.
 | [BUG-005](BUG-005-taylorseries-null-dereference.md) | `taylorSeries` dereferences null, and leaves the exponent clamps off | `TypeError` + silent loss of `minE`/`maxE` | 4 lines | differential campaign |
 | [BUG-006](BUG-006-argument-reduction-null-dereference.md) | the argument reduction of `sin`/`cos`/`tan` dereferences null | `TypeError` | 4 lines | differential campaign |
 | [BUG-007](BUG-007-precision-above-939524081.md) | `precision` is documented to 1e9 and division fails above 939,524,081 | host `RangeError`, not `[DecimalError]` | 2 lines | reproducing the host's ceiling in Rust |
+| [BUG-008](BUG-008-atan-infinity-null-dereference.md) | `atan(±Infinity)` dereferences null above the π constant's precision | `TypeError` | 3 lines | differential campaign |
 | [notes](NOTES-cbrt-and-hyperbolic-cost.md) | `cbrt` does not return near the exponent floor | non-termination | 3 lines | differential campaign |
 | [notes](NOTES-cbrt-and-hyperbolic-cost.md) | the hyperbolic argument fold ignores magnitude | 1.1 s for `cosh(1e6)` | 2 lines | benchmarking |
 
@@ -38,17 +39,24 @@ node fuzz/repro-case.js <case> <reference|port>
 
 ## Two families, not six unrelated defects
 
-**Four of the six are the same mistake.** A value that the exponent clamps
-turned into `Infinity` is then used as though it still had a digit array.
-BUG-003 in `toPower`, BUG-005 in `taylorSeries`, BUG-006 in `toLessThanHalfPi`
-and in `cosine`/`sine`. The clamp is deliberate and documented — a value is
-measured against `minE`/`maxE` when it is *used*, not when it is built, so
-`new Ctor(x)` is a re-judgement rather than a copy — and the consequence is that
-almost any intermediate can become non-finite between one line and the next. The
-call sites do not expect it.
+**Five of the eight are the same mistake.** A value with no digit array is used
+as though it had one. BUG-003 in `toPower`, BUG-005 in `taylorSeries`, BUG-006 in
+`toLessThanHalfPi` and in `cosine`/`sine`, BUG-008 in `inverseTangent`.
 
-A sweep for `.d.length` and `.d[` against that possibility would be worth more
-than four separate patches.
+In the first four the `Infinity` is manufactured by the exponent clamps — which
+are deliberate and documented, a value being measured against `minE`/`maxE` when
+it is *used* rather than when it is built, so `new Ctor(x)` is a re-judgement
+rather than a copy. The consequence is that almost any intermediate can become
+non-finite between one line and the next, and the call sites do not expect it.
+
+BUG-008 is the same read on a null `d` arrived at by a different road: there the
+infinity is the caller's own argument, and what lets it reach the indexing is a
+guard that returns *only sometimes* and falls through to a series when it does
+not.
+
+A sweep for `.d.length` and `.d[` against the possibility of a null `d` would be
+worth more than five separate patches. It is the single highest-value change
+suggested in this directory.
 
 **Two of the six are the missing `finally`.** BUG-002 and the second half of
 BUG-005: a function raises `Ctor.precision`, sets `external = false`, computes,
@@ -85,6 +93,6 @@ five of these came from. See [`fuzz/log-limits.txt`](../../fuzz/log-limits.txt).
 
 ## Filing status
 
-BUG-001 is written up for filing by the author of this port. The remaining six
+BUG-001 is written up for filing by the author of this port. The remaining seven
 are written here in filable form; each has a runnable reproduction and a
 suggested patch, and none has been submitted upstream at the time of writing.
