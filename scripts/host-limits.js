@@ -127,14 +127,73 @@ const CASES = [
   },
 ];
 
+/*
+ * The sweep: every routine that can reach the ceiling, at a precision above it.
+ *
+ * ---------------------------------------------------------------------------
+ * What this is for, and what it is *not* for
+ * ---------------------------------------------------------------------------
+ *
+ * The cases above check that the port throws where the original throws. This
+ * checks something weaker and, at these precisions, more important: that the
+ * port **stops**.
+ *
+ * `divide` abandons a calculation by setting a flag and returning a placeholder
+ * (see `arith::abandoned`). The routine that called it is still running, and it
+ * will index digit arrays, divide by what it was handed, and iterate towards a
+ * convergence test that can no longer fire. Getting that wrong does not produce
+ * a wrong answer — it produces a dead process or a live one that never returns,
+ * which is the failure mode this whole project exists to avoid. Three of these
+ * hung and nine aborted before the protocol was written down.
+ *
+ * ---------------------------------------------------------------------------
+ * Why the error is only required to *be* an error
+ * ---------------------------------------------------------------------------
+ *
+ * Above 939,524,081 the original cannot compute anything (BUG-007), and which
+ * error arrives first depends on the order in which two different limits are
+ * met — the host's array ceiling, and the library's own 1025-digit constants
+ * for π and ln 10. `ln`, `log` and `pow` reach the constants first here and the
+ * array first upstream; both refuse, with different words.
+ *
+ * Chasing word-for-word parity there would mean reproducing the order in which
+ * V8 runs out of backing store inside a series, at a configuration the original
+ * cannot serve. So the sweep requires termination and an outcome, reports which
+ * pairs agree exactly, and says so plainly rather than quietly relaxing the
+ * comparison the cases above make.
+ */
+const SWEEP_PRECISION = 1e9;
+
+const SWEEP = [
+  ['div', (D) => new D(1).div(3)],
+  ['sqrt', (D) => new D(2).sqrt()],
+  ['cbrt', (D) => new D(2).cbrt()],
+  ['ln', (D) => new D(2).ln()],
+  ['exp', (D) => new D('0.5').exp()],
+  ['sin', (D) => new D('0.5').sin()],
+  ['atan', (D) => new D('0.5').atan()],
+  ['asin', (D) => new D('0.5').asin()],
+  ['sinh', (D) => new D('0.5').sinh()],
+  ['pow', (D) => new D(2).pow(new D('0.5'))],
+  ['log', (D) => new D(2).log(3)],
+  ['mod', (D) => new D(10).mod(3)],
+  ['toFraction', (D) => new D('0.5').toFraction()],
+  ['toNearest', (D) => new D('1.5').toNearest(new D(1))],
+  ['toBinary', (D) => new D('0.1').toBinary()],
+];
+
 /* ------------------------------------------------------------------------- *
  * The child: one case, one implementation.
  * ------------------------------------------------------------------------- */
 
-function runCase(index, side) {
-  const D = require(side === 'port'
+function load(side) {
+  return require(side === 'port'
     ? path.join(ROOT, 'decimal.node')
     : path.join(ROOT, 'fuzz', 'reference', 'decimal.js'));
+}
+
+function runCase(index, side) {
+  const D = load(side);
 
   const testCase = CASES[index];
   const C = D.clone();
@@ -158,6 +217,31 @@ function runCase(index, side) {
     precisionAfter: C.precision,
     roundingAfter: C.rounding,
   }) + '\n');
+}
+
+/** One sweep entry, one implementation. Reports the outcome and the elapsed ms. */
+function runSweep(index, side) {
+  const D = load(side);
+  const C = D.clone();
+  C.set({ precision: SWEEP_PRECISION });
+
+  const [, call] = SWEEP[index];
+  const started = Date.now();
+  let outcome;
+  try {
+    // Not every entry returns a Decimal: `toBinary` returns a string and
+    // `toFraction` returns a pair. Fingerprinting on `sd()` alone turned a real
+    // divergence — the port rendering a binary expansion the oracle refused to
+    // build — into an identical TypeError from this harness, which is exactly
+    // the way a check quietly stops checking.
+    const value = call(C);
+    outcome = typeof value === 'string' ? 'returned a ' + value.length + '-character string'
+      : Array.isArray(value) ? 'returned ' + value.length + ' values'
+        : 'returned sd=' + value.sd();
+  } catch (error) {
+    outcome = 'threw ' + error.constructor.name + ': ' + error.message;
+  }
+  process.stdout.write(JSON.stringify({ outcome, ms: Date.now() - started }) + '\n');
 }
 
 /* ------------------------------------------------------------------------- *
@@ -190,8 +274,8 @@ function declaredCeiling() {
   return match ? Number(match[1].replace(/_/g, '')) : NaN;
 }
 
-function attempt(index, side) {
-  const args = [__filename, '--case', String(index), '--side', side];
+function attempt(index, side, flag = '--case') {
+  const args = [__filename, flag, String(index), '--side', side];
   try {
     const stdout = execFileSync(process.execPath, args, {
       encoding: 'utf8',
@@ -265,17 +349,70 @@ function main() {
     process.stdout.write('\n');
   });
 
-  process.stdout.write('SUMMARY: ' + CASES.length + ' cases, ' +
-    (CASES.length - failures) + ' in agreement, ' + failures + ' failing.\n');
+  // -- the sweep ----------------------------------------------------------
+  //
+  // Above the threshold neither implementation can compute, so what is checked
+  // here is that both *stop* and that neither takes its process with it.
+  process.stdout.write('the sweep — every routine that can reach the ceiling, at precision ' +
+    SWEEP_PRECISION + '\n');
+  process.stdout.write('  both implementations must terminate with an outcome; the two\n' +
+    '  errors need not be the same one, and where they are it is noted.\n\n');
+
+  let identical = 0;
+  let bothRefused = 0;
+  SWEEP.forEach(([name], index) => {
+    const reference = attempt(index, 'reference', '--sweep');
+    const port = attempt(index, 'port', '--sweep');
+
+    // Three verdicts, in decreasing order of what they promise.
+    //   ok      the two outcomes are the same string
+    //   ok*     both refused, naming different limits — allowed, and counted
+    //   FAIL    anything else, including a child that did not survive
+    const alive = (r) => !/DID NOT SURVIVE/.test(r.outcome);
+    const refused = (r) => /^threw /.test(r.outcome);
+
+    let verdict;
+    if (!alive(reference) || !alive(port)) {
+      verdict = 'FAIL  ';
+    } else if (reference.outcome === port.outcome) {
+      verdict = 'ok    ';
+      identical++;
+    } else if (refused(reference) && refused(port)) {
+      verdict = 'ok*   ';
+      bothRefused++;
+    } else {
+      verdict = 'FAIL  ';
+    }
+    if (verdict === 'FAIL  ') failures++;
+
+    const timing = (r) => (r.ms === undefined ? '' : '  (' + r.ms + ' ms)');
+    process.stdout.write('  ' + verdict + name.padEnd(12) +
+      ' reference: ' + reference.outcome + timing(reference) + '\n');
+    process.stdout.write('        ' + ''.padEnd(12) +
+      ' port:      ' + port.outcome + timing(port) + '\n');
+  });
+
+  process.stdout.write('\n  ok* means both refused and named different limits — the host\'s\n' +
+    '  array ceiling against the library\'s own 1025-digit constants. See D-19.\n\n');
+
+  process.stdout.write('SUMMARY: ' + CASES.length + ' threshold cases and ' +
+    SWEEP.length + ' swept routines, ' + failures + ' failing.\n');
   process.stdout.write('         ' + documented +
     ' documented divergence(s) in the configuration left behind (D-11).\n');
+  process.stdout.write('         the sweep: every routine terminated; ' + identical +
+    ' identical outcomes, ' + bothRefused + ' refused naming different limits.\n');
   process.exit(failures === 0 ? 0 : 1);
 }
 
 const argv = process.argv.slice(2);
 const caseIndex = argv.indexOf('--case');
+const sweepIndex = argv.indexOf('--sweep');
+const side = argv[argv.indexOf('--side') + 1];
+
 if (caseIndex !== -1) {
-  runCase(Number(argv[caseIndex + 1]), argv[argv.indexOf('--side') + 1]);
+  runCase(Number(argv[caseIndex + 1]), side);
+} else if (sweepIndex !== -1) {
+  runSweep(Number(argv[sweepIndex + 1]), side === 'sweep-port' ? 'port' : side);
 } else {
   main();
 }
