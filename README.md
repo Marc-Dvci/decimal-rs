@@ -14,11 +14,12 @@ conformance check, and every upstream reproduction.
 |---|---|
 | **Original test suite** | **exactly one failure**, documented ([D-08](DECISIONS.md)) — of about 22,650 assertions |
 | **Test files modified** | **0 of 69** — SHA-256 manifest enforced by the build, and the fuzzing oracle is pinned the same way |
-| **Differential fuzzing** | **zero undocumented divergences** over 70 continuous seconds, four independent seeds |
+| **Differential fuzzing** | **zero undocumented divergences**, and **zero port defects**, over 70 continuous seconds on 4 worker processes — in both the bounded and the unbounded pass |
 | **Unsafe in `decimal-core`** | **0**, compiler-enforced (`unsafe_code = "forbid"`) |
 | **Dependencies of `decimal-core`** | **0** |
 | **JavaScript in the port** | **none** — Node's own resolver loads the Rust binary |
 | **Defects found in the original** | **8**, four of them crashes, two of them hangs |
+| **Decisions documented** | **22**, each written at the moment it was made |
 
 ## The demo film
 
