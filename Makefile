@@ -21,7 +21,8 @@ else
 endif
 
 .PHONY: all build addon verify-tests test test-original test-rust clean fmt lint \
-        unsafe-report bench fuzz fuzz-limits repro clamp-conformance soak
+        unsafe-report bench fuzz fuzz-limits repro clamp-conformance host-limits \
+        conformance soak
 
 # Default target: nothing is considered built until the original, unmodified
 # test suite has run against the Rust artifact.
@@ -76,6 +77,16 @@ fuzz-limits: addon
 ## built. The largest family of defect this port had; see DECISIONS.md D-12.
 clamp-conformance: addon
 	$(NODE) scripts/clamp-conformance.js
+
+## The limits the original inherits from its host rather than from its own code:
+## the array ceiling V8 enforces, measured here and compared with the constant
+## compiled into the port. See DECISIONS.md D-10 and D-19.
+host-limits: addon
+	$(NODE) scripts/host-limits.js
+
+## Both targeted conformance checks. Neither is slow; both are exhaustive over
+## an axis the original suite does not vary at all.
+conformance: clamp-conformance host-limits
 
 ## Every defect found in the original, on both implementations, side by side.
 repro: addon

@@ -12,6 +12,11 @@
     "verify-tests": "node scripts/verify-tests.js",
     "test": "node scripts/verify-tests.js && node test/test.js",
     "fuzz": "node fuzz/differential.js",
+    "campaign": "node fuzz/campaign.js --seconds 70",
+    "clamp-conformance": "node scripts/clamp-conformance.js",
+    "host-limits": "node scripts/host-limits.js",
+    "repro-upstream": "node fuzz/repro-upstream.js",
+    "unsafe-report": "node scripts/unsafe-report.js",
     "soak": "node scripts/soak.js",
     "bench": "node bench/run.js"
   },

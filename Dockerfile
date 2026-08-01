@@ -42,6 +42,20 @@ COPY tests ./tests
 COPY scripts ./scripts
 COPY package.json Makefile DECISIONS.md README.md .port-mortem.toml ./
 
+# The fuzzing oracle — a byte-identical copy of upstream decimal.js — so that
+# the two conformance checks can run here as well, against the same artifact the
+# suite just ran against:
+#
+#     docker run --rm decimal-rs node scripts/clamp-conformance.js
+#     docker run --rm decimal-rs node scripts/host-limits.js
+#
+# It is data, not code: nothing in `crates/` can reach it, and the port does not
+# load it. See fuzz/reference/README.md. It is kept out of the default CMD
+# because `host-limits.js` deliberately allocates about a gigabyte, which is
+# above some default container limits, and a verification command that fails for
+# an unrelated reason is worse than one that checks less.
+COPY fuzz/reference ./fuzz/reference
+
 # The Rust sources come along so that the unsafe report can count what is
 # actually in the tree rather than repeat a number from the README. They are
 # not compiled here — stage 1 did that — and they add about 400 KB.
