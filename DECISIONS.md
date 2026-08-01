@@ -429,8 +429,8 @@ in it calls an inverse hyperbolic function on an argument near the exponent
 limit.
 
 **Decision.** Reproduce JavaScript's array-length ceiling explicitly.
-`MAX_ARRAY_LENGTH` is 2³² − 1; `plus` and `minus` check the padding against it,
-set `Ctx::array_limit_exceeded`, and abandon the calculation. The Node binding
+`MAX_ARRAY_LENGTH` is that ceiling; `plus` and `minus` check the padding against
+it, set `Ctx::array_limit_exceeded`, and abandon the calculation. The Node binding
 turns that flag into a thrown `RangeError` carrying the original's exact
 message — `napi_throw_range_error`, not `napi_throw_error`, so that
 `err instanceof RangeError` is true on both sides and not merely the message.
@@ -454,6 +454,12 @@ doubles and the port's are not; this is its structural counterpart, and it is
 worse, because a missing ceiling has no symptom until the day it has a fatal
 one. Where the original depends on its host refusing something, the port has to
 refuse it too — and refuse it the same way.
+
+**Postscript.** The mechanism here is right and the number was not: this entry
+set `MAX_ARRAY_LENGTH` to the specification's 2³² − 1, and the ceiling V8
+actually enforces on an array grown one index at a time is 2²⁷. The case above
+overshoots both by seven orders of magnitude, so nothing here noticed. D-19 is
+what did.
 
 ---
 
@@ -717,5 +723,250 @@ divergence is unobservable to the differential harness in the ordinary way,
 because the oracle never answers; it appears in `fuzz/log-limits.txt` as an
 input the oracle could not referee, with the port's own answer and timing beside
 it.
+
+---
+
+### D-15 · Two transcription errors in one line, cancelling at the default `maxE`
+
+**Context.** `new Decimal('0x1p-1074')` with `maxE` at 41 is **0** upstream, and
+this port answered 5e-324. The value is 4.94e-324, comfortably inside the
+default limits, so nothing about the answer suggests `maxE` should have a say.
+
+**Why upstream gives zero.** `parseOther` applies the binary exponent as
+
+```js
+if (p) x = x.times(Math.abs(p) < 54 ? mathpow(2, p) : Decimal.pow(2, p));
+```
+
+Two scales, and which one is used is observable. Below 54 the scale is a
+*double* — exact for every power of two in that range, and converted exactly.
+At 54 and above it is the library's own `pow`, whose negative-exponent branch is
+`new Ctor(1).div(r)` with `r = 2^1074`, exponent 323. `div` re-judges its
+argument (D-12), so below `maxE = 323` the divisor becomes Infinity and the
+quotient is 0.
+
+**The two errors.** This port computed the scale itself, with `int_pow` and a
+division, which is neither of upstream's two paths and bypasses `pow`'s
+exponent estimate entirely. And `int_pow` used `without_clamping`, which
+*restored* the flag where the original ends with a bare `external = true` — so
+even routing through `pow` would not have clamped, because `parseOther` clears
+the flag around the whole conversion and upstream's `intPow` hands it back.
+
+They cancel at the default `maxE`, which is why 22,658 assertions are silent
+about both: every radix test in the suite runs at the default configuration.
+
+**Decision.** Transcribe both. `parse_other` calls `to_power` for `|p| ≥ 54` and
+converts a double below it; `int_pow` sets the flag rather than restoring it.
+
+**Consequence.** A third error surfaced immediately and is worth recording,
+because it is the same shape one level up: the divisor for the *fractional*
+part must be built **before** the suppressed region, where upstream builds it.
+Built inside, `int_pow`'s parting `external = true` switches clamping on for the
+multiplication that follows, and `new Decimal('0x1.8p3')` at precision 1 comes
+out as 20 instead of 12.
+
+---
+
+### D-16 · A series that overflows must stop, even though the original cannot
+
+**Context.** Build a value while `maxE` is wide, narrow `maxE` below its
+exponent, take a hyperbolic function. The first argument reduction overflows, so
+`taylorSeries` is summing an infinity from its first term. Upstream's next line
+is `if (t.d[k] !== void 0)`, `t.d` is null, and it raises
+
+```
+TypeError: Cannot read properties of null (reading '30')
+```
+
+from between its own `external = false` and `external = true`. Nothing restores
+the flag: for the rest of the process the constructor stops clamping to `minE`
+and `maxE` at all. Four lines to reach, no recovery. Reported as BUG-005.
+
+**What the port did.** Not crash — and therefore never leave the loop. The
+convergence test asks whether the partial sum has a limb at position `k`, and an
+infinity has no limbs, so it was false for ever. The same non-answer in worse
+clothes.
+
+**Decision.** Break when the partial sum stops being finite. Every remaining
+term is added to an infinity and no iteration can bring it back, so it is the
+answer such as it is.
+
+**Consequence.** ±Infinity, in microseconds, with the clamps still in force
+afterwards. `trig.rs` asserts both halves for `sinh`, `cosh` and `tanh`. The
+fourth deliberate divergence, on the same test as D-11 and D-13.
+
+---
+
+### D-17 · The third null dereference, and the panic that was worse than it
+
+**Context.** `to_less_than_half_pi` reduces its operand by subtracting
+`⌊|x|/π⌋·π`, and forms that multiple with the clamps in force. Above `maxE`
+there is no representable multiple of π, so the multiple is Infinity and there
+is nothing to reduce. Upstream walks into it three separate ways — `isOdd(t)`
+reads `t.d.length`, `cosine` reads `x.d.length` on its first working line,
+`sine` on its very first — and raises the same `TypeError`. BUG-006.
+
+This port **panicked**:
+
+```
+thread '<unnamed>' panicked at crates\decimal-core\src\decimal.rs:268:14:
+digits() called on a non-finite value
+```
+
+A Rust panic unwinding across the Node-API boundary, which is strictly worse
+than the exception it was failing to reproduce.
+
+**Decision.** Answer NaN, which is the rule the original's *own first line*
+applies to a non-finite argument: `if (!x.d) return new Ctor(NaN);`. The
+reduction produced no number, so there is no angle to take a sine of.
+
+**Consequence.** The fifth deliberate divergence. Found by the campaign's
+watchdog, in the category it exists to report — *the oracle answered and the
+port did not* — and the upstream defect and the port's panic were the same
+missing guard on two sides of a port.
+
+---
+
+### D-18 · The flag is set, not restored, and the sloppiness is load-bearing
+
+**Context.** `external` suppresses the exponent clamps around computations whose
+intermediates may legitimately leave the representable range. The original
+writes it by hand, eighteen times, always as
+
+```js
+external = false;  …  external = true;
+```
+
+which **sets** the flag rather than putting back what it was. `Ctx::without_clamping`
+restored it, and said so in its own doc comment: *"That is safe there only
+because the pattern is never nested. Restoring instead of setting makes nesting
+harmless, and costs nothing."*
+
+Both halves of that sentence are false.
+
+**It is nested.** `acosh` suppresses the clamps and then calls `sqrt`, which
+suppresses them again and turns them back on — so the `.plus(x)` in
+`x.times(x).minus(1).sqrt().plus(x)` runs *with* clamping, and `acosh(1.5e300)`
+with `maxE` at 100 is Infinity rather than 691.87. `parseOther` calls `intPow`
+and gets the same treatment (D-15). `asinh` gets NaN out of it, from a
++Infinity root meeting a −Infinity operand.
+
+**And it costs a behaviour.** Nine methods differed because of this, none of
+them reachable from the suite.
+
+**A second mechanism, found alongside it.** `P.plus`, `P.minus` and `P.times`
+each open with `y = new Ctor(y)` — a clamping copy of the *argument*. There is
+no function form of these in the original; every internal use is a method call,
+so the copy happens every time. This port's `add`, `sub` and `mul` did not do
+it. `divide` is the exception and stays one: it *is* a function upstream, called
+directly by a dozen routines, and it does not re-judge.
+
+**Decision.** Match the original exactly, in both. `without_clamping` sets the
+flag on exit; `add`/`sub`/`mul` re-judge their second operand.
+
+**The instrument.** [`scripts/clamp-conformance.js`](scripts/clamp-conformance.js)
+checks the whole family in one pass: 43 methods × 6 operands × 4 limit pairs,
+each operand built under wide limits and the limits narrowed before the call —
+the only arrangement in which any of this is observable. It knows the two
+documented divergences and counts them rather than hiding them, and it shards
+one child per method-and-operand so that the four cases neither implementation
+returns from cost four cases rather than four methods.
+
+**Consequence.** Every method agrees. This was the largest family of defect in
+the port and the one that most resembled an improvement: a port that saves and
+restores a flag is more careful than one that sets it, and is a port of a
+different library.
+
+---
+
+### D-19 · The ceiling is the host's, not the specification's — and `| 0` is not a cast
+
+**Context.** The unbounded campaign ended with a **1** in the column that is
+supposed to read zero: *the oracle answered and the port did not*.
+
+```
+slice 0x422d0c37  sequence 57  x0.sinh()
+  oracle:  returned in 1607 ms
+  port:    did NOT return within 2.5 s
+  verdict: PORT DEFECT
+```
+
+Replayed on its own, the port did worse than not return:
+
+```
+memory allocation of 34359738368 bytes failed
+```
+
+Thirty-two gigabytes, from `sinh` of an ordinary six-digit value that happens to
+sit one exponent below `maxE`. The oracle raises `RangeError: Invalid array
+length` — catchable, 1.6 seconds, process fine.
+
+**Two transcription errors, one on top of the other.**
+
+*First.* `divide` sizes its quotient from the working precision:
+
+```js
+sd = sd / logBase + 2 | 0;
+```
+
+`sinh` has already raised the precision to `pr + max(x.e, x.sd()) + 4`, which for
+this operand is 8_999_999_999_999_967. The port computed the limb target in
+`i64` and got 1_285_714_285_714_283. The original computes it as a *double* and
+then truncates it to **32 bits** — `| 0` is `ToInt32`, not a cast — so upstream's
+target is **−1_354_212_501**. Both then run the same loop, whose guard is
+`sd--`; a negative count is truthy, so neither implementation is bounded by it,
+and what actually stops the original is its host.
+
+*Second.* The port had no host to stop it. `MAX_ARRAY_LENGTH` existed already —
+D-10 introduced it — but it was applied only in `plus` and `minus`, and it held
+the wrong number.
+
+**2³² − 1 is the wrong ceiling.** It is the largest value an array's `length` may
+*hold*; it is not the largest array that can be *built*. A 64-bit V8 keeps a
+dense array's elements in a backing store capped at one gigabyte of eight-byte
+slots, so growing an array by assigning one index at a time — which is how the
+original grows every digit array — stops at **2²⁷** and throws there. Four
+billion elements below the specification.
+
+The distinction is not academic, and it is not confined to the exponent limits:
+
+```js
+Decimal.set({ precision: 1e9 });   // the largest precision the library documents
+new Decimal(1).div(3);
+```
+
+is `RangeError: Invalid array length` upstream, in 1.3 seconds. With the
+specification's constant the port answered — a billion correct digits, in half
+the time, and the wrong behaviour. Three lines, one documented setting, no
+exponent games; the kind of divergence that is embarrassing to find late.
+
+**Decision.** `MAX_ARRAY_LENGTH` becomes 2²⁷, checked at the one statement that
+can breach it — `push_limb`, in `divide`'s quotient loop — rather than inferred
+from the loop bound, which is the very thing that has gone wrong. And
+`crate::to_int32` transcribes `ToInt32`, because Rust's `as i32` *saturates*
+where JavaScript *wraps*: `1e16 as i32` is 2_147_483_647 and `1e16 | 0` is
+1_874_919_424, and a saturating port of a wrapping expression has stopped
+computing the same function.
+
+**The instrument.** [`scripts/host-limits.js`](scripts/host-limits.js) measures
+the ceiling the host enforces *right now*, reads `MAX_ARRAY_LENGTH` back out of
+the Rust source, and fails if the two have drifted apart — a constant nobody
+re-measures is a constant that has already gone stale. It then runs five cases
+on both implementations in separate processes and compares the outcome
+including the error's type, with one case that must **not** throw, because
+without it a ceiling set far too low would pass every other case in the file.
+
+**Consequence.** All five agree. The three cases that reach the ceiling through
+a raised precision also show the configuration leak the port declines to
+reproduce (D-11), and the script names that divergence rather than tolerating a
+mismatch.
+
+**The general point, which is D-10's restated and sharpened.** Where the original
+depends on its host refusing something, the port has to refuse it too — and it
+has to refuse it *at the size the host actually refuses*, which is a property of
+V8 and not of ECMA-262. D-10 got the mechanism right and the number wrong, and
+the wrong number survived because the only case that had ever exercised it
+overshot both ceilings by seven orders of magnitude. A limit that is only ever
+tested far beyond itself is not tested.
 
 ---
