@@ -66,7 +66,11 @@ const PLAN: Array<{id: string; command: string; args: string[]; cwd?: string; op
   {id: "calc-sqrt", command: "target\\release\\decimal-calc.exe", args: ["2", "sqrt", "--precision", "40"]},
   {id: "calc-div", command: "target\\release\\decimal-calc.exe", args: ["355", "div", "113"]},
   {id: "calc-hex", command: "target\\release\\decimal-calc.exe", args: ["0x1.8p3", "add", "1"]},
-  {id: "docker-build", command: "docker", args: ["build", "-t", "decimal-rs", "."], optional: true},
+  /* `--no-cache` on purpose. A cached build finishes in three seconds, which
+   * is true and proves nothing: the claim being filmed is that one command
+   * takes a clean checkout to a running test suite, and only a cold build is
+   * evidence of that. */
+  {id: "docker-build", command: "docker", args: ["build", "--no-cache", "-t", "decimal-rs", "."], optional: true},
   {id: "docker-run", command: "docker", args: ["run", "--rm", "decimal-rs"], optional: true},
 ];
 

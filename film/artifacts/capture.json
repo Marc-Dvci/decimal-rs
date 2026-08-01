@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "capturedAt": "2026-08-01T15:22:32.785Z",
+  "capturedAt": "2026-08-01T15:32:10.019Z",
   "host": {
     "hostname": "DESKTOP-BUS8UQQ",
     "platform": "win32",
@@ -10,9 +10,9 @@
     "memGiB": 31
   },
   "git": {
-    "commit": "9bcb7d8dbaeb958c3abd2e46895c12b2a6cd75fb",
+    "commit": "4a5c047e8648cd049e4ac4ae7cca218f405b65a6",
     "branch": "main",
-    "dirty": true
+    "dirty": false
   },
   "commands": [
     {
@@ -4877,490 +4877,615 @@
     },
     {
       "id": "docker-build",
-      "command": "docker build -t decimal-rs .",
+      "command": "docker build --no-cache -t decimal-rs .",
       "cwd": "D:\\pm\\decimal-rs",
       "exitCode": 0,
-      "durationMs": 2767,
-      "startedAt": "2026-08-01T15:22:28.984Z",
+      "durationMs": 12446,
+      "startedAt": "2026-08-01T15:31:56.624Z",
       "lines": [
         {
-          "t": 582,
+          "t": 536,
           "text": "#0 building with \"desktop-linux\" instance using docker driver",
           "stream": "err"
         },
         {
-          "t": 582,
+          "t": 536,
           "text": "",
           "stream": "err"
         },
         {
-          "t": 582,
+          "t": 536,
           "text": "#1 [internal] load build definition from Dockerfile",
           "stream": "err"
         },
         {
-          "t": 582,
-          "text": "#1 transferring dockerfile: 3.15kB done",
+          "t": 536,
+          "text": "#1 transferring dockerfile: 3.54kB done",
           "stream": "err"
         },
         {
-          "t": 582,
+          "t": 536,
           "text": "#1 DONE 0.0s",
           "stream": "err"
         },
         {
-          "t": 582,
+          "t": 536,
           "text": "",
           "stream": "err"
         },
         {
-          "t": 582,
-          "text": "#2 [internal] load metadata for docker.io/library/rust:1-slim-bookworm",
+          "t": 536,
+          "text": "#2 [auth] library/node:pull token for registry-1.docker.io",
           "stream": "err"
         },
         {
-          "t": 960,
-          "text": "#2 ...",
+          "t": 536,
+          "text": "#2 DONE 0.0s",
           "stream": "err"
         },
         {
-          "t": 960,
+          "t": 536,
           "text": "",
           "stream": "err"
         },
         {
-          "t": 960,
-          "text": "#3 [auth] library/node:pull token for registry-1.docker.io",
+          "t": 536,
+          "text": "#3 [auth] library/rust:pull token for registry-1.docker.io",
           "stream": "err"
         },
         {
-          "t": 960,
+          "t": 536,
           "text": "#3 DONE 0.0s",
           "stream": "err"
         },
         {
-          "t": 960,
+          "t": 536,
           "text": "",
           "stream": "err"
         },
         {
-          "t": 960,
-          "text": "#4 [auth] library/rust:pull token for registry-1.docker.io",
+          "t": 536,
+          "text": "#4 [internal] load metadata for docker.io/library/rust:1-slim-bookworm",
           "stream": "err"
         },
         {
-          "t": 960,
-          "text": "#4 DONE 0.0s",
+          "t": 1004,
+          "text": "#4 DONE 0.7s",
           "stream": "err"
         },
         {
-          "t": 1109,
+          "t": 1004,
           "text": "",
           "stream": "err"
         },
         {
-          "t": 1109,
+          "t": 1004,
           "text": "#5 [internal] load metadata for docker.io/library/node:24-slim",
           "stream": "err"
         },
         {
-          "t": 1227,
-          "text": "#5 DONE 0.8s",
+          "t": 1239,
+          "text": "#5 DONE 0.7s",
           "stream": "err"
         },
         {
-          "t": 1227,
+          "t": 1239,
           "text": "",
           "stream": "err"
         },
         {
-          "t": 1227,
-          "text": "#2 [internal] load metadata for docker.io/library/rust:1-slim-bookworm",
-          "stream": "err"
-        },
-        {
-          "t": 1332,
-          "text": "#2 DONE 0.8s",
-          "stream": "err"
-        },
-        {
-          "t": 1332,
-          "text": "",
-          "stream": "err"
-        },
-        {
-          "t": 1332,
+          "t": 1239,
           "text": "#6 [internal] load .dockerignore",
           "stream": "err"
         },
         {
-          "t": 1332,
+          "t": 1239,
           "text": "#6 transferring context: 1.21kB done",
           "stream": "err"
         },
         {
-          "t": 1332,
+          "t": 1239,
           "text": "#6 DONE 0.0s",
           "stream": "err"
         },
         {
-          "t": 1332,
+          "t": 1239,
           "text": "",
           "stream": "err"
         },
         {
-          "t": 1332,
-          "text": "#7 [stage-1  1/11] FROM docker.io/library/node:24-slim@sha256:235600a8101ab264e117b1768e925532262668dc9b581ef1dd7d96ced463b8e7",
+          "t": 1239,
+          "text": "#7 [build 1/7] FROM docker.io/library/rust:1-slim-bookworm@sha256:99e09cb2284e2ddbb73a995deee3e91783fd04d177602ccf6eab326d778ee777",
           "stream": "err"
         },
         {
-          "t": 1332,
-          "text": "#7 resolve docker.io/library/node:24-slim@sha256:235600a8101ab264e117b1768e925532262668dc9b581ef1dd7d96ced463b8e7 0.0s done",
+          "t": 1239,
+          "text": "#7 resolve docker.io/library/rust:1-slim-bookworm@sha256:99e09cb2284e2ddbb73a995deee3e91783fd04d177602ccf6eab326d778ee777 0.0s done",
           "stream": "err"
         },
         {
-          "t": 1332,
+          "t": 1239,
           "text": "#7 DONE 0.0s",
           "stream": "err"
         },
         {
-          "t": 1332,
+          "t": 1239,
           "text": "",
           "stream": "err"
         },
         {
-          "t": 1332,
-          "text": "#8 [build 1/7] FROM docker.io/library/rust:1-slim-bookworm@sha256:99e09cb2284e2ddbb73a995deee3e91783fd04d177602ccf6eab326d778ee777",
+          "t": 1239,
+          "text": "#8 [stage-1  1/11] FROM docker.io/library/node:24-slim@sha256:235600a8101ab264e117b1768e925532262668dc9b581ef1dd7d96ced463b8e7",
           "stream": "err"
         },
         {
-          "t": 1332,
-          "text": "#8 resolve docker.io/library/rust:1-slim-bookworm@sha256:99e09cb2284e2ddbb73a995deee3e91783fd04d177602ccf6eab326d778ee777 0.0s done",
+          "t": 1239,
+          "text": "#8 resolve docker.io/library/node:24-slim@sha256:235600a8101ab264e117b1768e925532262668dc9b581ef1dd7d96ced463b8e7 0.0s done",
           "stream": "err"
         },
         {
-          "t": 1332,
+          "t": 1239,
           "text": "#8 DONE 0.0s",
           "stream": "err"
         },
         {
-          "t": 1332,
+          "t": 1239,
           "text": "",
           "stream": "err"
         },
         {
-          "t": 1332,
-          "text": "#9 [internal] load build context",
+          "t": 1239,
+          "text": "#9 [build 2/7] WORKDIR /src",
           "stream": "err"
         },
         {
-          "t": 1332,
-          "text": "#9 transferring context: 25.54kB 0.0s done",
+          "t": 1239,
+          "text": "#9 CACHED",
           "stream": "err"
         },
         {
-          "t": 1332,
-          "text": "#9 DONE 0.0s",
-          "stream": "err"
-        },
-        {
-          "t": 1332,
+          "t": 1239,
           "text": "",
           "stream": "err"
         },
         {
-          "t": 1332,
-          "text": "#10 [build 7/7] RUN cargo build --release --locked -p decimal-napi -p decimal-cli",
+          "t": 1239,
+          "text": "#10 [stage-1  2/11] WORKDIR /app",
           "stream": "err"
         },
         {
-          "t": 1332,
+          "t": 1239,
           "text": "#10 CACHED",
           "stream": "err"
         },
         {
-          "t": 1332,
+          "t": 1239,
           "text": "",
           "stream": "err"
         },
         {
-          "t": 1332,
-          "text": "#11 [build 5/7] COPY Cargo.toml Cargo.lock ./",
+          "t": 1239,
+          "text": "#11 [internal] load build context",
           "stream": "err"
         },
         {
-          "t": 1332,
-          "text": "#11 CACHED",
+          "t": 1239,
+          "text": "#11 transferring context: 93.34kB 0.0s done",
           "stream": "err"
         },
         {
-          "t": 1332,
+          "t": 1239,
+          "text": "#11 DONE 0.0s",
+          "stream": "err"
+        },
+        {
+          "t": 1239,
           "text": "",
           "stream": "err"
         },
         {
-          "t": 1332,
-          "text": "#12 [stage-1  6/11] COPY tests ./tests",
+          "t": 1239,
+          "text": "#12 [build 3/7] COPY rust-toolchain.toml ./",
           "stream": "err"
         },
         {
-          "t": 1332,
-          "text": "#12 CACHED",
+          "t": 1239,
+          "text": "#12 DONE 0.0s",
           "stream": "err"
         },
         {
-          "t": 1332,
+          "t": 1239,
           "text": "",
           "stream": "err"
         },
         {
-          "t": 1332,
-          "text": "#13 [build 6/7] COPY crates ./crates",
+          "t": 1239,
+          "text": "#13 [build 4/7] RUN rustup show",
           "stream": "err"
         },
         {
-          "t": 1332,
-          "text": "#13 CACHED",
+          "t": 1411,
+          "text": "#13 0.322 Default host: x86_64-unknown-linux-gnu",
           "stream": "err"
         },
         {
-          "t": 1332,
+          "t": 1411,
+          "text": "#13 0.322 rustup home:  /usr/local/rustup",
+          "stream": "err"
+        },
+        {
+          "t": 1411,
+          "text": "#13 0.322 ",
+          "stream": "err"
+        },
+        {
+          "t": 1567,
+          "text": "#13 0.478 info: syncing channel updates for 1.97.1-x86_64-unknown-linux-gnu",
+          "stream": "err"
+        },
+        {
+          "t": 2363,
+          "text": "#13 1.274 info: latest update on 2026-07-16 for version 1.97.1 (8bab26f4f 2026-07-14)",
+          "stream": "err"
+        },
+        {
+          "t": 2524,
+          "text": "#13 1.285 info: downloading component clippy",
+          "stream": "err"
+        },
+        {
+          "t": 4217,
+          "text": "#13 3.128 installed toolchains",
+          "stream": "err"
+        },
+        {
+          "t": 4217,
+          "text": "#13 3.128 --------------------",
+          "stream": "err"
+        },
+        {
+          "t": 4217,
+          "text": "#13 3.128 1.97.1-x86_64-unknown-linux-gnu (active, default)",
+          "stream": "err"
+        },
+        {
+          "t": 4217,
+          "text": "#13 3.128 ",
+          "stream": "err"
+        },
+        {
+          "t": 4217,
+          "text": "#13 3.128 active toolchain",
+          "stream": "err"
+        },
+        {
+          "t": 4217,
+          "text": "#13 3.128 ----------------",
+          "stream": "err"
+        },
+        {
+          "t": 4217,
+          "text": "#13 3.128 name: 1.97.1-x86_64-unknown-linux-gnu",
+          "stream": "err"
+        },
+        {
+          "t": 4217,
+          "text": "#13 3.128 active because: overridden by '/src/rust-toolchain.toml'",
+          "stream": "err"
+        },
+        {
+          "t": 4217,
+          "text": "#13 3.128 installed targets:",
+          "stream": "err"
+        },
+        {
+          "t": 4217,
+          "text": "#13 3.128   x86_64-unknown-linux-gnu",
+          "stream": "err"
+        },
+        {
+          "t": 4320,
+          "text": "#13 DONE 3.2s",
+          "stream": "err"
+        },
+        {
+          "t": 4320,
           "text": "",
           "stream": "err"
         },
         {
-          "t": 1332,
-          "text": "#14 [stage-1  5/11] COPY test ./test",
+          "t": 4320,
+          "text": "#14 [build 5/7] COPY Cargo.toml Cargo.lock ./",
           "stream": "err"
         },
         {
-          "t": 1332,
-          "text": "#14 CACHED",
+          "t": 4320,
+          "text": "#14 DONE 0.0s",
           "stream": "err"
         },
         {
-          "t": 1332,
+          "t": 4320,
           "text": "",
           "stream": "err"
         },
         {
-          "t": 1332,
-          "text": "#15 [stage-1  2/11] WORKDIR /app",
+          "t": 4320,
+          "text": "#15 [build 6/7] COPY crates ./crates",
           "stream": "err"
         },
         {
-          "t": 1332,
-          "text": "#15 CACHED",
+          "t": 4320,
+          "text": "#15 DONE 0.0s",
           "stream": "err"
         },
         {
-          "t": 1332,
+          "t": 4471,
           "text": "",
           "stream": "err"
         },
         {
-          "t": 1332,
-          "text": "#16 [build 2/7] WORKDIR /src",
+          "t": 4471,
+          "text": "#16 [build 7/7] RUN cargo build --release --locked -p decimal-napi -p decimal-cli",
           "stream": "err"
         },
         {
-          "t": 1332,
-          "text": "#16 CACHED",
+          "t": 4718,
+          "text": "#16 0.396     Updating crates.io index",
           "stream": "err"
         },
         {
-          "t": 1332,
+          "t": 4913,
+          "text": "#16 0.592  Downloading crates ...",
+          "stream": "err"
+        },
+        {
+          "t": 5180,
+          "text": "#16 0.859   Downloaded napi-build v2.4.0",
+          "stream": "err"
+        },
+        {
+          "t": 5364,
+          "text": "#16 0.864   Downloaded napi-sys v2.4.0",
+          "stream": "err"
+        },
+        {
+          "t": 5364,
+          "text": "#16 0.893    Compiling napi-build v2.4.0",
+          "stream": "err"
+        },
+        {
+          "t": 5364,
+          "text": "#16 0.893    Compiling decimal-core v0.1.0 (/src/crates/decimal-core)",
+          "stream": "err"
+        },
+        {
+          "t": 5364,
+          "text": "#16 0.893    Compiling napi-sys v2.4.0",
+          "stream": "err"
+        },
+        {
+          "t": 5536,
+          "text": "#16 1.214    Compiling decimal-napi v0.1.0 (/src/crates/decimal-napi)",
+          "stream": "err"
+        },
+        {
+          "t": 6332,
+          "text": "#16 2.010    Compiling decimal-cli v0.1.0 (/src/crates/decimal-cli)",
+          "stream": "err"
+        },
+        {
+          "t": 11083,
+          "text": "#16 6.760     Finished `release` profile [optimized] target(s) in 6.46s",
+          "stream": "err"
+        },
+        {
+          "t": 11210,
+          "text": "#16 DONE 6.8s",
+          "stream": "err"
+        },
+        {
+          "t": 11210,
           "text": "",
           "stream": "err"
         },
         {
-          "t": 1332,
-          "text": "#17 [build 4/7] RUN rustup show",
+          "t": 11210,
+          "text": "#17 [stage-1  3/11] COPY --from=build /src/target/release/libdecimal.so ./decimal.node",
           "stream": "err"
         },
         {
-          "t": 1332,
-          "text": "#17 CACHED",
+          "t": 11210,
+          "text": "#17 DONE 0.1s",
           "stream": "err"
         },
         {
-          "t": 1332,
+          "t": 11210,
           "text": "",
           "stream": "err"
         },
         {
-          "t": 1332,
-          "text": "#18 [build 3/7] COPY rust-toolchain.toml ./",
+          "t": 11210,
+          "text": "#18 [stage-1  4/11] COPY --from=build /src/target/release/decimal-calc ./bin/decimal-calc",
           "stream": "err"
         },
         {
-          "t": 1332,
-          "text": "#18 CACHED",
+          "t": 11210,
+          "text": "#18 DONE 0.0s",
           "stream": "err"
         },
         {
-          "t": 1332,
+          "t": 11337,
           "text": "",
           "stream": "err"
         },
         {
-          "t": 1332,
-          "text": "#19 [stage-1  3/11] COPY --from=build /src/target/release/libdecimal.so ./decimal.node",
+          "t": 11337,
+          "text": "#19 [stage-1  5/11] COPY test ./test",
           "stream": "err"
         },
         {
-          "t": 1332,
-          "text": "#19 CACHED",
+          "t": 11337,
+          "text": "#19 DONE 0.1s",
           "stream": "err"
         },
         {
-          "t": 1332,
+          "t": 11337,
           "text": "",
           "stream": "err"
         },
         {
-          "t": 1332,
-          "text": "#20 [stage-1  4/11] COPY --from=build /src/target/release/decimal-calc ./bin/decimal-calc",
+          "t": 11337,
+          "text": "#20 [stage-1  6/11] COPY tests ./tests",
           "stream": "err"
         },
         {
-          "t": 1332,
-          "text": "#20 CACHED",
+          "t": 11337,
+          "text": "#20 DONE 0.0s",
           "stream": "err"
         },
         {
-          "t": 1332,
+          "t": 11337,
           "text": "",
           "stream": "err"
         },
         {
-          "t": 1332,
+          "t": 11337,
           "text": "#21 [stage-1  7/11] COPY scripts ./scripts",
           "stream": "err"
         },
         {
-          "t": 1464,
-          "text": "#21 CACHED",
+          "t": 11337,
+          "text": "#21 DONE 0.0s",
           "stream": "err"
         },
         {
-          "t": 1464,
+          "t": 11445,
           "text": "",
           "stream": "err"
         },
         {
-          "t": 1464,
+          "t": 11445,
           "text": "#22 [stage-1  8/11] COPY package.json Makefile DECISIONS.md README.md .port-mortem.toml ./",
           "stream": "err"
         },
         {
-          "t": 1464,
-          "text": "#22 DONE 0.1s",
+          "t": 11445,
+          "text": "#22 DONE 0.0s",
           "stream": "err"
         },
         {
-          "t": 1464,
+          "t": 11445,
           "text": "",
           "stream": "err"
         },
         {
-          "t": 1464,
+          "t": 11445,
           "text": "#23 [stage-1  9/11] COPY fuzz/reference ./fuzz/reference",
           "stream": "err"
         },
         {
-          "t": 1464,
-          "text": "#23 DONE 0.1s",
+          "t": 11445,
+          "text": "#23 DONE 0.0s",
           "stream": "err"
         },
         {
-          "t": 1693,
+          "t": 11445,
           "text": "",
           "stream": "err"
         },
         {
-          "t": 1693,
+          "t": 11445,
           "text": "#24 [stage-1 10/11] COPY crates ./crates",
           "stream": "err"
         },
         {
-          "t": 1693,
-          "text": "#24 DONE 0.1s",
+          "t": 11445,
+          "text": "#24 DONE 0.0s",
           "stream": "err"
         },
         {
-          "t": 1693,
+          "t": 11596,
           "text": "",
           "stream": "err"
         },
         {
-          "t": 1693,
+          "t": 11596,
           "text": "#25 [stage-1 11/11] RUN node scripts/verify-tests.js",
           "stream": "err"
         },
         {
-          "t": 2296,
-          "text": "#25 0.753   Original test suite verified: 69 files byte-identical to upstream decimal.js @ cd73a7f (0 modified, 0 added, 0 removed).",
+          "t": 11802,
+          "text": "#25 0.356   Original test suite verified: 69 files byte-identical to upstream decimal.js @ cd73a7f (0 modified, 0 added, 0 removed).",
           "stream": "err"
         },
         {
-          "t": 2425,
-          "text": "#25 0.753   Fuzzing oracle verified:      1 file byte-identical to the same commit.",
+          "t": 11970,
+          "text": "#25 0.356   Fuzzing oracle verified:      1 file byte-identical to the same commit.",
           "stream": "err"
         },
         {
-          "t": 2425,
-          "text": "#25 DONE 0.8s",
+          "t": 11970,
+          "text": "#25 DONE 0.4s",
           "stream": "err"
         },
         {
-          "t": 2425,
+          "t": 11970,
           "text": "",
           "stream": "err"
         },
         {
-          "t": 2425,
+          "t": 11970,
           "text": "#26 exporting to image",
           "stream": "err"
         },
         {
-          "t": 2425,
-          "text": "#26 exporting layers 0.1s done",
+          "t": 11970,
+          "text": "#26 exporting layers",
           "stream": "err"
         },
         {
-          "t": 2563,
-          "text": "#26 exporting manifest sha256:b1658c8a9def28433e59f3e67516abad45554ba1817cbab351b4e249c3947c64 done",
+          "t": 12068,
+          "text": "#26 exporting layers 0.2s done",
           "stream": "err"
         },
         {
-          "t": 2563,
-          "text": "#26 exporting config sha256:03a11b43b7159aa59da2aa775dd5ef78776bf1479a4555a4cc22d53c9daba746 done",
+          "t": 12277,
+          "text": "#26 exporting manifest sha256:c4a30e016636de0d6dc3deec7f4293ae936b0cf31b38ef26e786671cca2a2a28 done",
           "stream": "err"
         },
         {
-          "t": 2563,
-          "text": "#26 exporting attestation manifest sha256:806284fa1d668e34d99799655faddd26867907541a3742607a09bfaaed5ac050 0.0s done",
+          "t": 12277,
+          "text": "#26 exporting config sha256:51c56a5a3f4cb513dbda30a025e117595101ba1b29b9246980a039cd6c4fe583 done",
           "stream": "err"
         },
         {
-          "t": 2563,
-          "text": "#26 exporting manifest list sha256:09c73c87c2032e30d17a7e53489650d12367d8a59d170f3733d11dbc46d7ed03 done",
+          "t": 12277,
+          "text": "#26 exporting attestation manifest sha256:42abb595b8db719f0e67985f1816310d0a34eb97e9258d0d4949643f7e8458b6 0.0s done",
           "stream": "err"
         },
         {
-          "t": 2563,
+          "t": 12277,
+          "text": "#26 exporting manifest list sha256:e8b89c2289c4ca8d036c4fd6b45f955c68d66be734e9593b80a16070d4b13464 done",
+          "stream": "err"
+        },
+        {
+          "t": 12277,
           "text": "#26 naming to docker.io/library/decimal-rs:latest done",
           "stream": "err"
         },
         {
-          "t": 2563,
-          "text": "#26 unpacking to docker.io/library/decimal-rs:latest 0.1s done",
+          "t": 12277,
+          "text": "#26 unpacking to docker.io/library/decimal-rs:latest",
           "stream": "err"
         },
         {
-          "t": 2743,
-          "text": "#26 DONE 0.3s",
+          "t": 12279,
+          "text": "#26 unpacking to docker.io/library/decimal-rs:latest 0.2s done",
+          "stream": "err"
+        },
+        {
+          "t": 12426,
+          "text": "#26 DONE 0.5s",
           "stream": "err"
         }
       ]
@@ -5370,511 +5495,521 @@
       "command": "docker run --rm decimal-rs",
       "cwd": "D:\\pm\\decimal-rs",
       "exitCode": 0,
-      "durationMs": 1033,
-      "startedAt": "2026-08-01T15:22:31.751Z",
+      "durationMs": 947,
+      "startedAt": "2026-08-01T15:32:09.071Z",
       "lines": [
         {
-          "t": 399,
+          "t": 349,
           "text": "  Original test suite verified: 69 files byte-identical to upstream decimal.js @ cd73a7f (0 modified, 0 added, 0 removed).",
           "stream": "out"
         },
         {
-          "t": 399,
+          "t": 349,
           "text": "  Fuzzing oracle verified:      1 file byte-identical to the same commit.",
           "stream": "out"
         },
         {
-          "t": 405,
+          "t": 354,
           "text": "",
           "stream": "out"
         },
         {
-          "t": 434,
+          "t": 400,
           "text": "",
           "stream": "out"
         },
         {
-          "t": 434,
+          "t": 400,
           "text": " Testing decimal.js",
           "stream": "out"
         },
         {
-          "t": 434,
+          "t": 400,
           "text": "",
           "stream": "out"
         },
         {
-          "t": 443,
+          "t": 402,
           "text": " Testing absoluteValue... 100 of 100 tests passed in 1 ms",
           "stream": "out"
         },
         {
-          "t": 450,
-          "text": " Testing acos... 54 of 54 tests passed in 6 ms",
+          "t": 407,
+          "text": " Testing acos... 54 of 54 tests passed in 4 ms",
           "stream": "out"
         },
         {
-          "t": 452,
+          "t": 409,
           "text": " Testing acosh... 50 of 50 tests passed in 2 ms",
           "stream": "out"
         },
         {
-          "t": 457,
+          "t": 413,
           "text": " Testing asin... 54 of 54 tests passed in 4 ms",
           "stream": "out"
         },
         {
-          "t": 460,
+          "t": 415,
           "text": " Testing asinh... 50 of 50 tests passed in 2 ms",
           "stream": "out"
         },
         {
-          "t": 466,
+          "t": 424,
           "text": " Testing atan... 50 of 50 tests passed in 4 ms",
           "stream": "out"
         },
         {
-          "t": 470,
-          "text": " Testing atan2... 100 of 100 tests passed in 2 ms",
+          "t": 428,
+          "text": " Testing atan2... 100 of 100 tests passed in 3 ms",
           "stream": "out"
         },
         {
-          "t": 473,
-          "text": " Testing atanh... 50 of 50 tests passed in 2 ms",
+          "t": 434,
+          "text": " Testing atanh... 50 of 50 tests passed in 4 ms",
           "stream": "out"
         },
         {
-          "t": 475,
+          "t": 437,
           "text": " Testing cubeRoot... 50 of 50 tests passed in 2 ms",
           "stream": "out"
         },
         {
-          "t": 475,
-          "text": " Testing ceil... 50 of 50 tests passed in 1 ms",
+          "t": 438,
+          "text": " Testing ceil... 50 of 50 tests passed in 0 ms",
           "stream": "out"
         },
         {
-          "t": 476,
-          "text": " Testing clamp... 29 of 29 tests passed in 0 ms",
+          "t": 438,
+          "text": " Testing clamp... 29 of 29 tests passed in 1 ms",
           "stream": "out"
         },
         {
-          "t": 478,
+          "t": 440,
           "text": " Testing clone...",
           "stream": "out"
         },
         {
-          "t": 478,
+          "t": 440,
           "text": "  Test number 1 failed: assert",
           "stream": "out"
         },
         {
-          "t": 478,
+          "t": 440,
           "text": "  Expected: true",
           "stream": "out"
         },
         {
-          "t": 479,
+          "t": 441,
           "text": "  Actual:   false",
           "stream": "out"
         },
         {
-          "t": 479,
-          "text": " 64 of 65 tests passed in 4 ms",
+          "t": 441,
+          "text": " 64 of 65 tests passed in 3 ms",
           "stream": "out"
         },
         {
-          "t": 483,
-          "text": " Testing comparedTo... 1000 of 1000 tests passed in 3 ms",
+          "t": 445,
+          "text": " Testing comparedTo... 1000 of 1000 tests passed in 2 ms",
           "stream": "out"
         },
         {
-          "t": 486,
-          "text": " Testing config... 206 of 206 tests passed in 2 ms",
+          "t": 449,
+          "text": " Testing config... 206 of 206 tests passed in 3 ms",
           "stream": "out"
         },
         {
-          "t": 489,
+          "t": 451,
           "text": " Testing cos... 101 of 101 tests passed in 3 ms",
           "stream": "out"
         },
         {
-          "t": 492,
+          "t": 453,
           "text": " Testing cosh... 100 of 100 tests passed in 2 ms",
           "stream": "out"
         },
         {
-          "t": 503,
+          "t": 465,
           "text": " Testing Decimal... 987 of 987 tests passed in 11 ms",
           "stream": "out"
         },
         {
-          "t": 512,
+          "t": 473,
           "text": " Testing dividedBy... 1000 of 1000 tests passed in 8 ms",
           "stream": "out"
         },
         {
-          "t": 519,
-          "text": " Testing dividedToIntegerBy... 1000 of 1000 tests passed in 6 ms",
+          "t": 479,
+          "text": " Testing dividedToIntegerBy... 1000 of 1000 tests passed in 5 ms",
           "stream": "out"
         },
         {
-          "t": 520,
-          "text": " Testing decimalPlaces and precision... 133 of 133 tests passed in 1 ms",
+          "t": 480,
+          "text": " Testing decimalPlaces and precision... 133 of 133 tests passed in 0 ms",
           "stream": "out"
         },
         {
-          "t": 523,
-          "text": " Testing exp... 100 of 100 tests passed in 3 ms",
+          "t": 482,
+          "text": " Testing exp... 100 of 100 tests passed in 2 ms",
           "stream": "out"
         },
         {
-          "t": 524,
+          "t": 483,
           "text": " Testing floor... 100 of 100 tests passed in 0 ms",
           "stream": "out"
         },
         {
-          "t": 527,
-          "text": " Testing hypot... 100 of 100 tests passed in 2 ms",
+          "t": 484,
+          "text": " Testing hypot... 100 of 100 tests passed in 1 ms",
           "stream": "out"
         },
         {
-          "t": 541,
-          "text": " Testing immutability... 3371 of 3371 tests passed in 14 ms",
+          "t": 497,
+          "text": " Testing immutability... 3311 of 3311 tests passed in 12 ms",
           "stream": "out"
         },
         {
-          "t": 547,
-          "text": " Testing integer pow... 500 of 500 tests passed in 4 ms",
+          "t": 501,
+          "text": " Testing integer pow... 500 of 500 tests passed in 3 ms",
           "stream": "out"
         },
         {
-          "t": 547,
-          "text": " Testing isFinite, isInteger, isNaN, isNegative, isZero, isDecimal... 214 of 214 tests passed in 0 ms",
+          "t": 502,
+          "text": " Testing isFinite, isInteger, isNaN, isNegative, isZero, isDecimal... 214 of 214 tests passed in 1 ms",
           "stream": "out"
         },
         {
-          "t": 562,
-          "text": " Testing ln... 499 of 499 tests passed in 11 ms",
+          "t": 518,
+          "text": " Testing ln... 499 of 499 tests passed in 16 ms",
           "stream": "out"
         },
         {
-          "t": 570,
-          "text": " Testing log... 200 of 200 tests passed in 8 ms",
+          "t": 531,
+          "text": " Testing log... 200 of 200 tests passed in 12 ms",
           "stream": "out"
         },
         {
-          "t": 584,
-          "text": " Testing log10... 500 of 500 tests passed in 12 ms",
+          "t": 548,
+          "text": " Testing log10... 500 of 500 tests passed in 17 ms",
           "stream": "out"
         },
         {
-          "t": 595,
-          "text": " Testing log2... 200 of 200 tests passed in 11 ms",
+          "t": 557,
+          "text": " Testing log2... 200 of 200 tests passed in 9 ms",
           "stream": "out"
         },
         {
-          "t": 596,
+          "t": 557,
           "text": " Testing min and max... 110 of 110 tests passed in 1 ms",
           "stream": "out"
         },
         {
-          "t": 602,
+          "t": 564,
           "text": " Testing minus... 1000 of 1000 tests passed in 5 ms",
           "stream": "out"
         },
         {
-          "t": 610,
+          "t": 571,
           "text": " Testing modulo... 1000 of 1000 tests passed in 7 ms",
           "stream": "out"
         },
         {
-          "t": 611,
+          "t": 572,
           "text": " Testing negated... 200 of 200 tests passed in 1 ms",
           "stream": "out"
         },
         {
-          "t": 619,
-          "text": " Testing plus... 1000 of 1000 tests passed in 7 ms",
+          "t": 580,
+          "text": " Testing plus... 1000 of 1000 tests passed in 6 ms",
           "stream": "out"
         },
         {
-          "t": 624,
-          "text": " Testing pow... 108 of 108 tests passed in 5 ms",
+          "t": 592,
+          "text": " Testing pow... 108 of 108 tests passed in 11 ms",
           "stream": "out"
         },
         {
-          "t": 630,
-          "text": " Testing random... 1000 of 1000 tests passed in 6 ms",
+          "t": 598,
+          "text": " Testing random... 1000 of 1000 tests passed in 4 ms",
           "stream": "out"
         },
         {
-          "t": 634,
-          "text": " Testing round... 500 of 500 tests passed in 2 ms",
+          "t": 601,
+          "text": " Testing round... 500 of 500 tests passed in 4 ms",
           "stream": "out"
         },
         {
-          "t": 634,
+          "t": 602,
           "text": " Testing sign... 16 of 16 tests passed in 0 ms",
           "stream": "out"
         },
         {
-          "t": 638,
-          "text": " Testing sin... 100 of 100 tests passed in 3 ms",
+          "t": 606,
+          "text": " Testing sin... 100 of 100 tests passed in 4 ms",
           "stream": "out"
         },
         {
-          "t": 640,
+          "t": 608,
           "text": " Testing sinh... 100 of 100 tests passed in 2 ms",
           "stream": "out"
         },
         {
-          "t": 649,
-          "text": " Testing sqrt... 1000 of 1000 tests passed in 8 ms",
+          "t": 617,
+          "text": " Testing sqrt... 1000 of 1000 tests passed in 7 ms",
           "stream": "out"
         },
         {
-          "t": 650,
-          "text": " Testing sum... 37 of 37 tests passed in 0 ms",
+          "t": 617,
+          "text": " Testing sum... 37 of 37 tests passed in 1 ms",
           "stream": "out"
         },
         {
-          "t": 653,
+          "t": 621,
           "text": " Testing tan... 100 of 100 tests passed in 3 ms",
           "stream": "out"
         },
         {
-          "t": 656,
+          "t": 624,
           "text": " Testing tanh... 100 of 100 tests passed in 3 ms",
           "stream": "out"
         },
         {
-          "t": 663,
-          "text": " Testing times... 1000 of 1000 tests passed in 6 ms",
+          "t": 630,
+          "text": " Testing times... 1000 of 1000 tests passed in 4 ms",
           "stream": "out"
         },
         {
-          "t": 667,
+          "t": 633,
           "text": " Testing toBinary... 327 of 327 tests passed in 3 ms",
           "stream": "out"
         },
         {
-          "t": 671,
+          "t": 636,
           "text": " Testing toDecimalPlaces... 500 of 500 tests passed in 3 ms",
           "stream": "out"
         },
         {
-          "t": 685,
-          "text": " Testing toExponential... 500 of 500 tests passed in 12 ms",
+          "t": 642,
+          "text": " Testing toExponential... 500 of 500 tests passed in 5 ms",
           "stream": "out"
         },
         {
-          "t": 688,
-          "text": " Testing toFixed... 500 of 500 tests passed in 3 ms",
+          "t": 645,
+          "text": " Testing toFixed... 500 of 500 tests passed in 2 ms",
           "stream": "out"
         },
         {
-          "t": 700,
-          "text": " Testing toFraction... 200 of 200 tests passed in 11 ms",
+          "t": 650,
+          "text": " Testing toFraction... 200 of 200 tests passed in 4 ms",
           "stream": "out"
         },
         {
-          "t": 703,
+          "t": 652,
           "text": " Testing toHex... 309 of 309 tests passed in 2 ms",
           "stream": "out"
         },
         {
-          "t": 704,
+          "t": 654,
           "text": " Testing toNearest... 157 of 157 tests passed in 1 ms",
           "stream": "out"
         },
         {
-          "t": 705,
+          "t": 654,
           "text": " Testing toNumber... 40 of 40 tests passed in 0 ms",
           "stream": "out"
         },
         {
-          "t": 707,
+          "t": 656,
           "text": " Testing toOctal... 293 of 293 tests passed in 2 ms",
           "stream": "out"
         },
         {
-          "t": 715,
-          "text": " Testing toPrecision... 500 of 500 tests passed in 7 ms",
+          "t": 666,
+          "text": " Testing toPrecision... 500 of 500 tests passed in 9 ms",
           "stream": "out"
         },
         {
-          "t": 718,
-          "text": " Testing toSignificantDigits... 500 of 500 tests passed in 2 ms",
+          "t": 668,
+          "text": " Testing toSignificantDigits... 500 of 500 tests passed in 3 ms",
           "stream": "out"
         },
         {
-          "t": 719,
+          "t": 670,
           "text": " Testing toString... 338 of 338 tests passed in 1 ms",
           "stream": "out"
         },
         {
-          "t": 720,
+          "t": 670,
           "text": " Testing trunc... 100 of 100 tests passed in 0 ms",
           "stream": "out"
         },
         {
-          "t": 720,
-          "text": " Testing valueOf... 40 of 40 tests passed in 0 ms",
+          "t": 671,
+          "text": " Testing valueOf... 40 of 40 tests passed in 1 ms",
           "stream": "out"
         },
         {
-          "t": 720,
+          "t": 671,
           "text": "",
           "stream": "out"
         },
         {
-          "t": 720,
-          "text": " In total, 22687 of 22688 tests passed in 0.292 secs.",
+          "t": 671,
+          "text": " In total, 22627 of 22628 tests passed in 0.275 secs.",
           "stream": "out"
         },
         {
-          "t": 720,
+          "t": 671,
           "text": "",
           "stream": "out"
         },
         {
-          "t": 736,
+          "t": 714,
           "text": "",
           "stream": "out"
         },
         {
-          "t": 788,
+          "t": 714,
+          "text": "  1 failure of 22,628 assertions, as documented (D-08).",
+          "stream": "out"
+        },
+        {
+          "t": 718,
+          "text": "",
+          "stream": "out"
+        },
+        {
+          "t": 765,
           "text": "unsafe report — decimal-rs",
           "stream": "out"
         },
         {
-          "t": 788,
+          "t": 765,
           "text": "",
           "stream": "out"
         },
         {
-          "t": 788,
+          "t": 765,
           "text": "crate            files   lines  unsafe   compiler-enforced?",
           "stream": "out"
         },
         {
-          "t": 788,
+          "t": 765,
           "text": "------------------------------------------------------------------------",
           "stream": "out"
         },
         {
-          "t": 788,
+          "t": 765,
           "text": "decimal-core        19    9913       0   yes, via Cargo.toml [lints.rust]",
           "stream": "out"
         },
         {
-          "t": 788,
+          "t": 765,
           "text": "decimal-napi         2    2581      93   no — see below",
           "stream": "out"
         },
         {
-          "t": 788,
+          "t": 765,
           "text": "decimal-cli          1     296       0   yes, via Cargo.toml [lints.rust]",
           "stream": "out"
         },
         {
-          "t": 788,
+          "t": 765,
           "text": "",
           "stream": "out"
         },
         {
-          "t": 788,
+          "t": 765,
           "text": "method",
           "stream": "out"
         },
         {
-          "t": 788,
+          "t": 765,
           "text": "  decimal-core sets unsafe_code = \"forbid\". `forbid` is not a lint level an",
           "stream": "out"
         },
         {
-          "t": 788,
+          "t": 765,
           "text": "  inner `allow` can turn off, so the crate does not compile if an unsafe",
           "stream": "out"
         },
         {
-          "t": 788,
+          "t": 765,
           "text": "  block appears anywhere in it — including one produced by a macro. The",
           "stream": "out"
         },
         {
-          "t": 788,
+          "t": 765,
           "text": "  declaration is the evidence and a successful `cargo build` is the check;",
           "stream": "out"
         },
         {
-          "t": 788,
+          "t": 765,
           "text": "  the counts above are only a textual cross-check of it, taken after",
           "stream": "out"
         },
         {
-          "t": 788,
+          "t": 765,
           "text": "  comments and string literals have been removed. Grepping for the word",
           "stream": "out"
         },
         {
-          "t": 788,
+          "t": 765,
           "text": "  would not do: this repository discusses unsafety at length in prose.",
           "stream": "out"
         },
         {
-          "t": 788,
+          "t": 765,
           "text": "",
           "stream": "out"
         },
         {
-          "t": 788,
+          "t": 765,
           "text": "  decimal-napi is the Node-API adapter and cannot be safe: every call into",
           "stream": "out"
         },
         {
-          "t": 788,
+          "t": 765,
           "text": "  the Node-API is an `extern \"C\"` function over raw pointers supplied by",
           "stream": "out"
         },
         {
-          "t": 788,
+          "t": 765,
           "text": "  V8. Its 93 uses are the boundary and nothing else — the adapter",
           "stream": "out"
         },
         {
-          "t": 788,
+          "t": 765,
           "text": "  contains no arithmetic. All of it is in 2581 lines against",
           "stream": "out"
         },
         {
-          "t": 788,
+          "t": 765,
           "text": "  9913 lines of arithmetic in decimal-core, which has none.",
           "stream": "out"
         },
         {
-          "t": 788,
+          "t": 765,
           "text": "",
           "stream": "out"
         },
         {
-          "t": 788,
+          "t": 765,
           "text": "  Dependencies: decimal-core has none at all. The workspace depends on",
           "stream": "out"
         },
         {
-          "t": 788,
+          "t": 765,
           "text": "  napi-sys, which is bindings only. `cargo geiger` will report unsafe inside",
           "stream": "out"
         },
         {
-          "t": 788,
+          "t": 765,
           "text": "  it, and that is unsafe in Node itself reached through a binding, not code",
           "stream": "out"
         },
         {
-          "t": 788,
+          "t": 765,
           "text": "  this project wrote.",
           "stream": "out"
         }
