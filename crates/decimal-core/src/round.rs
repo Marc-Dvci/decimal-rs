@@ -327,13 +327,11 @@ mod tests {
     /// original promises.
     fn round_to(literal: &str, sd: i64, rm: u8) -> String {
         let mut ctx = Ctx::default();
-        let sign = if let Some(stripped) = literal.strip_prefix('-') {
-            let _ = stripped;
-            Sign::Neg
-        } else {
-            Sign::Pos
+        let (sign, magnitude) = match literal.strip_prefix('-') {
+            Some(rest) => (Sign::Neg, rest),
+            None => (Sign::Pos, literal),
         };
-        let mut x = crate::parse::parse_decimal(&ctx, sign, literal.trim_start_matches('-'));
+        let mut x = crate::parse::parse_decimal(&ctx, sign, magnitude);
         finalise(&mut ctx, &mut x, Some(sd), rm, false);
         crate::format::to_string(&x, &ctx.cfg)
     }
