@@ -1181,3 +1181,73 @@ still. Both defects lived in the axis that was constant. The question worth
 asking of any such instrument is not "what does it cover" but **"what does it
 hold still, and why is that safe?"** — and the honest answer here was that
 nobody had asked.
+
+### D-22 · The unwind backstop the build profile already promised
+
+**Context.** `Cargo.toml` has said this since the first commit:
+
+```toml
+# Deliberately NOT panic = "abort". A panic inside a Node addon must not take
+# the host process down; the N-API boundary catches unwinds and converts them
+# into thrown JavaScript errors.
+panic = "unwind"
+```
+
+The module documentation said the same thing in prose. Neither was true: no
+callback caught anything, and `catch_unwind` appeared nowhere in the crate. A
+panic in `decimal-core` aborted the Node process — no stack, no `catch`, no
+exit code a caller could act on.
+
+Nothing was known to panic. Every fallible path in the core returns a `Result`,
+and its nine `expect`s assert invariants that `finalise` restores on every
+exit. But "we believe it cannot happen" is the argument for keeping the
+handler cheap, not for not having one, and a *documented* guarantee that does
+not exist is worse than an absent one: a reader who greps for the mechanism and
+finds prose has been told something false about the artifact.
+
+**Decision.** Install it, at the registration tables rather than inside sixty
+callback bodies, so that the guarantee is visible in one place and an entry
+added later that lacks it does not read like the sixty that have it:
+
+```rust
+(&["absoluteValue\0", "abs\0"], Some(guarded!(m_abs))),
+```
+
+**The part that is worth writing down.** The first version of this was wrong in
+a way that looked right, compiled, passed the entire suite, and would have
+shipped a guarantee that did not hold. `guarded!` wrapped each callback while
+the callbacks were themselves `unsafe extern "C" fn`. A panic then escapes an
+`extern "C"` frame *before* it reaches the wrapper, and Rust aborts at that
+frame. The negative control:
+
+```
+$ node -e "require('./probe.node'); new D(-3).abs()"     # panic injected in ops::abs
+thread '<unnamed>' panicked at crates/decimal-core/src/ops.rs:30:5
+exit=127                                                  # process gone, nothing caught
+```
+
+The fix is that the callbacks stop being `extern "C"` — they become plain
+`unsafe fn`s, and the wrapper is the only C boundary in the crate, so the
+unwind has somewhere to unwind *to*:
+
+```
+$ node -e "…"                                             # same injected panic
+caught: Error: decimal-rs internal error: negative-control panic from ops::abs
+still alive; 1+2 = 3
+exit=0
+```
+
+**Consequence.** A panic is now a catchable `Error` and the process survives it.
+The message says `decimal-rs internal error` and deliberately does *not* wear
+the library's `[DecimalError]` prefix: a `try`/`catch` written for the
+library's own errors must not silently swallow a bug in the port.
+`AssertUnwindSafe` is the honest annotation rather than a workaround — a panic
+part-way through a configuration change can leave that constructor's
+`precision` inconsistent, and an inconsistent `precision` is recoverable and
+observable where an aborted process is neither.
+
+**The lesson, which is the same one as D-21.** A guard nobody has watched fail
+is a claim, not a mechanism. This one was tested exactly the way the fuzz
+harness tests its own comparator — inject the fault, require the machinery to
+catch it, then revert — and the first attempt failed that test. Two of this
+port's instruments have now been wrong in the direction that reads as green.

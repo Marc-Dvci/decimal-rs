@@ -2,9 +2,9 @@ port-mortem differential fuzz campaign — decimal.js vs decimal-rs
 oracle:  fuzz/reference/decimal.js  v10.6.0 @ cd73a7f  [vendored; not linked into the port]
 subject: decimal.node  (crates/decimal-core + crates/decimal-napi, release)
 host:    AMD Ryzen 5 7600 6-Core Processor / win32 10.0.26200 / node v24.13.1
-started 2026-08-01T13:28:02.394Z   seed 0x8E741921
+started 2026-08-01T14:25:12.466Z   seed 0x4402ADFC
 budget:  70s continuous, 4 worker processes, slices of 150 sequences
-watchdog: a slice whose sequence index has not advanced in 4.0s is killed, its input recorded by
+watchdog: a slice whose sequence index has not advanced in 2.0s is killed, its input recorded by
          seed, and the slice resumed at the next sequence. Children are
          capped at 1024 MB of heap.
 bounds:  OFF — the whole legal input space, 1e9000000000000000 included. Inputs the oracle cannot referee are named individually below.
@@ -20,22 +20,25 @@ excluded by rule: Decimal.random (no fixed answer — the two sides draw from
 [harness self-check] injected a one-ulp fault into the port's results
 [harness self-check]   -> DETECTED at sequence 1 (comparator is live)
 [harness self-check] fault reverted
-[replay check] one slice run twice: identical  (3 probe slices tried; earlier ones stalled)
-[replay check] the same slice in two halves: accounts for the whole (15 + 12 = 27 operations)
+[replay check] one slice run twice: identical  (2 probe slices tried; earlier ones stalled)
+[replay check] the same slice in two halves: accounts for the whole (16 + 20 = 36 operations)
 
 starting clean run
 
-seq        48  ops        424  elapsed   10.0s  divergences 0  unrefereeable 8
-seq        94  ops        763  elapsed   20.0s  divergences 0  unrefereeable 16
-seq       141  ops       1143  elapsed   30.0s  divergences 0  unrefereeable 26
-seq       217  ops       1741  elapsed   40.0s  divergences 0  unrefereeable 34
-seq       270  ops       2214  elapsed   50.0s  divergences 0  unrefereeable 43
-seq       314  ops       2532  elapsed   60.0s  divergences 0  unrefereeable 52
-seq       338  ops       2721  elapsed   70.0s  divergences 0  unrefereeable 61
+seq       112  ops        909  elapsed   10.0s  divergences 0  unrefereeable 15
+seq       190  ops       1551  elapsed   20.0s  divergences 0  unrefereeable 31
+seq       299  ops       2494  elapsed   30.0s  divergences 0  unrefereeable 50
+seq       394  ops       3250  elapsed   40.0s  divergences 0  unrefereeable 65
+seq       484  ops       4006  elapsed   50.0s  divergences 0  unrefereeable 84
+seq       579  ops       4825  elapsed   60.0s  divergences 0  unrefereeable 100
+seq       667  ops       5574  elapsed   70.1s  divergences 0  unrefereeable 118
 
-STOP  elapsed 73.4s  sequences 346  operations 2791  divergences 0  unrefereeable 65
+STOP  elapsed 72.3s  sequences 682  operations 5718  divergences 0  unrefereeable 122
 
-UNREFEREEABLE INPUTS — 65 of 411 sequences
+known divergences encountered (deliberate, documented, reported upstream):
+  D-11 / BUG-002  x2
+
+UNREFEREEABLE INPUTS — 122 of 804 sequences
 
 These are inputs on which the *oracle* did not produce an answer, so there
 was nothing to compare the port against. Each was killed by the watchdog,
@@ -44,262 +47,387 @@ failure. Nothing here is filtered out of the counts above: the sequences
 they belong to are excluded from `sequences`, and they are listed
 individually so that the exclusion can be checked.
 
-  slice 0x0b9fd34a  sequence    4  (stalled)
-    step:      x3.sinh()
-    oracle:    did NOT return within 2.5 s
-    port:      did NOT return within 2.5 s
-    verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 195023690 --resume 4 --sequences 1 --bounds off
-  slice 0x99db308d  sequence   10  (stalled)
+  slice 0x53ad8450  sequence    3  (stalled)
     step:      x0.sinh()
     oracle:    did NOT return within 2.5 s
     port:      did NOT return within 2.5 s
     verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 2581278861 --resume 10 --sequences 1 --bounds off
-  slice 0x1fb74660  sequence    5  (stalled)
-    step:      x0.cosh()
+    replay:    node fuzz/differential.js --slice 1403880528 --resume 3 --sequences 1 --bounds off
+  slice 0x4fd5392a  sequence   10  (stalled)
+    step:      x1.cosh()
     oracle:    did NOT return within 2.5 s
     port:      did NOT return within 2.5 s
     verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 532104800 --resume 5 --sequences 1 --bounds off
-  slice 0x85a38df7  sequence    9  (stalled)
+    replay:    node fuzz/differential.js --slice 1339373866 --resume 10 --sequences 1 --bounds off
+  slice 0xd5c1f2bd  sequence    9  (stalled)
+    step:      x0.tanh()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 3586257597 --resume 9 --sequences 1 --bounds off
+  slice 0xc1e96797  sequence   29  (stalled)
+    step:      x2.tanh()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 3253299095 --resume 29 --sequences 1 --bounds off
+  slice 0x4fd5392a  sequence   15  (stalled)
     step:      x3.cosh()
     oracle:    did NOT return within 2.5 s
     port:      did NOT return within 2.5 s
     verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 2242088439 --resume 9 --sequences 1 --bounds off
-  slice 0x0b9fd34a  sequence    9  (stalled)
-    step:      x0.tanh()
-    oracle:    did NOT return within 2.5 s
-    port:      did NOT return within 2.5 s
-    verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 195023690 --resume 9 --sequences 1 --bounds off
-  slice 0x99db308d  sequence   12  (stalled)
-    step:      x1.toFraction()
-    oracle:    did NOT return within 2.5 s
-    port:      returned in 35 ms
-    verdict:   upstream defect — the port answers, the oracle does not
-    replay:    node fuzz/differential.js --slice 2581278861 --resume 12 --sequences 1 --bounds off
-  slice 0x1fb74660  sequence   10  (stalled)
-    step:      x1.tanh()
-    oracle:    did NOT return within 2.5 s
-    port:      did NOT return within 2.5 s
-    verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 532104800 --resume 10 --sequences 1 --bounds off
-  slice 0x85a38df7  sequence   21  (stalled)
-    step:      x1.sinh()
-    oracle:    did NOT return within 2.5 s
-    port:      did NOT return within 2.5 s
-    verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 2242088439 --resume 21 --sequences 1 --bounds off
-  slice 0x0b9fd34a  sequence   12  (stalled)
+    replay:    node fuzz/differential.js --slice 1339373866 --resume 15 --sequences 1 --bounds off
+  slice 0xd5c1f2bd  sequence   12  (stalled)
     step:      x0.toFraction()
     oracle:    did NOT return within 2.5 s
-    port:      returned in 38 ms
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 3586257597 --resume 12 --sequences 1 --bounds off
+  slice 0x53ad8450  sequence   23  (stalled)
+    step:      x0.sinh()
+    oracle:    did NOT return within 2.5 s
+    port:      returned in 680 ms
     verdict:   upstream defect — the port answers, the oracle does not
-    replay:    node fuzz/differential.js --slice 195023690 --resume 12 --sequences 1 --bounds off
-  slice 0x99db308d  sequence   16  (stalled)
-    step:      x1.tanh()
-    oracle:    did NOT return within 2.5 s
-    port:      did NOT return within 2.5 s
-    verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 2581278861 --resume 16 --sequences 1 --bounds off
-  slice 0x1fb74660  sequence   15  (stalled)
+    replay:    node fuzz/differential.js --slice 1403880528 --resume 23 --sequences 1 --bounds off
+  slice 0xc1e96797  sequence   31  (stalled)
     step:      x0.sinh()
     oracle:    did NOT return within 2.5 s
     port:      did NOT return within 2.5 s
     verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 532104800 --resume 15 --sequences 1 --bounds off
-  slice 0x85a38df7  sequence   27  (stalled)
+    replay:    node fuzz/differential.js --slice 3253299095 --resume 31 --sequences 1 --bounds off
+  slice 0xd5c1f2bd  sequence   17  (stalled)
     step:      x0.cosh()
     oracle:    did NOT return within 2.5 s
     port:      did NOT return within 2.5 s
     verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 2242088439 --resume 27 --sequences 1 --bounds off
-  slice 0x0b9fd34a  sequence   16  (stalled)
-    step:      x1.cosh()
+    replay:    node fuzz/differential.js --slice 3586257597 --resume 17 --sequences 1 --bounds off
+  slice 0x4fd5392a  sequence   20  (stalled)
+    step:      x3.toFraction()
     oracle:    did NOT return within 2.5 s
-    port:      did NOT return within 2.5 s
-    verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 195023690 --resume 16 --sequences 1 --bounds off
-  slice 0x1fb74660  sequence   27  (stalled)
-    step:      x1.sinh()
-    oracle:    did NOT return within 2.5 s
-    port:      did NOT return within 2.5 s
-    verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 532104800 --resume 27 --sequences 1 --bounds off
-  slice 0x99db308d  sequence   32  (stalled)
-    step:      x0.sinh()
-    oracle:    did NOT return within 2.5 s
-    port:      did NOT return within 2.5 s
-    verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 2581278861 --resume 32 --sequences 1 --bounds off
-  slice 0x85a38df7  sequence   31  (stalled)
-    step:      x0.tanh()
-    oracle:    did NOT return within 2.5 s
-    port:      did NOT return within 2.5 s
-    verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 2242088439 --resume 31 --sequences 1 --bounds off
-  slice 0x99db308d  sequence   33  (stalled)
-    step:      x2.tanh()
-    oracle:    did NOT return within 2.5 s
-    port:      did NOT return within 2.5 s
-    verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 2581278861 --resume 33 --sequences 1 --bounds off
-  slice 0x1fb74660  sequence   29  (stalled)
-    step:      x0.tanh()
-    oracle:    did NOT return within 2.5 s
-    port:      did NOT return within 2.5 s
-    verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 532104800 --resume 29 --sequences 1 --bounds off
-  slice 0x0b9fd34a  sequence   17  (stalled)
-    step:      x1.cosh()
-    oracle:    did NOT return within 2.5 s
-    port:      did NOT return within 2.5 s
-    verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 195023690 --resume 17 --sequences 1 --bounds off
-  slice 0x85a38df7  sequence   37  (stalled)
+    port:      returned in 605 ms
+    verdict:   upstream defect — the port answers, the oracle does not
+    replay:    node fuzz/differential.js --slice 1339373866 --resume 20 --sequences 1 --bounds off
+  slice 0x53ad8450  sequence   26  (stalled)
     step:      x1.tanh()
     oracle:    did NOT return within 2.5 s
     port:      did NOT return within 2.5 s
     verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 2242088439 --resume 37 --sequences 1 --bounds off
-  slice 0x99db308d  sequence   45  (stalled)
-    step:      x0.sinh()
+    replay:    node fuzz/differential.js --slice 1403880528 --resume 26 --sequences 1 --bounds off
+  slice 0xc1e96797  sequence   39  (stalled)
+    step:      x0.toFraction()
+    oracle:    did NOT return within 2.5 s
+    port:      returned in 41 ms
+    verdict:   upstream defect — the port answers, the oracle does not
+    replay:    node fuzz/differential.js --slice 3253299095 --resume 39 --sequences 1 --bounds off
+  slice 0xd5c1f2bd  sequence   18  (stalled)
+    step:      x3.tanh()
     oracle:    did NOT return within 2.5 s
     port:      did NOT return within 2.5 s
     verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 2581278861 --resume 45 --sequences 1 --bounds off
-  slice 0x1fb74660  sequence   31  (stalled)
-    step:      x1.toFraction()
-    oracle:    did NOT return within 2.5 s
-    port:      did NOT return within 2.5 s
-    verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 532104800 --resume 31 --sequences 1 --bounds off
-  slice 0x0b9fd34a  sequence   21  (stalled)
-    step:      x3.sinh()
-    oracle:    did NOT return within 2.5 s
-    port:      did NOT return within 2.5 s
-    verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 195023690 --resume 21 --sequences 1 --bounds off
-  slice 0x85a38df7  sequence   55  (stalled)
-    step:      x0.cosh()
-    oracle:    did NOT return within 2.5 s
-    port:      did NOT return within 2.5 s
-    verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 2242088439 --resume 55 --sequences 1 --bounds off
-  slice 0x99db308d  sequence   52  (stalled)
-    step:      x1.cosh()
-    oracle:    did NOT return within 2.5 s
-    port:      did NOT return within 2.5 s
-    verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 2581278861 --resume 52 --sequences 1 --bounds off
-  slice 0x1fb74660  sequence   35  (stalled)
-    step:      x1.sinh()
-    oracle:    did NOT return within 2.5 s
-    port:      did NOT return within 2.5 s
-    verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 532104800 --resume 35 --sequences 1 --bounds off
-  slice 0x0b9fd34a  sequence   36  (stalled)
-    step:      x0.atan()
-    oracle:    did NOT return within 2.5 s
-    port:      did NOT return within 2.5 s
-    verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 195023690 --resume 36 --sequences 1 --bounds off
-  slice 0x85a38df7  sequence   57  (stalled)
-    step:      x1.tanh()
-    oracle:    did NOT return within 2.5 s
-    port:      did NOT return within 2.5 s
-    verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 2242088439 --resume 57 --sequences 1 --bounds off
-  slice 0x0b9fd34a  sequence   55  (stalled)
-    step:      x0.cosh()
-    oracle:    did NOT return within 2.5 s
-    port:      did NOT return within 2.5 s
-    verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 195023690 --resume 55 --sequences 1 --bounds off
-  slice 0x1fb74660  sequence   42  (stalled)
-    step:      x0.sinh()
-    oracle:    did NOT return within 2.5 s
-    port:      did NOT return within 2.5 s
-    verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 532104800 --resume 42 --sequences 1 --bounds off
-  slice 0x99db308d  sequence   64  (stalled)
+    replay:    node fuzz/differential.js --slice 3586257597 --resume 18 --sequences 1 --bounds off
+  slice 0x53ad8450  sequence   27  (stalled)
     step:      x2.sinh()
     oracle:    did NOT return within 2.5 s
     port:      did NOT return within 2.5 s
     verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 2581278861 --resume 64 --sequences 1 --bounds off
-  slice 0x85a38df7  sequence   70  (stalled)
-    step:      x0.tanh()
-    oracle:    did NOT return within 2.5 s
-    port:      did NOT return within 2.5 s
-    verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 2242088439 --resume 70 --sequences 1 --bounds off
-  slice 0x1fb74660  sequence   47  (stalled)
-    step:      x0.cosh()
-    oracle:    did NOT return within 2.5 s
-    port:      did NOT return within 2.5 s
-    verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 532104800 --resume 47 --sequences 1 --bounds off
-  slice 0x99db308d  sequence   75  (stalled)
-    step:      x0.toHex()
-    oracle:    did NOT return within 2.5 s
-    port:      did NOT return within 2.5 s
-    verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 2581278861 --resume 75 --sequences 1 --bounds off
-  slice 0x0b9fd34a  sequence   60  (stalled)
-    step:      x0.tanh()
-    oracle:    did NOT return within 2.5 s
-    port:      did NOT return within 2.5 s
-    verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 195023690 --resume 60 --sequences 1 --bounds off
-  slice 0x85a38df7  sequence   77  (stalled)
-    step:      x0.cosh()
-    oracle:    did NOT return within 2.5 s
-    port:      did NOT return within 2.5 s
-    verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 2242088439 --resume 77 --sequences 1 --bounds off
-  slice 0x1fb74660  sequence   51  (stalled)
-    step:      x1.tanh()
-    oracle:    did NOT return within 2.5 s
-    port:      did NOT return within 2.5 s
-    verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 532104800 --resume 51 --sequences 1 --bounds off
-  slice 0x99db308d  sequence   88  (stalled)
-    step:      x2.cosh()
-    oracle:    did NOT return within 2.5 s
-    port:      did NOT return within 2.5 s
-    verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 2581278861 --resume 88 --sequences 1 --bounds off
-  slice 0x0b9fd34a  sequence   67  (stalled)
-    step:      x2.cosh()
-    oracle:    did NOT return within 2.5 s
-    port:      did NOT return within 2.5 s
-    verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 195023690 --resume 67 --sequences 1 --bounds off
-  slice 0x85a38df7  sequence   84  (stalled)
+    replay:    node fuzz/differential.js --slice 1403880528 --resume 27 --sequences 1 --bounds off
+  slice 0xc1e96797  sequence   58  (stalled)
     step:      x2.tanh()
     oracle:    did NOT return within 2.5 s
     port:      did NOT return within 2.5 s
     verdict:   intractable for both — they agree in not returning
-    replay:    node fuzz/differential.js --slice 2242088439 --resume 84 --sequences 1 --bounds off
-  … and 25 more, not diagnosed (--diagnose 40)
+    replay:    node fuzz/differential.js --slice 3253299095 --resume 58 --sequences 1 --bounds off
+  slice 0x4fd5392a  sequence   32  (stalled)
+    step:      x0.tanh()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 1339373866 --resume 32 --sequences 1 --bounds off
+  slice 0xd5c1f2bd  sequence   19  (stalled)
+    step:      x3.cosh()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 3586257597 --resume 19 --sequences 1 --bounds off
+  slice 0x53ad8450  sequence   28  (stalled)
+    step:      x1.toOctal()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 1403880528 --resume 28 --sequences 1 --bounds off
+  slice 0xc1e96797  sequence   61  (stalled)
+    step:      x0.sinh()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 3253299095 --resume 61 --sequences 1 --bounds off
+  slice 0x4fd5392a  sequence   36  (stalled)
+    step:      x0.toFraction()
+    oracle:    did NOT return within 2.5 s
+    port:      returned in 43 ms
+    verdict:   upstream defect — the port answers, the oracle does not
+    replay:    node fuzz/differential.js --slice 1339373866 --resume 36 --sequences 1 --bounds off
+  slice 0xd5c1f2bd  sequence   24  (stalled)
+    step:      x0.cosh()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 3586257597 --resume 24 --sequences 1 --bounds off
+  slice 0xc1e96797  sequence   75  (stalled)
+    step:      x2.mod(x0)
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 3253299095 --resume 75 --sequences 1 --bounds off
+  slice 0x53ad8450  sequence   31  (stalled)
+    step:      x0.sinh()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 1403880528 --resume 31 --sequences 1 --bounds off
+  slice 0x4fd5392a  sequence   39  (stalled)
+    step:      x1.toFraction()
+    oracle:    did NOT return within 2.5 s
+    port:      returned in 41 ms
+    verdict:   upstream defect — the port answers, the oracle does not
+    replay:    node fuzz/differential.js --slice 1339373866 --resume 39 --sequences 1 --bounds off
+  slice 0xd5c1f2bd  sequence   26  (stalled)
+    step:      x1.tanh()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 3586257597 --resume 26 --sequences 1 --bounds off
+  slice 0xc1e96797  sequence   80  (stalled)
+    step:      x2.tanh()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 3253299095 --resume 80 --sequences 1 --bounds off
+  slice 0x53ad8450  sequence   45  (stalled)
+    step:      x0.divToInt(x1)
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 1403880528 --resume 45 --sequences 1 --bounds off
+  slice 0xd5c1f2bd  sequence   38  (stalled)
+    step:      x1.toHex()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 3586257597 --resume 38 --sequences 1 --bounds off
+  slice 0x4fd5392a  sequence   45  (stalled)
+    step:      x1.sinh()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 1339373866 --resume 45 --sequences 1 --bounds off
+  slice 0xc1e96797  sequence   81  (stalled)
+    step:      x0.cosh()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 3253299095 --resume 81 --sequences 1 --bounds off
+  slice 0x53ad8450  sequence   53  (stalled)
+    step:      x0.toFraction()
+    oracle:    did NOT return within 2.5 s
+    port:      returned in 621 ms
+    verdict:   upstream defect — the port answers, the oracle does not
+    replay:    node fuzz/differential.js --slice 1403880528 --resume 53 --sequences 1 --bounds off
+  slice 0xc1e96797  sequence   84  (stalled)
+    step:      x1.cosh()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 3253299095 --resume 84 --sequences 1 --bounds off
+  slice 0xd5c1f2bd  sequence   60  (stalled)
+    step:      x1.toBinary()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 3586257597 --resume 60 --sequences 1 --bounds off
+  slice 0x53ad8450  sequence   57  (stalled)
+    step:      x0.tanh()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 1403880528 --resume 57 --sequences 1 --bounds off
+  slice 0xc1e96797  sequence   90  (stalled)
+    step:      x0.cosh()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 3253299095 --resume 90 --sequences 1 --bounds off
+  slice 0xd5c1f2bd  sequence   62  (stalled)
+    step:      x1.sinh()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 3586257597 --resume 62 --sequences 1 --bounds off
+  slice 0x4fd5392a  sequence   51  (stalled)
+    step:      x3.toNearest(x1)
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 1339373866 --resume 51 --sequences 1 --bounds off
+  slice 0x53ad8450  sequence   77  (stalled)
+    step:      x2.cosh()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 1403880528 --resume 77 --sequences 1 --bounds off
+  slice 0xd5c1f2bd  sequence   64  (stalled)
+    step:      x2.cosh()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 3586257597 --resume 64 --sequences 1 --bounds off
+  slice 0xc1e96797  sequence  102  (stalled)
+    step:      x3.sinh()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 3253299095 --resume 102 --sequences 1 --bounds off
+  slice 0x4fd5392a  sequence   52  (stalled)
+    step:      x0.cosh()
+    oracle:    did NOT return within 2.5 s
+    port:      returned in 1533 ms
+    verdict:   upstream defect — the port answers, the oracle does not
+    replay:    node fuzz/differential.js --slice 1339373866 --resume 52 --sequences 1 --bounds off
+  slice 0x53ad8450  sequence   78  (stalled)
+    step:      x1.cosh()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 1403880528 --resume 78 --sequences 1 --bounds off
+  slice 0xc1e96797  sequence  105  (stalled)
+    step:      x1.tanh()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 3253299095 --resume 105 --sequences 1 --bounds off
+  slice 0xd5c1f2bd  sequence   69  (stalled)
+    step:      x1.toOctal()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 3586257597 --resume 69 --sequences 1 --bounds off
+  slice 0x4fd5392a  sequence   53  (stalled)
+    step:      x2.sinh()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 1339373866 --resume 53 --sequences 1 --bounds off
+  slice 0x53ad8450  sequence   91  (oracle exhausted the heap)
+    step:      Decimal = Decimal.clone({"precision":13,"rounding":7,"toExpNeg":-7,"toExpPos":21,"maxE":797,"minE":-9000000000000000,"modulo":5,"crypto":false})
+    oracle:    returned in 123 ms
+    port:      returned in 59 ms
+    verdict:   inconclusive — neither side reproduced the stall in isolation
+    replay:    node fuzz/differential.js --slice 1403880528 --resume 91 --sequences 1 --bounds off
+  slice 0xd5c1f2bd  sequence   76  (stalled)
+    step:      x2.sinh()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 3586257597 --resume 76 --sequences 1 --bounds off
+  slice 0xc1e96797  sequence  108  (stalled)
+    step:      x3.toBinary()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 3253299095 --resume 108 --sequences 1 --bounds off
+  slice 0x4fd5392a  sequence   63  (stalled)
+    step:      x2.sinh()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 1339373866 --resume 63 --sequences 1 --bounds off
+  slice 0x53ad8450  sequence   98  (stalled)
+    step:      x2.cosh()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 1403880528 --resume 98 --sequences 1 --bounds off
+  slice 0xc1e96797  sequence  111  (stalled)
+    step:      x0.toFraction()
+    oracle:    did NOT return within 2.5 s
+    port:      returned in 46 ms
+    verdict:   upstream defect — the port answers, the oracle does not
+    replay:    node fuzz/differential.js --slice 3253299095 --resume 111 --sequences 1 --bounds off
+  slice 0xd5c1f2bd  sequence   79  (stalled)
+    step:      x1.toOctal()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 3586257597 --resume 79 --sequences 1 --bounds off
+  slice 0x4fd5392a  sequence   68  (stalled)
+    step:      x1.tanh()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 1339373866 --resume 68 --sequences 1 --bounds off
+  slice 0xd5c1f2bd  sequence   84  (stalled)
+    step:      x2.toFraction()
+    oracle:    did NOT return within 2.5 s
+    port:      returned in 40 ms
+    verdict:   upstream defect — the port answers, the oracle does not
+    replay:    node fuzz/differential.js --slice 3586257597 --resume 84 --sequences 1 --bounds off
+  slice 0xc1e96797  sequence  125  (stalled)
+    step:      x3.sinh()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 3253299095 --resume 125 --sequences 1 --bounds off
+  slice 0x53ad8450  sequence  111  (stalled)
+    step:      x1.toFraction()
+    oracle:    did NOT return within 2.5 s
+    port:      returned in 44 ms
+    verdict:   upstream defect — the port answers, the oracle does not
+    replay:    node fuzz/differential.js --slice 1403880528 --resume 111 --sequences 1 --bounds off
+  slice 0x4fd5392a  sequence   70  (stalled)
+    step:      x1.tanh()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 1339373866 --resume 70 --sequences 1 --bounds off
+  slice 0xd5c1f2bd  sequence   93  (stalled)
+    step:      x1.cosh()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 3586257597 --resume 93 --sequences 1 --bounds off
+  slice 0xc1e96797  sequence  126  (stalled)
+    step:      x0.sinh()
+    oracle:    did NOT return within 2.5 s
+    port:      did NOT return within 2.5 s
+    verdict:   intractable for both — they agree in not returning
+    replay:    node fuzz/differential.js --slice 3253299095 --resume 126 --sequences 1 --bounds off
+  slice 0x53ad8450  sequence  114  (stalled)
+    step:      x1.toFraction()
+    oracle:    returned in 1755 ms
+    port:      returned in 607 ms
+    verdict:   inconclusive — neither side reproduced the stall in isolation
+    replay:    node fuzz/differential.js --slice 1403880528 --resume 114 --sequences 1 --bounds off
+  … and 62 more, not diagnosed (--diagnose 60)
 
   by operation                      upstream  intractable   PORT DEFECT
-    cosh                  12             0           12             0
+    sinh                  14             1           13             0
+    cosh                  14             1           13             0
     tanh                  12             0           12             0
-    sinh                  11             0           11             0
-    toFraction             3             2            1             0
-    atan                   1             0            1             0
+    toFraction            10             8            1             0
+    toOctal                3             0            3             0
+    toBinary               2             0            2             0
+    mod                    1             0            1             0
+    divToInt               1             0            1             0
     toHex                  1             0            1             0
+    toNearest              1             0            1             0
+    clone                  1             0            0             0
 
-SUMMARY: 2,791 refereed operations over 346 stateful sequences,
+SUMMARY: 5,718 refereed operations over 682 stateful sequences,
          across 61 API entry points and all 9 rounding modes,
-         in 73.4 continuous seconds on 4 worker processes.
+         in 72.3 continuous seconds on 4 worker processes.
          Zero undocumented divergences.
-         65 input(s) could not be refereed, named above. Of the 40 diagnosed:
-              2  the port answered and the oracle did not  (upstream defects)
-             38  neither returned                          (agreement, no answer available)
-              0  neither reproduced it in isolation        (inconclusive)
+         122 input(s) could not be refereed, named above. Of the 60 diagnosed:
+             10  the port answered and the oracle did not  (upstream defects)
+             48  neither returned                          (agreement, no answer available)
+              2  neither reproduced it in isolation        (inconclusive)
               0  the oracle answered and the port did not  (none — the claim that matters)
