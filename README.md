@@ -336,7 +336,8 @@ crates/decimal-napi   the only place that knows Node exists: object protocol,
 crates/decimal-cli    decimal-calc, a standalone evaluator — the port computes
                       with no Node present, through the same two functions the
                       addon uses to parse and to render.
-test/                 the original suite, unmodified and hash-pinned.
+test/                 the original suite, unmodified and hash-pinned — at
+                      upstream's own paths, for the reason in tests/README.md.
 tests/                the two manifests: the suite's hashes, and the oracle's.
 fuzz/                 the differential campaign, its oracle, and the upstream
                       reproductions.
@@ -350,6 +351,8 @@ docs/upstream/        one filable report per defect found in the original.
 
 - [DECISIONS.md](DECISIONS.md) — every architectural choice and every deliberate
   divergence, written when the decision was made, with its consequence
+- [tests/README.md](tests/README.md) — where the original suite is, why it is at
+  upstream's paths rather than `tests/original/`, and how the pinning is checked
 - [bench/README.md](bench/README.md) — the benchmark report, losses included
 - [bench/methodology.md](bench/methodology.md) — how those numbers were produced
 - [docs/upstream/README.md](docs/upstream/README.md) — the eight defects
