@@ -126,7 +126,33 @@ pub fn to_decimal_places(
     };
     let dp = check_int32(dp, 0, MAX_DIGITS)?;
     let rm = resolve_rounding_mode(ctx, rm)?;
-    let sd = dp.saturating_add(x.e).saturating_add(1);
+
+    // `out.e`, not `x.e`, and the difference is the whole of this function.
+    //
+    // `round` and friends are written `finalise(new Ctor(x), x.e + 1, rm)`, so
+    // the digit count comes from the *receiver* while the value it is applied
+    // to is the clamped copy — see `round_to_integer`, which says so. `toDP` is
+    // written differently:
+    //
+    // ```js
+    //     x = new Ctor(x);              // x is rebound
+    //     …
+    //     return finalise(x, dp + x.e + 1, rm);
+    // ```
+    //
+    // so here `x.e` is the *clamped* exponent. Two lines apart in the original,
+    // opposite in effect, and only distinguishable when the clamp actually
+    // fires. Reading the receiver's exponent here made
+    // `toDP(0, ROUND_UP)` of a value below `minE` come out as
+    // 1e+8999999999999559 where the original gives 0: the clamped copy is zero,
+    // but the digit count was computed from an exponent of −9 × 10¹⁵.
+    //
+    // Found by the differential campaign at 29,472 refereed operations. The
+    // eighty argument pairs that expose it are all `ROUND_UP` or `ROUND_CEIL`,
+    // which is why `scripts/clamp-conformance.js` — which calls `toDP` at the
+    // default `ROUND_HALF_UP`, where a tiny value rounds to zero either way —
+    // had nothing to say about it.
+    let sd = dp.saturating_add(out.e).saturating_add(1);
     finalise(ctx, &mut out, Some(sd), rm, false);
     Ok(out)
 }
@@ -305,7 +331,20 @@ pub fn to_fixed(ctx: &mut Ctx, x: &Decimal, dp: Option<f64>, rm: Option<f64>) ->
         Some(dp) => {
             let dp = check_int32(dp, 0, MAX_DIGITS)?;
             let rm = resolve_rounding_mode(ctx, rm)?;
-            let mut y = x.clone();
+
+            // `finalise(new Ctor(x), dp + x.e + 1, rm)`. The value rounded is
+            // the *clamped* copy and the digit count comes from the *receiver*
+            // — the same split as `round_to_integer`, and the same reason: the
+            // copy is made inside the call, so `x.e` beside it still refers to
+            // the receiver.
+            //
+            // A plain clone here was invisible under every rounding mode that
+            // rounds towards zero, because `finalise` clamps its own result on
+            // the way out and both sides then agreed on the zero. `ROUND_UP`
+            // on `1.5e-300` with `minE` at −100 is where they part: upstream
+            // rounds a zero at 10⁻³⁰⁰ precision and gets a fifty-seven-digit
+            // integer, the port rounded the surviving 1.5e-300 and got 0.01.
+            let mut y = clamped_copy(ctx, x);
             finalise(
                 ctx,
                 &mut y,
@@ -335,7 +374,12 @@ pub fn to_exponential(
         Some(dp) => {
             let dp = check_int32(dp, 0, MAX_DIGITS)?;
             let rm = resolve_rounding_mode(ctx, rm)?;
-            let mut y = x.clone();
+            // `new Ctor(x)` again, as in `to_fixed`. Here the digit count does
+            // not depend on the exponent, so the two implementations happen to
+            // agree case for case; the copy is clamped anyway, because the
+            // agreement is a coincidence of this argument shape and not a
+            // property of the function.
+            let mut y = clamped_copy(ctx, x);
             finalise(ctx, &mut y, Some(dp + 1), rm, false);
             let str = finite_to_string(&y, true, Some(dp + 1));
             (y, str)
@@ -361,7 +405,7 @@ pub fn to_precision(
         Some(sd) => {
             let sd = check_int32(sd, 1, MAX_DIGITS)?;
             let rm = resolve_rounding_mode(ctx, rm)?;
-            let mut y = x.clone();
+            let mut y = clamped_copy(ctx, x); // `new Ctor(x)`, as above.
             finalise(ctx, &mut y, Some(sd), rm, false);
             let exp = sd <= y.e || y.e <= ctx.cfg.to_exp_neg;
             let str = finite_to_string(&y, exp, Some(sd));
@@ -623,6 +667,44 @@ mod tests {
         assert_eq!(
             crate::format::to_string(&floored, &ctx.cfg),
             "-1e+8999999999999976"
+        );
+    }
+
+    /// The companion to the case above, and its opposite.
+    ///
+    /// `ceil` and `floor` take their digit count from the receiver's exponent,
+    /// so a value the clamp crushed to zero still rounds as though its digits
+    /// stood where they were. `toDP` rebinds `x` before it reads `x.e`, so the
+    /// same value rounds as the zero it has become. The two forms sit ten
+    /// lines apart upstream, and only a mode that rounds *away* from zero can
+    /// tell them apart: under the default `ROUND_HALF_UP` a vanished value
+    /// rounds to zero either way. That is why this survived until the
+    /// differential campaign put `ROUND_UP` and a narrow `minE` into the same
+    /// sequence — 29,472 refereed operations in.
+    #[test]
+    fn to_decimal_places_rounds_the_value_the_clamp_left_behind() {
+        const ROUND_UP: f64 = 0.0;
+        const ROUND_CEIL: f64 = 2.0;
+
+        let mut ctx = Ctx::default();
+        ctx.cfg.min_e = -872;
+
+        let tiny = d("1785178753e-8999999999999985");
+        for rm in [ROUND_UP, ROUND_CEIL] {
+            let rounded = to_decimal_places(&mut ctx, &tiny, Some(0.0), Some(rm)).unwrap();
+            assert_eq!(
+                crate::format::to_string(&rounded, &ctx.cfg),
+                "0",
+                "toDP(0, {rm}) of a value below minE"
+            );
+        }
+
+        // The same operand, rounded away from zero by a method of the other
+        // form: same clamp, same configuration, an answer nine quadrillion
+        // digits wide. Both lines were read off upstream in Node.
+        assert_eq!(
+            crate::format::to_string(&ceil(&mut ctx, &tiny), &ctx.cfg),
+            "1e+8999999999999976"
         );
     }
 }
