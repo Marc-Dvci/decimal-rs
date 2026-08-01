@@ -173,15 +173,14 @@ ulps** rather than exact-match equality. Upstream's own
 neighbourhood that way is a needle in a `10¹⁴` haystack. Sampling *relative to
 the poles* finds it immediately.
 
-Harness, probes and logs live outside this repository, in a separate
-`pm-bughunt/` tree: `probe_tan2.py` (error profile), `probe_fix.py` (mechanism
-and fix verification), `probe_poles.py` (scope), `probe_gaps.py` (the functions
-confirmed clean), `selfcheck.py` (the positive control described above).
+This is the one finding that needed an oracle outside the pair. A port built for
+fidelity reproduces the defect exactly, so the two implementations agree and any
+comparison between them is satisfied; catching it required a third opinion —
+mpmath at 500 bits — and a question the campaign does not ask, which is not
+*"do these two agree"* but *"how many digits are left"*. The error profile, the
+mechanism, the pole sweep and the positive control above are all reproducible
+from the figures in this document.
 
-**This one was not found by the differential campaign, and could not have
-been.** The port reproduces it exactly, on purpose, so the two implementations
-agree and a comparison between them sees nothing. It took a different
-instrument answering a different question: error in ulps against mpmath at 500
-bits. The port pins the behaviour in `crates/decimal-core/src/trig.rs` with a
-test that asserts the *wrong* answer, so that a fix upstream would surface here
-as a deliberate choice rather than a silent drift.
+The port pins the behaviour in `crates/decimal-core/src/trig.rs` with a test
+that asserts the *wrong* answer, so a fix upstream surfaces here as a deliberate
+choice rather than a silent drift.
