@@ -350,10 +350,7 @@ macro_rules! guarded {
 // The constructor
 // ---------------------------------------------------------------------------
 
-unsafe fn construct_decimal(
-    env: sys::napi_env,
-    info: sys::napi_callback_info,
-) -> sys::napi_value {
+unsafe fn construct_decimal(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
     let (args, this, data) = env.callback_info(info, 1);
     let st = state(data);
@@ -409,10 +406,7 @@ fn optional_number(env: Env, args: &[Value], index: usize) -> Option<f64> {
 /// Declares an instance method of shape `(&mut Ctx, &Decimal) -> Decimal`.
 macro_rules! unary {
     ($name:ident, $body:expr) => {
-        unsafe fn $name(
-            env: sys::napi_env,
-            info: sys::napi_callback_info,
-        ) -> sys::napi_value {
+        unsafe fn $name(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
             let env = Env(env);
             let Some((_, x, st)) = receiver(env, info, 0) else {
                 return env.undefined();
@@ -427,10 +421,7 @@ macro_rules! unary {
 /// Declares an instance method of shape `(&mut Ctx, &Decimal, &Decimal) -> Decimal`.
 macro_rules! binary {
     ($name:ident, $body:expr) => {
-        unsafe fn $name(
-            env: sys::napi_env,
-            info: sys::napi_callback_info,
-        ) -> sys::napi_value {
+        unsafe fn $name(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
             let env = Env(env);
             let Some((args, x, st)) = receiver(env, info, 1) else {
                 return env.undefined();
@@ -449,10 +440,7 @@ macro_rules! binary {
 /// Declares an instance method returning a boolean from the value alone.
 macro_rules! predicate {
     ($name:ident, $body:expr) => {
-        unsafe fn $name(
-            env: sys::napi_env,
-            info: sys::napi_callback_info,
-        ) -> sys::napi_value {
+        unsafe fn $name(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
             let env = Env(env);
             let Some((_, x, _)) = receiver(env, info, 0) else {
                 return env.undefined();
@@ -466,10 +454,7 @@ macro_rules! predicate {
 /// Declares an instance method comparing against one argument.
 macro_rules! comparison {
     ($name:ident, $body:expr) => {
-        unsafe fn $name(
-            env: sys::napi_env,
-            info: sys::napi_callback_info,
-        ) -> sys::napi_value {
+        unsafe fn $name(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
             let env = Env(env);
             let Some((args, x, st)) = receiver(env, info, 1) else {
                 return env.undefined();
@@ -488,10 +473,7 @@ macro_rules! comparison {
 /// to two optional numeric arguments.
 macro_rules! stringify {
     ($name:ident, $body:expr) => {
-        unsafe fn $name(
-            env: sys::napi_env,
-            info: sys::napi_callback_info,
-        ) -> sys::napi_value {
+        unsafe fn $name(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
             let env = Env(env);
             let Some((args, x, st)) = receiver(env, info, 2) else {
                 return env.undefined();
@@ -519,10 +501,7 @@ macro_rules! stringify {
 /// optional numeric arguments.
 macro_rules! rounder {
     ($name:ident, $body:expr) => {
-        unsafe fn $name(
-            env: sys::napi_env,
-            info: sys::napi_callback_info,
-        ) -> sys::napi_value {
+        unsafe fn $name(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
             let env = Env(env);
             let Some((args, x, st)) = receiver(env, info, 2) else {
                 return env.undefined();
@@ -559,10 +538,7 @@ unary!(m_tanh, |ctx, x| decimal_core::trig::tanh(ctx, x));
 /// precision outruns the 1025-digit `PI` constant.
 macro_rules! fallible_unary {
     ($name:ident, $body:expr) => {
-        unsafe fn $name(
-            env: sys::napi_env,
-            info: sys::napi_callback_info,
-        ) -> sys::napi_value {
+        unsafe fn $name(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
             let env = Env(env);
             let Some((_, x, st)) = receiver(env, info, 0) else {
                 return env.undefined();
@@ -661,10 +637,7 @@ rounder!(m_to_sd, |ctx, x, a, b| ops::to_significant_digits(
 /// "absent", because the original's test is `maxD == null`, which is the loose
 /// equality that holds for both. `argument` would coerce a `null` into a thrown
 /// `[DecimalError] Invalid argument: null`, so the check has to come first.
-unsafe fn m_to_fraction(
-    env: sys::napi_env,
-    info: sys::napi_callback_info,
-) -> sys::napi_value {
+unsafe fn m_to_fraction(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
     let Some((args, x, st)) = receiver(env, info, 1) else {
         return env.undefined();
@@ -738,10 +711,7 @@ unsafe fn m_pow(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_
 /// supplied rather than taken from the caller.
 macro_rules! static_log_base {
     ($name:ident, $base:literal) => {
-        unsafe fn $name(
-            env: sys::napi_env,
-            info: sys::napi_callback_info,
-        ) -> sys::napi_value {
+        unsafe fn $name(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
             let env = Env(env);
             let (args, _, data) = env.callback_info(info, 1);
             // SAFETY: `data` is the leaked ConstructorState for this class.
@@ -784,10 +754,7 @@ unsafe fn m_clamp(env: sys::napi_env, info: sys::napi_callback_info) -> sys::nap
 }
 
 /// `toNearest`, whose modulus argument is optional.
-unsafe fn m_to_nearest(
-    env: sys::napi_env,
-    info: sys::napi_callback_info,
-) -> sys::napi_value {
+unsafe fn m_to_nearest(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
     let Some((args, x, st)) = receiver(env, info, 2) else {
         return env.undefined();
@@ -809,10 +776,7 @@ unsafe fn m_to_nearest(
 
 /// `comparedTo`, which returns a number rather than a boolean and reports NaN
 /// for an unordered pair.
-unsafe fn m_compared_to(
-    env: sys::napi_env,
-    info: sys::napi_callback_info,
-) -> sys::napi_value {
+unsafe fn m_compared_to(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
     let Some((args, x, st)) = receiver(env, info, 1) else {
         return env.undefined();
@@ -829,10 +793,7 @@ unsafe fn m_compared_to(
     })
 }
 
-unsafe fn m_to_string(
-    env: sys::napi_env,
-    info: sys::napi_callback_info,
-) -> sys::napi_value {
+unsafe fn m_to_string(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
     let Some((_, x, st)) = receiver(env, info, 0) else {
         return env.undefined();
@@ -840,10 +801,7 @@ unsafe fn m_to_string(
     env.string(&format::to_string(&x, &st.ctx.cfg))
 }
 
-unsafe fn m_value_of(
-    env: sys::napi_env,
-    info: sys::napi_callback_info,
-) -> sys::napi_value {
+unsafe fn m_value_of(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
     let Some((_, x, st)) = receiver(env, info, 0) else {
         return env.undefined();
@@ -851,10 +809,7 @@ unsafe fn m_value_of(
     env.string(&format::value_of(&x, &st.ctx.cfg))
 }
 
-unsafe fn m_to_number(
-    env: sys::napi_env,
-    info: sys::napi_callback_info,
-) -> sys::napi_value {
+unsafe fn m_to_number(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
     let Some((_, x, st)) = receiver(env, info, 0) else {
         return env.undefined();
@@ -863,10 +818,7 @@ unsafe fn m_to_number(
     env.number(text.parse::<f64>().unwrap_or(f64::NAN))
 }
 
-unsafe fn m_decimal_places(
-    env: sys::napi_env,
-    info: sys::napi_callback_info,
-) -> sys::napi_value {
+unsafe fn m_decimal_places(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
     let Some((_, x, _)) = receiver(env, info, 0) else {
         return env.undefined();
@@ -874,10 +826,7 @@ unsafe fn m_decimal_places(
     env.number(x.decimal_places().map_or(f64::NAN, |dp| dp as f64))
 }
 
-unsafe fn m_precision(
-    env: sys::napi_env,
-    info: sys::napi_callback_info,
-) -> sys::napi_value {
+unsafe fn m_precision(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
     let Some((args, x, _)) = receiver(env, info, 1) else {
         return env.undefined();
@@ -916,10 +865,7 @@ unsafe fn m_precision(
 
 macro_rules! accessor {
     ($name:ident, $body:expr) => {
-        unsafe fn $name(
-            env: sys::napi_env,
-            info: sys::napi_callback_info,
-        ) -> sys::napi_value {
+        unsafe fn $name(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
             let env = Env(env);
             let (_, this, _) = env.callback_info(info, 0);
             let Some(x) = env.unwrap::<Decimal>(this) else {
@@ -1008,10 +954,7 @@ fn range_of(name: &str) -> (i64, i64) {
     }
 }
 
-unsafe fn s_config(
-    env: sys::napi_env,
-    info: sys::napi_callback_info,
-) -> sys::napi_value {
+unsafe fn s_config(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
     let (args, this, data) = env.callback_info(info, 1);
     let st = state(data);
@@ -1102,20 +1045,14 @@ unsafe fn s_config(
 
 macro_rules! setting_accessor {
     ($getter:ident, $setter:ident, $index:expr) => {
-        unsafe fn $getter(
-            env: sys::napi_env,
-            info: sys::napi_callback_info,
-        ) -> sys::napi_value {
+        unsafe fn $getter(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
             let env = Env(env);
             let (_, _, data) = env.callback_info(info, 0);
             let st = state(data);
             env.number(SETTINGS[$index].1(&st.ctx.cfg))
         }
 
-        unsafe fn $setter(
-            env: sys::napi_env,
-            info: sys::napi_callback_info,
-        ) -> sys::napi_value {
+        unsafe fn $setter(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
             let env = Env(env);
             let (args, _, data) = env.callback_info(info, 1);
             let st = state(data);
@@ -1141,10 +1078,7 @@ macro_rules! setting_accessor {
 /// Reading it is how the config tests check that `config` took the setting;
 /// writing it directly is, as with the numeric settings, an unvalidated plain
 /// property write in the original — `config` is the only validating door.
-unsafe fn get_crypto(
-    env: sys::napi_env,
-    info: sys::napi_callback_info,
-) -> sys::napi_value {
+unsafe fn get_crypto(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
     let (_, _, data) = env.callback_info(info, 0);
     // SAFETY: `data` is the leaked ConstructorState for this class.
@@ -1152,10 +1086,7 @@ unsafe fn get_crypto(
     env.boolean(st.ctx.cfg.crypto)
 }
 
-unsafe fn set_crypto(
-    env: sys::napi_env,
-    info: sys::napi_callback_info,
-) -> sys::napi_value {
+unsafe fn set_crypto(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
     let (args, _, data) = env.callback_info(info, 1);
     // SAFETY: as above.
@@ -1180,10 +1111,7 @@ setting_accessor!(get_max_e, set_max_e, 6);
 /// than reimplementing keeps the two spellings from ever drifting apart.
 macro_rules! static_via_instance {
     ($name:ident, $method:literal) => {
-        unsafe fn $name(
-            env: sys::napi_env,
-            info: sys::napi_callback_info,
-        ) -> sys::napi_value {
+        unsafe fn $name(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
             let env = Env(env);
             let (args, _, data) = env.callback_info(info, 3);
             // SAFETY: `data` is the leaked ConstructorState for this class.
@@ -1303,10 +1231,7 @@ impl decimal_core::random::Entropy for CryptoEntropy {
 /// `decimal_core::random`. It stands where the original has `Math.random()`,
 /// and shares that function's standing exactly: adequate for anything that is
 /// not a secret, and used only when `crypto` is off.
-unsafe fn s_random(
-    env: sys::napi_env,
-    info: sys::napi_callback_info,
-) -> sys::napi_value {
+unsafe fn s_random(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
     let (args, _, data) = env.callback_info(info, 1);
     // SAFETY: `data` is the leaked ConstructorState for this class.
@@ -1552,10 +1477,7 @@ unsafe fn s_sign(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi
     })
 }
 
-unsafe fn s_is_decimal(
-    env: sys::napi_env,
-    info: sys::napi_callback_info,
-) -> sys::napi_value {
+unsafe fn s_is_decimal(env: sys::napi_env, info: sys::napi_callback_info) -> sys::napi_value {
     let env = Env(env);
     let (args, _, _) = env.callback_info(info, 1);
     let is = args
@@ -1727,7 +1649,10 @@ fn build_class(env: Env, cfg: Config) -> Value {
         (&["minus\0", "sub\0"], Some(guarded!(m_minus))),
         (&["times\0", "mul\0"], Some(guarded!(m_times))),
         (&["dividedBy\0", "div\0"], Some(guarded!(m_div))),
-        (&["dividedToIntegerBy\0", "divToInt\0"], Some(guarded!(m_div_to_int))),
+        (
+            &["dividedToIntegerBy\0", "divToInt\0"],
+            Some(guarded!(m_div_to_int)),
+        ),
         (&["modulo\0", "mod\0"], Some(guarded!(m_mod))),
         (&["comparedTo\0", "cmp\0"], Some(guarded!(m_compared_to))),
         (&["equals\0", "eq\0"], Some(guarded!(m_equals))),
@@ -1741,10 +1666,16 @@ fn build_class(env: Env, cfg: Config) -> Value {
         (&["isZero\0"], Some(guarded!(m_is_zero))),
         (&["isNegative\0", "isNeg\0"], Some(guarded!(m_is_negative))),
         (&["isPositive\0", "isPos\0"], Some(guarded!(m_is_positive))),
-        (&["decimalPlaces\0", "dp\0"], Some(guarded!(m_decimal_places))),
+        (
+            &["decimalPlaces\0", "dp\0"],
+            Some(guarded!(m_decimal_places)),
+        ),
         (&["precision\0", "sd\0"], Some(guarded!(m_precision))),
         (&["toDecimalPlaces\0", "toDP\0"], Some(guarded!(m_to_dp))),
-        (&["toSignificantDigits\0", "toSD\0"], Some(guarded!(m_to_sd))),
+        (
+            &["toSignificantDigits\0", "toSD\0"],
+            Some(guarded!(m_to_sd)),
+        ),
         (&["toFixed\0"], Some(guarded!(m_to_fixed))),
         (&["toExponential\0"], Some(guarded!(m_to_exponential))),
         (&["toPrecision\0"], Some(guarded!(m_to_precision))),
@@ -1754,11 +1685,20 @@ fn build_class(env: Env, cfg: Config) -> Value {
         (&["clampedTo\0", "clamp\0"], Some(guarded!(m_clamp))),
         (&["toNearest\0"], Some(guarded!(m_to_nearest))),
         (&["inverseCosine\0", "acos\0"], Some(guarded!(m_acos))),
-        (&["inverseHyperbolicCosine\0", "acosh\0"], Some(guarded!(m_acosh))),
+        (
+            &["inverseHyperbolicCosine\0", "acosh\0"],
+            Some(guarded!(m_acosh)),
+        ),
         (&["inverseSine\0", "asin\0"], Some(guarded!(m_asin))),
-        (&["inverseHyperbolicSine\0", "asinh\0"], Some(guarded!(m_asinh))),
+        (
+            &["inverseHyperbolicSine\0", "asinh\0"],
+            Some(guarded!(m_asinh)),
+        ),
         (&["inverseTangent\0", "atan\0"], Some(guarded!(m_atan))),
-        (&["inverseHyperbolicTangent\0", "atanh\0"], Some(guarded!(m_atanh))),
+        (
+            &["inverseHyperbolicTangent\0", "atanh\0"],
+            Some(guarded!(m_atanh)),
+        ),
         (&["cubeRoot\0", "cbrt\0"], Some(guarded!(m_cbrt))),
         (&["cosine\0", "cos\0"], Some(guarded!(m_cos))),
         (&["hyperbolicCosine\0", "cosh\0"], Some(guarded!(m_cosh))),
@@ -1793,8 +1733,20 @@ fn build_class(env: Env, cfg: Config) -> Value {
     // `set` is not defined here: it is installed below as the very function
     // object `config` becomes, because `Decimal.set === Decimal.config` is one
     // of the original's assertions.
-    properties.push(static_entry("config\0", Some(guarded!(s_config)), None, None, data));
-    properties.push(static_entry("clone\0", Some(guarded!(s_clone)), None, None, data));
+    properties.push(static_entry(
+        "config\0",
+        Some(guarded!(s_config)),
+        None,
+        None,
+        data,
+    ));
+    properties.push(static_entry(
+        "clone\0",
+        Some(guarded!(s_clone)),
+        None,
+        None,
+        data,
+    ));
     properties.push(static_entry(
         "isDecimal\0",
         Some(guarded!(s_is_decimal)),
@@ -1906,7 +1858,15 @@ fn build_class(env: Env, cfg: Config) -> Value {
 
     // SAFETY: `properties` lives until after the call returns, and `data` is
     // leaked, so both outlive every invocation of the methods they describe.
-    let class = unsafe { define_class(env, "Decimal", Some(guarded!(construct_decimal)), data, &properties) };
+    let class = unsafe {
+        define_class(
+            env,
+            "Decimal",
+            Some(guarded!(construct_decimal)),
+            data,
+            &properties,
+        )
+    };
 
     // Install every alias as the function object already defined, rather than
     // as a second function over the same callback. `Decimal.set` must *be*
