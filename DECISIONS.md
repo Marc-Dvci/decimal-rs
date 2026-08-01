@@ -1097,7 +1097,7 @@ code should *answer*, and "keep going" is never that answer.
 
 **Context.** The bounded campaign reported a divergence at 29,472 refereed
 operations: `toDP(0, ROUND_UP)` on a value below `minE` answered
-`1e+8999999999999559` where the oracle answered `0`.
+`1e+8999999999999532` where the oracle answered `0`.
 
 The cause is a two-line asymmetry upstream. `round` and its neighbours are
 written

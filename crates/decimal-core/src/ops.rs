@@ -144,7 +144,7 @@ pub fn to_decimal_places(
     // opposite in effect, and only distinguishable when the clamp actually
     // fires. Reading the receiver's exponent here made
     // `toDP(0, ROUND_UP)` of a value below `minE` come out as
-    // 1e+8999999999999559 where the original gives 0: the clamped copy is zero,
+    // 1e+8999999999999532 where the original gives 0: the clamped copy is zero,
     // but the digit count was computed from an exponent of −9 × 10¹⁵.
     //
     // Found by the differential campaign at 29,472 refereed operations. The
