@@ -6,10 +6,10 @@
  *
  * ---------------------------------------------------------------------------
  *
- * Six of the seven cases are things the original does that a caller cannot
- * recover from: three null dereferences, one non-terminating loop, one
+ * Seven of the eight cases are things the original does that a caller cannot
+ * recover from: four null dereferences, one non-terminating loop, one
  * non-terminating iteration, and one configuration leak that leaves the library
- * permanently unusable. The seventh is a cost, not a defect.
+ * permanently unusable. The eighth is a cost, not a defect.
  *
  * Each runs in its own process with a timeout, because three of them do not
  * return and two of the rest wreck the state of anything measured afterwards.
@@ -30,6 +30,8 @@ const CASES = [
   ['sinh-overflowing-series', 'BUG-005', 'taylorSeries dereferences null and leaves the clamps off'],
   ['cos-overflowing-reduction', 'BUG-006', 'the argument reduction of sin/cos/tan dereferences null'],
   ['pow-clamped-base', 'BUG-003', 'toPower dereferences null when the clamp made the base infinite'],
+  ['atan-infinity-above-pi', 'BUG-008',
+    'atan(Infinity) dereferences null above the pi constant\'s precision'],
   ['acosh-configuration-leak', 'BUG-002', 'acosh leaks precision and rounding when it throws'],
   ['cbrt-exponent-floor', '—', 'cbrt does not return near the exponent floor'],
   ['cosh-argument-fold-cost', '—', 'the hyperbolic fold is chosen by digit count, not magnitude'],
@@ -99,8 +101,8 @@ async function main() {
   process.stdout.write(
     '\nEvery case above is an input on which the original produces no usable\n' +
     'answer. Where this port differs, the difference is recorded in DECISIONS.md\n' +
-    '(D-11, D-13, D-14, D-16, D-17) and is always the same judgement: reproduce\n' +
-    'what the original computes, decline what merely breaks it.\n');
+    '(D-11, D-13, D-14, D-16, D-17, D-20) and is always the same judgement:\n' +
+    'reproduce what the original computes, decline what merely breaks it.\n');
 }
 
 main();

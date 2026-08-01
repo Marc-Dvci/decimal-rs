@@ -563,6 +563,17 @@ const KNOWN_DIVERGENCES = [
       d.actual.indexOf('THROW') !== 0,
   },
   {
+    tag: 'D-20 / BUG-008',
+    what: 'atan(±Infinity) above the precision the pi constant carries. The answer is ' +
+      '±pi/2 and pi/2 is unavailable, so upstream falls through to a series it cannot ' +
+      'converge and dereferences null on its first convergence test. The port raises ' +
+      'the library\'s own Precision limit exceeded — which is what asin(1), acos(0), ' +
+      'atan2(1,-1) and sin(1e9) all raise at that precision, on both implementations',
+    matches: (d) =>
+      d.expected.indexOf('THROW Cannot read properties of null') === 0 &&
+      d.actual === 'THROW [DecimalError] Precision limit exceeded',
+  },
+  {
     tag: 'D-11 / BUG-002',
     what: 'upstream leaves precision and rounding raised when an inverse hyperbolic throws',
     matches: (d) =>

@@ -101,6 +101,23 @@ const cases = {
   },
 
   /*
+   * BUG-008. `inverseTangent` returns ±π/2 for an infinite argument only while
+   * `pr + 4 <= PI_PRECISION`; above that neither branch returns and control
+   * reaches the series with `x` still infinite. Every term is Infinity, no two
+   * partial sums ever differ, and the convergence test indexes `r.d` — which is
+   * null. The fourth member of the BUG-003 / BUG-005 / BUG-006 family, and the
+   * first in which the infinity is the caller's own argument rather than
+   * something the exponent clamps produced.
+   *
+   * 1022 rather than something larger because it is the exact threshold: one
+   * lower and the built-in π stretches far enough to answer.
+   */
+  'atan-infinity-above-pi': () => {
+    Decimal.set({ precision: 1022, rounding: 4 });
+    return { outcome: outcome(() => new Decimal(Infinity).atan()) };
+  },
+
+  /*
    * BUG-002. `acosh` raises the working precision, computes, and lowers it
    * again — with no `try`/`finally`. Near the exponent limit the raised
    * precision is around 9e15 and the alignment inside `minus` asks for an array
