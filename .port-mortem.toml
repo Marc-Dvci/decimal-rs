@@ -1,0 +1,88 @@
+# Port Mortem 2026 — submission metadata.
+#
+# The schema was not published with the brief, so this is a best-effort
+# machine-readable summary of what the repository contains. Everything in it is
+# reproducible by the command named beside it; nothing here is a claim that is
+# not checkable from a clean clone.
+
+[port]
+name        = "decimal-rs"
+track       = "F"
+source_lang = "javascript"
+target_lang = "rust"
+team_size   = 1
+
+[source]
+repo    = "https://github.com/MikeMcl/decimal.js"
+commit  = "cd73a7f830f07bc98e906d2ebe76e8c02cc20c8f"
+version = "10.6.0"
+license = "MIT"
+loc     = 4952            # decimal.js, the whole implementation, one file
+
+[build]
+# The single documented command. Builds from source, verifies the test manifest,
+# and runs the original suite against the compiled artifact.
+command    = "docker build -t decimal-rs . && docker run --rm decimal-rs"
+local      = "make"
+toolchain  = "rustc 1.97.1 (pinned in rust-toolchain.toml), node 24"
+
+[tests]
+command        = "node test/test.js"
+total          = 22658
+passing        = 22657
+failing        = 1
+failing_reason = "DECISIONS.md D-08 — a Node-API signature constraint, not an arithmetic difference"
+files_modified = 0
+files_total    = 69
+manifest       = "tests/ORIGINAL_HASHES.txt"
+manifest_check = "node scripts/verify-tests.js"
+# About 6,000 of the assertions are generated with Math.random(), so the
+# denominator moves between runs (22,598 / 22,628 / 22,658 all observed). The
+# failure count is the stable number.
+note = "read the failure count, not the ratio"
+
+[tests.native]
+command = "cargo test -p decimal-core"
+total   = 162
+
+[fuzz]
+harness      = "fuzz/campaign.js"
+inner        = "fuzz/differential.js"
+oracle       = "fuzz/reference/decimal.js"
+oracle_note  = "vendored copy of upstream, used only as a fuzzing oracle; not linked into the port, not reachable from its build graph"
+log          = "fuzz/log.txt"
+limits_log   = "fuzz/log-limits.txt"
+command      = "node fuzz/campaign.js --seconds 70"
+self_check   = true   # a one-ulp fault is injected and must be detected before the run starts
+
+[safety]
+unsafe_core           = 0
+unsafe_cli            = 0
+unsafe_adapter        = 94
+method                = "unsafe_code = \"forbid\" in decimal-core and decimal-cli, compiler-enforced; textual cross-check in scripts/unsafe-report.js"
+command               = "node scripts/unsafe-report.js"
+dependencies_core     = 0
+dependencies_workspace = 1   # napi-sys, bindings only
+
+[bench]
+command  = "node bench/run.js"
+report   = "bench/README.md"
+method   = "bench/methodology.md"
+data     = "bench/results.json"
+
+[soak]
+command = "node scripts/soak.js"
+data    = "bench/soak.json"
+
+[findings]
+# Defects found in the original. Write-ups in docs/upstream/, all reproducible
+# with `node fuzz/repro-upstream.js`.
+count       = 6
+crashes     = 3
+hangs       = 2
+index       = "docs/upstream/README.md"
+repro       = "node fuzz/repro-upstream.js"
+
+[docs]
+decisions = "DECISIONS.md"
+upstream  = "docs/upstream/README.md"

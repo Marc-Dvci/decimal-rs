@@ -20,7 +20,8 @@ else
   ARTIFACT := target/release/libdecimal.so
 endif
 
-.PHONY: all build addon verify-tests test test-original test-rust clean fmt lint unsafe-report bench fuzz soak
+.PHONY: all build addon verify-tests test test-original test-rust clean fmt lint \
+        unsafe-report bench fuzz fuzz-limits repro soak
 
 # Default target: nothing is considered built until the original, unmodified
 # test suite has run against the Rust artifact.
@@ -60,11 +61,22 @@ unsafe-report:
 bench: addon
 	$(NODE) bench/run.js
 
+## The published differential campaign: 70 continuous seconds, slices watched by
+## a parent that kills and records anything that stops making progress.
 fuzz: addon
-	$(NODE) fuzz/differential.js
+	$(NODE) fuzz/campaign.js --seconds 70
+
+## The same, with the family bounds removed, so that every input the oracle
+## cannot referee is named individually rather than by rule.
+fuzz-limits: addon
+	$(NODE) fuzz/campaign.js --seconds 70 --bounds off --stall 2000
+
+## Every defect found in the original, on both implementations, side by side.
+repro: addon
+	$(NODE) fuzz/repro-upstream.js
 
 soak: addon
-	$(NODE) scripts/soak.js
+	$(NODE) scripts/soak.js --json bench/soak.json
 
 clean:
 	$(CARGO) clean

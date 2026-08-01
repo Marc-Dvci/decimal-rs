@@ -40,10 +40,17 @@ COPY --from=build /src/target/release/decimal ./bin/decimal
 COPY test ./test
 COPY tests ./tests
 COPY scripts ./scripts
-COPY package.json Makefile DECISIONS.md README.md ./
+COPY package.json Makefile DECISIONS.md README.md .port-mortem.toml ./
+
+# The Rust sources come along so that the unsafe report can count what is
+# actually in the tree rather than repeat a number from the README. They are
+# not compiled here — stage 1 did that — and they add about 400 KB.
+COPY crates ./crates
 
 # Fail loudly at image-build time if the test suite was tampered with, so the
 # problem surfaces during the build rather than during judging.
 RUN node scripts/verify-tests.js
 
-CMD ["sh", "-c", "node scripts/verify-tests.js && echo '' && node test/test.js"]
+# Three claims, checked in the order a sceptic would want them: the suite is
+# unmodified, it passes, and the core crate contains no unsafe.
+CMD ["sh", "-c", "node scripts/verify-tests.js && echo '' && node test/test.js && echo '' && node scripts/unsafe-report.js"]

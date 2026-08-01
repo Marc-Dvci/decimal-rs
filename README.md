@@ -5,11 +5,13 @@ Upstream: [MikeMcl/decimal.js](https://github.com/MikeMcl/decimal.js) @ [`cd73a7
 
 | | |
 |---|---|
-| **Original test suite** | *in progress* — baseline upstream: 22,628 / 22,628 |
+| **Original test suite** | **22,657 / 22,658** — one failure, documented ([D-08](DECISIONS.md)) |
 | **Test files modified** | **0 of 69** — SHA-256 manifest enforced by the build |
-| **JavaScript in this project** | **none** — Node's own resolver loads the Rust binary |
+| **Differential fuzzing** | **zero undocumented divergences** over 70 continuous seconds, four independent seeds |
 | **Unsafe in `decimal-core`** | **0**, compiler-enforced (`unsafe_code = "forbid"`) |
 | **Dependencies of `decimal-core`** | **0** |
+| **JavaScript in the port** | **none** — Node's own resolver loads the Rust binary |
+| **Defects found in the original** | **6**, three of them crashes, two of them hangs |
 
 ## Build and verify — one command
 
@@ -42,18 +44,206 @@ and no JavaScript file anywhere between the test suite and the Rust code. This
 required writing the N-API entry point by hand; the usual derive macros cannot
 return a constructor function as the module itself.
 
+**About the JavaScript that is in this repository.** There is none in the port
+or in its build graph — `cargo build` produces `decimal.node` and touches no
+`.js` file. There is JavaScript under `fuzz/`, `bench/` and `scripts/`, which are
+the harnesses that *test and measure* the port, and one file that deserves to be
+called out: `fuzz/reference/decimal.js` is a byte-identical copy of upstream,
+vendored as the fuzzing oracle. It is not linked, called, or shipped by the
+port; nothing in `crates/` can reach it. See
+[`fuzz/reference/README.md`](fuzz/reference/README.md).
+
+## Performance, in one paragraph
+
+On CPU-bound arbitrary-precision arithmetic the port is **1.4× to 9.1× faster**,
+and the advantage is almost entirely a function of operand size: 2.9× at 100
+digits, 8.4× at 1 000, 9.1× at 10 000. Below about **40 significant digits it is
+slower**, and at the library's default precision of twenty there is **no
+measurable difference** on most operations — the port's per-multiply cost is flat
+from 10 to 60 digits, because across that whole range it is paying a fixed
+~850 ns to cross the Node-API boundary and the arithmetic underneath is lost in
+it. Called one small operation at a time it is slower still, ~800 ns against
+~100 ns. Startup is 1.3 ms faster; the compiled artifact is 3.8× larger than the
+original's source. Full table, methodology and the losses in
+[`bench/`](bench/README.md).
+
+## Behavioural equivalence
+
+Two instruments, answering different questions.
+
+**The original suite** — 22,658 assertions, unmodified, hash-pinned. It is the
+strongest single piece of evidence and it is also fixed: it can only check what
+its author thought of, from one starting configuration.
+
+**A differential campaign** — [`fuzz/campaign.js`](fuzz/campaign.js) — which
+checks the other thing: that the two implementations agree on inputs nobody
+chose, under configurations nobody wrote down, in *sequences* where each
+operation inherits the state the last one left. Both run in one process on the
+same values. Every result is compared on every observable channel — sign,
+exponent, the digit array itself, all three string renderings, the finiteness
+predicates, the precision metadata, negative zero, the exact thrown message —
+plus the operands afterwards, to catch a mutation, plus the constructor
+configuration, to catch a leak. There is no tolerance anywhere in it.
+
+Each run begins by deliberately corrupting the port's results by one unit in the
+last place and refusing to continue until the comparator has caught it. A log
+saying "zero divergences" from a harness with no demonstrated ability to see one
+proves nothing.
+
+```
+node fuzz/campaign.js --seconds 70
+```
+
+Log: [`fuzz/log.txt`](fuzz/log.txt). The unbounded pass, which fuzzes the entire
+legal input space including `1e9000000000000000`, is
+[`fuzz/log-limits.txt`](fuzz/log-limits.txt).
+
+### The watchdog, and what it is for
+
+The campaign runs slices as child processes and watches them make progress. A
+slice whose sequence index stops advancing is killed, its input recorded **by
+seed**, and the slice resumed at the next sequence.
+
+This exists because the oracle cannot always answer. The corpus deliberately
+includes values at the exponent limits, and for a handful of operations upstream
+at those magnitudes exhausts the heap, or runs for hours, or does not return at
+all. An oracle that cannot answer cannot referee. The first response was to bound
+the offending families one at a time, and another family kept appearing — a
+losing game that also produces a weak artifact, because a bound names a *family*
+and the family is far larger than the set of inputs that actually defeat it.
+
+So instead each such input is named individually and then diagnosed, after the
+clock has stopped, by re-running it one implementation at a time. That turns a
+line of the log from "something hung" into a verdict:
+
+| | meaning |
+|---|---|
+| **upstream defect** | the port answered and the oracle did not |
+| **intractable** | neither returned — they agree, no answer is available |
+| **inconclusive** | neither reproduced the stall in isolation |
+| **PORT DEFECT** | the oracle answered and the port did not — **this must be zero** |
+
+That last row is a claim worth stating rather than leaving to be inferred from
+an absence, and the campaign prints it whether or not it is zero.
+
+**Every upstream defect below came out of that mechanism.**
+
+## Six defects in the original
+
+Five of the six are crashes or hangs. Three of those leave the library in a
+state it cannot recover from: afterwards, either every subsequent operation
+takes minutes, or the documented `minE`/`maxE` limits silently stop applying to
+anything at all. Each is reproducible in three to five lines with no unusual
+operand.
+
+| | Defect | Failure |
+|---|---|---|
+| [BUG-001](docs/upstream/BUG-001-tan-near-poles.md) | `tan` loses every significant digit near its poles | silently wrong, then `Infinity` for finite input |
+| [BUG-002](docs/upstream/BUG-002-configuration-leak.md) | `acosh`/`asinh`/`atanh` leak `precision`, `rounding` and `external` when they throw | library permanently unusable |
+| [BUG-003](docs/upstream/BUG-003-topower-null-dereference.md) | `toPower` dereferences null when the clamp made the base infinite | `TypeError` |
+| [BUG-004](docs/upstream/BUG-004-tofraction-round-floor.md) | `toFraction` never returns under `ROUND_FLOOR` | infinite loop, **every finite value** |
+| [BUG-005](docs/upstream/BUG-005-taylorseries-null-dereference.md) | `taylorSeries` dereferences null, and leaves the exponent clamps off | `TypeError` + silent loss of `minE`/`maxE` |
+| [BUG-006](docs/upstream/BUG-006-argument-reduction-null-dereference.md) | the argument reduction of `sin`/`cos`/`tan` dereferences null | `TypeError` |
+
+BUG-004 is three lines:
+
+```js
+Decimal.set({ rounding: Decimal.ROUND_FLOOR });
+new Decimal(1).toFraction();     // never returns
+```
+
+Run all of them, on both implementations, each in its own process with a
+timeout:
+
+```
+node fuzz/repro-upstream.js
+```
+
+Four of the six are one mistake wearing different hats, and two are one missing
+`finally`; both families, and the suggested sweeps, are in
+[`docs/upstream/README.md`](docs/upstream/README.md).
+
+## Fidelity, and the five places it is set aside
+
+The rule is **fidelity over correctness**: where the original is wrong, this
+port is wrong in the same way, because reproducing the original's answers is the
+point. `tan` near its poles is transcribed defect and all, with a test asserting
+the wrong answer so that a fix upstream would show up here as a decision rather
+than a drift.
+
+There are exactly five deliberate exceptions, each with its own DECISIONS entry,
+and the test for setting fidelity aside has been the same every time:
+**reproducing the original would hand a caller a way to break the library rather
+than a way to compute a number.** A `TypeError` from an unguarded null
+dereference is that. A loop with no exit is that. A precision left at nine
+quadrillion is that.
+
+## Safety
+
+```
+node scripts/unsafe-report.js
+```
+
+| crate | lines | unsafe | |
+|---|---:|---:|---|
+| `decimal-core` | 9,086 | **0** | `unsafe_code = "forbid"`, compiler-enforced |
+| `decimal-cli` | 10 | **0** | same |
+| `decimal-napi` | 2,405 | 94 | the Node-API boundary; no arithmetic |
+
+`forbid` is not a lint level an inner `allow` can turn off, so `decimal-core`
+does not compile if an unsafe block appears anywhere in it, including one
+produced by a macro. The declaration is the evidence and a successful build is
+the check; the counts are a textual cross-check taken after comments and string
+literals are stripped.
+
+`decimal-core` has **no dependencies at all** — the limb arithmetic is written
+here rather than taken from a bignum crate, for reasons in
+[D-02](DECISIONS.md).
+
+## Memory
+
+```
+node scripts/soak.js
+```
+
+Ten minutes per implementation, RSS sampled every two seconds, verdict from the
+least-squares slope and the drift between the first and last quarters.
+
+The script yields to the event loop between batches, and this matters: Node runs
+Node-API finalizers from the loop, so a fully synchronous soak measures deferral
+rather than footprint. The first version did not yield and reported the port
+growing to 2.2 GiB in sixty seconds. That turned out to be half a real defect —
+the addon was asking `napi_wrap` for a reference it never released, which kept
+every Decimal alive for ever — and half an artefact of the measurement. Both are
+worth knowing and neither is visible from a test suite that runs in a quarter of
+a second.
+
 ## Layout
 
 ```
-crates/decimal-core   the port: parsing, limb arithmetic, rounding, formatting.
-                      Zero dependencies, zero unsafe, no Node concepts.
+crates/decimal-core   the port: parsing, limb arithmetic, rounding, formatting,
+                      transcendentals. Zero dependencies, zero unsafe, no Node.
 crates/decimal-napi   the only place that knows Node exists: object protocol,
                       config state, error mapping. All unsafe lives here.
 crates/decimal-cli    standalone binary — the port runs with no Node present.
 test/                 the original suite, unmodified and hash-pinned.
 tests/                ORIGINAL_HASHES.txt and verification artifacts.
+fuzz/                 the differential campaign, its oracle, and the upstream
+                      reproductions.
+bench/                the benchmark harness, its methodology, and its results.
+scripts/              soak, unsafe report, test-manifest verification.
+docs/upstream/        one filable report per defect found in the original.
 ```
 
 ## Documents
 
-- [DECISIONS.md](DECISIONS.md) — every non-trivial divergence, and why
+- [DECISIONS.md](DECISIONS.md) — every architectural choice and every deliberate
+  divergence, written when the decision was made, with its consequence
+- [bench/README.md](bench/README.md) — the benchmark report, losses included
+- [bench/methodology.md](bench/methodology.md) — how those numbers were produced
+- [docs/upstream/README.md](docs/upstream/README.md) — the six defects
+- [fuzz/log.txt](fuzz/log.txt) — the published campaign log
+
+## Licence
+
+MIT, as upstream. `LICENCE.md` is retained verbatim from the original.
