@@ -41,9 +41,10 @@ fails the build on any mismatch — including a file added or removed. The
 negative control is exercised: flip a byte in any file under `test/` and the
 build stops.
 
-**Files modified: 0 of 69.** The one failing assertion is a Node-API
-constraint, not a test edit, and is written up as D-08 in
-[`../DECISIONS.md`](../DECISIONS.md).
+**Files modified: 0 of 69, and every assertion passes.** The adapter satisfies
+the suite's prototype-identity requirement structurally, by defining the
+instance methods on one shared plain prototype; the design and the Node-API
+constraint that shapes it are D-08 in [`../DECISIONS.md`](../DECISIONS.md).
 
 ## Tests this port added
 
@@ -53,5 +54,5 @@ in that directory remains upstream's and the hash manifest covers the whole of
 it.
 
 ```
-cargo test --release          # 167 core + 3 cli + 2 fixture
+cargo test --release          # 168 core + 3 cli + 2 fixture
 ```
