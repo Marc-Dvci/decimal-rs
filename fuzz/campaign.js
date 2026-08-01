@@ -96,6 +96,7 @@ function parseArguments(argv) {
     log: null,
     quiet: false,
     diagnose: 60,
+    diagnoseTimeout: 2500,
   };
   for (let i = 0; i < argv.length; i++) {
     const flag = argv[i];
@@ -108,6 +109,7 @@ function parseArguments(argv) {
     else if (flag === '--log') options.log = argv[++i];
     else if (flag === '--quiet') options.quiet = true;
     else if (flag === '--diagnose') options.diagnose = Number(argv[++i]);
+    else if (flag === '--diagnose-timeout') options.diagnoseTimeout = Number(argv[++i]);
   }
   if (options.seed === null) options.seed = (Date.now() ^ (Math.random() * 0xffffffff)) >>> 0;
   if (options.log === null) {
@@ -272,8 +274,14 @@ async function diagnose(entry, options, scratch) {
   const common = ['--slice', String(entry.slice), '--resume', String(entry.index), '--sequences', '1'];
   const bounded = options.bounds ? [] : ['--bounds', 'off'];
 
+  // A shorter clock than the watchdog's. Diagnosis only has to tell "returns"
+  // from "does not", and every one of these inputs has already failed to return
+  // once — three children each at the full stall timeout would make the
+  // post-mortem several times longer than the run it explains.
+  const limit = options.diagnoseTimeout;
+
   await runChild(common.concat(bounded, ['--trace-file', traceFile]),
-    { stall: options.stall, deadline: Date.now() + options.stall });
+    { stall: limit, deadline: Date.now() + limit });
 
   let expression = '(not recorded)';
   try {
@@ -286,7 +294,7 @@ async function diagnose(entry, options, scratch) {
   for (const side of ['reference', 'port']) {
     const started = Date.now();
     const run = await runChild(common.concat(bounded, ['--side', side]),
-      { stall: options.stall, deadline: Date.now() + options.stall });
+      { stall: limit, deadline: Date.now() + limit });
     sides[side] = {
       returned: !run.stalled && run.code === 0 && parseResult(run.stdout) !== null,
       ms: Date.now() - started,
@@ -398,7 +406,13 @@ async function main() {
   // any of them: one slice run twice must give byte-identical output, and a
   // slice run in two halves must account for exactly the work of the whole.
   const bounded = options.bounds ? [] : ['--bounds', 'off'];
-  const HALF = 8;
+
+  // Smaller probe slices when the bounds are off, because a larger one almost
+  // always contains an input the oracle cannot answer — about a fifth of
+  // unbounded sequences do — and a probe that never completes proves nothing
+  // either way.
+  const HALF = options.bounds ? 8 : 2;
+  const ATTEMPTS = options.bounds ? 6 : 16;
 
   // The probe slice has to be one that *finishes*, and whether any given slice
   // finishes is exactly what the watchdog exists to be unsure about. So try a
@@ -410,7 +424,7 @@ async function main() {
   let attempts = 0;
   let counts = null;
 
-  for (let attempt = 0; attempt < 6 && !(deterministic && resumable); attempt++) {
+  for (let attempt = 0; attempt < ATTEMPTS && !(deterministic && resumable); attempt++) {
     attempts = attempt + 1;
     const seed = (options.seed ^ Math.imul(attempt + 1, 0x27d4eb2f)) >>> 0;
     const whole = ['--slice', String(seed), '--sequences', String(HALF * 2)].concat(bounded);
@@ -541,10 +555,10 @@ async function main() {
       emit('    step:      ' + detail.expression);
       emit('    oracle:    ' + (detail.sides.reference.returned
         ? 'returned in ' + detail.sides.reference.ms + ' ms'
-        : 'did NOT return within ' + (options.stall / 1000).toFixed(1) + ' s'));
+        : 'did NOT return within ' + (options.diagnoseTimeout / 1000).toFixed(1) + ' s'));
       emit('    port:      ' + (detail.sides.port.returned
         ? 'returned in ' + detail.sides.port.ms + ' ms'
-        : 'did NOT return within ' + (options.stall / 1000).toFixed(1) + ' s'));
+        : 'did NOT return within ' + (options.diagnoseTimeout / 1000).toFixed(1) + ' s'));
       emit('    verdict:   ' + VERDICTS[detail.verdict]);
       emit('    replay:    node fuzz/differential.js --slice ' + entry.slice +
            ' --resume ' + entry.index + ' --sequences 1' +
