@@ -151,7 +151,7 @@ luck, once, after minutes; these reach every case in seconds and name the
 method rather than the seed.
 
 ```
-node scripts/clamp-conformance.js     # 43 methods × 6 operands × 4 limit pairs
+node scripts/clamp-conformance.js     # 3,528 calls across four axes
 node scripts/host-limits.js           # the ceilings the original's host imposes
 ```
 
@@ -162,7 +162,15 @@ call**. That is the only arrangement in which the original's pervasive
 at all, and it is why some 22,650 assertions have nothing to say about the whole
 family: the suite never narrows the limits after building an operand. This was
 the largest single family of defect in the port ([D-18](DECISIONS.md)). All
-1,032 calls agree; the documented divergences are counted, not hidden.
+3,528 calls agree; the documented divergences are counted, not hidden.
+
+It varies four axes — 67 methods × 6 operands × 4 exponent-limit pairs, the ten
+methods that take a rounding mode across all nine of them, and each binary
+method with the extreme operand in the *argument* position as well as the
+receiver. Two of those axes were added after the campaign found a defect the
+check should have caught and did not, and the second of them found another
+within a minute of being written: [D-21](DECISIONS.md) is the entry on what an
+instrument is silent about.
 
 [`scripts/host-limits.js`](scripts/host-limits.js) covers the opposite hazard —
 where the original is stopped by *its host* and Rust would not be. It measures
@@ -336,7 +344,7 @@ docs/upstream/        one filable report per defect found in the original.
   divergence, written when the decision was made, with its consequence
 - [bench/README.md](bench/README.md) — the benchmark report, losses included
 - [bench/methodology.md](bench/methodology.md) — how those numbers were produced
-- [docs/upstream/README.md](docs/upstream/README.md) — the six defects
+- [docs/upstream/README.md](docs/upstream/README.md) — the eight defects
 - [fuzz/log.txt](fuzz/log.txt) — the published campaign log
 
 ## Licence

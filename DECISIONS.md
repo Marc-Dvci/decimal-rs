@@ -1092,3 +1092,92 @@ cannot survive is only half a fix: the other half is deciding what the surviving
 code should *answer*, and "keep going" is never that answer.
 
 ---
+
+### D-21 · The axis a conformance check does not vary is where the next defect lives
+
+**Context.** The bounded campaign reported a divergence at 29,472 refereed
+operations: `toDP(0, ROUND_UP)` on a value below `minE` answered
+`1e+8999999999999559` where the oracle answered `0`.
+
+The cause is a two-line asymmetry upstream. `round` and its neighbours are
+written
+
+```js
+return finalise(new Ctor(x), x.e + 1, rm);
+```
+
+— the copy is made *inside* the call, so `x.e` beside it is still the
+**receiver's** exponent, and the digit count and the value being rounded come
+from different places. That is D-12, and the port reproduces it deliberately.
+`toDecimalPlaces` is written differently:
+
+```js
+x = new Ctor(x);              // x is rebound
+…
+return finalise(x, dp + x.e + 1, rm);
+```
+
+Here `x.e` is the **clamped** exponent. Ten lines apart in the original,
+opposite in effect, and distinguishable only when the clamp actually fires. The
+port had transcribed the first form into both.
+
+**Why nothing had caught it.** Two instruments should have. The original suite
+never narrows the exponent limits after building an operand, so the whole family
+is outside it — that is already D-12. But `scripts/clamp-conformance.js` exists
+precisely to cover that family, it had been calling `toDP` since the day it was
+written, and it was green.
+
+It called `toDP` at the default `ROUND_HALF_UP`. A value the clamp crushed to
+zero rounds to zero under every mode that rounds towards zero, so the default
+hides *which* value was rounded. Only `ROUND_UP` and `ROUND_CEIL` — 2 of the 9
+modes — make the difference observable, and the check varied operand and
+exponent limits while holding the rounding mode constant.
+
+**Decision.** Fix the transcription, and then fix the instrument, in that order,
+because the second is the part that generalises. The check now varies four axes
+instead of two:
+
+| axis | before | after |
+|---|---|---|
+| operands | 6 | 6 |
+| exponent-limit pairs | 4 | 4 |
+| rounding mode | 1 (the default) | **9**, for the 10 methods that take one |
+| operand position | receiver only | **receiver and argument** |
+| methods | 43 | **67** |
+| calls | 1,032 | **3,528** |
+
+**Consequence — the mode axis found a second defect on its first run.**
+`toFixed` had no clamping copy at all: upstream's
+`finalise(new Ctor(x), dp + x.e + 1, rm)` had been transcribed as a plain clone.
+`(1.5e-300).toFixed(2, ROUND_UP)` with `minE` at −100 gave `0.01` where the
+original gives a fifty-seven-digit integer — upstream rounds a zero at 10⁻³⁰⁰
+precision, the port rounded the operand that should not have survived. Invisible
+under the seven modes that round towards zero, because `finalise` clamps its own
+result on the way out and both sides then agreed on the answer for the wrong
+reason.
+
+`toExponential` and `toPrecision` carried the identical plain clone. Neither is
+observable — their digit counts do not depend on the exponent, so the clamp
+inside `finalise` covers for the missing one — and both were corrected anyway.
+An agreement that holds because of an argument shape is not a property of the
+function.
+
+**The position axis found nothing, which is also a result.** `y = new Ctor(y)`
+opens every binary method upstream, and no check had ever put a wide-built
+extreme on the right-hand side of an operator: the existing entries build their
+argument *after* narrowing the limits, so the argument was always ordinary.
+Eleven new entries pass the extreme operand as the argument instead. All agree —
+because `coerce`, at the Node-API boundary, re-judges every incoming Decimal
+before the core sees it. That is the correct place for it, and it now calls
+`ops::clamped_copy` rather than restating the rule, so the boundary and the core
+cannot drift apart.
+
+**The lesson.** A conformance check is a product of the axes it varies, and it
+is silent about every axis it holds constant. This one was written to cover a
+family that the original suite could not reach, and it inherited the suite's
+blind spot on a different axis: the suite varies operands and holds the
+configuration still; the check varied the configuration and held the *arguments*
+still. Both defects lived in the axis that was constant. The question worth
+asking of any such instrument is not "what does it cover" but **"what does it
+hold still, and why is that safe?"** — and the honest answer here was that
+nobody had asked.

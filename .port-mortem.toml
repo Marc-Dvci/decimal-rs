@@ -45,7 +45,7 @@ note = "read the failure count, not the ratio"
 
 [tests.native]
 command = "cargo test -p decimal-core"
-total   = 162
+total   = 167
 
 [fuzz]
 harness      = "fuzz/campaign.js"
@@ -69,8 +69,8 @@ note    = "parses and renders through the same two core functions the addon uses
 # varies. Both compare against the vendored oracle and count their documented
 # divergences rather than filtering them out.
 clamp        = "node scripts/clamp-conformance.js"
-clamp_scope  = "43 methods x 6 operands x 4 exponent-limit pairs = 1032 calls"
-clamp_note   = "operands built under wide limits, limits narrowed before the call; DECISIONS.md D-12, D-18"
+clamp_scope  = "67 methods x 6 operands x 4 exponent-limit pairs, x 9 rounding modes where one is taken, in receiver and in argument position = 3528 calls"
+clamp_note   = "operands built under wide limits, limits narrowed before the call; DECISIONS.md D-12, D-18, D-21"
 host         = "node scripts/host-limits.js"
 host_scope   = "the array ceiling V8 enforces, measured live and compared with MAX_ARRAY_LENGTH"
 host_note    = "DECISIONS.md D-10, D-19"
