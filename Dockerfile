@@ -71,6 +71,6 @@ RUN node scripts/verify-tests.js
 # The middle one runs through `expect-zero-failures.js` rather than `test/test.js`
 # directly, because upstream's runner exits 0 whatever happens — so a container
 # that ran it and reported its exit code would report success through any
-# regression. The wrapper reads the summary line and fails on anything beyond
-# every assertion rather than trusting the upstream runner's always-zero exit.
+# regression. The wrapper reads the summary line and fails on anything short of
+# every assertion passing, rather than trusting that always-zero exit code.
 CMD ["sh", "-c", "node scripts/verify-tests.js && echo '' && node scripts/expect-zero-failures.js && echo '' && node --expose-gc scripts/adapter-regression.js && echo '' && node scripts/unsafe-report.js"]

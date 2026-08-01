@@ -83,8 +83,8 @@ jobs:
 
       # `expect-zero-failures.js` and not `test/test.js` directly: upstream's
       # runner exits 0 whatever happens, so gating on its exit code would gate
-      # on nothing. This reads the summary line and fails on any failure beyond
-      # every assertion.
+      # on nothing. This reads the summary line and fails on anything short of
+      # every assertion passing.
       - name: the original test suite, unmodified
         run: |
           node scripts/verify-tests.js
@@ -93,7 +93,7 @@ jobs:
       - name: Node-API constructor, re-entry, prototype, and lifecycle regression
         run: node --expose-gc scripts/adapter-regression.js
 
-      # 3,528 calls, and the axis that found two defects on day 3. Slower than
+      # 3,528 calls, and the axis that found two defects on day 2. Slower than
       # the suite by two orders of magnitude and still under four minutes.
       - name: the exponent-clamp conformance check
         run: node scripts/clamp-conformance.js
