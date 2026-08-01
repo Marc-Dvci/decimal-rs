@@ -54,30 +54,30 @@
   {
     "id": "suite",
     "file": "audio/03-suite.mp3",
-    "script": "Twenty-two thousand six hundred and twenty-eight assertions, and every one passes. The former prototype-identity failure is resolved by one shared plain prototype and per-instance constructor ownership. Zero test files were modified. Six thousand assertions are generated randomly, so automation parses each run's total and requires passed to equal asserted.",
+    "script": "Twenty-two thousand six hundred and twenty-eight assertions, and every one passes. Zero test files were modified: all sixty-nine are byte-identical to upstream, and the build stops if a single byte of one of them has changed. Six thousand assertions are generated randomly, so automation parses each run's total and requires passed to equal asserted.",
     "captions": [
       "22,628 assertions. Every one passed.",
-      "The former prototype-identity failure is resolved by a shared plain prototype.",
-      "Zero test files modified.",
+      "Zero test files modified \u2014 all 69 byte-identical to upstream.",
+      "The build stops if a single byte has changed.",
       "The random total moves \u2014 automation requires passed to equal asserted."
     ],
-    "duration": 22.608,
+    "duration": 21.408,
     "captionCues": [
       {
         "start": 0.0,
-        "end": 4.997
+        "end": 4.313
       },
       {
-        "start": 4.997,
-        "end": 12.37
+        "start": 4.313,
+        "end": 9.941
       },
       {
-        "start": 12.37,
-        "end": 15.478
+        "start": 9.941,
+        "end": 15.254
       },
       {
-        "start": 15.478,
-        "end": 22.608
+        "start": 15.254,
+        "end": 21.408
       }
     ],
     "voice": "en-GB-RyanNeural"
@@ -170,7 +170,7 @@
     "file": "audio/07-todp.mp3",
     "script": "Here is a defect it caught. Upstream, round reads the exponent of the receiver, and toDecimalPlaces reads the exponent of a rebound copy. Ten lines apart, opposite in effect, and only distinguishable when the exponent clamps actually fire. The port had transcribed the first form into both.",
     "captions": [
-      "One it caught, on day three.",
+      "One it caught, on day two.",
       "round reads the receiver's exponent. toDP reads the rebound copy's.",
       "Ten lines apart upstream, opposite in effect.",
       "The port had transcribed the first form into both."

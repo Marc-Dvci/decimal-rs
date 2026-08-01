@@ -131,9 +131,9 @@ export const SuiteScene: React.FC = () => {
           ]}
         />
         <div style={{marginTop: 22, fontSize: 21, lineHeight: 1.45, color: theme.dim}}>
-          The former <span style={{color: theme.bright}}>Decimal.prototype === D9.prototype</span> failure is
-          resolved: signature-free methods live on one shared plain prototype, and each instance owns its actual
-          clone constructor. The lifecycle and re-entry proof is D-23.
+          Including <span style={{color: theme.bright}}>Decimal.prototype === D9.prototype</span>, which the
+          adapter earns structurally: signature-free methods live on one shared plain prototype, and each instance
+          owns its actual clone constructor. The lifecycle and re-entry proof is D-23.
         </div>
       </Panel>
       <Panel box={{top: 660, left: 1332, width: 496}} title="the total line" accent={theme.panelEdge} at={52}>
