@@ -37,6 +37,14 @@
  * Compare the port against the vendored oracle on the exact string, including
  * the exact thrown message. Repeat across a spread of operands and limits.
  *
+ * Methods that accept a rounding mode are repeated across all nine of them,
+ * which is not decoration. A value the clamp crushed to zero rounds to zero
+ * under every mode that rounds towards it, so the default `ROUND_HALF_UP`
+ * hides any disagreement about *which* value was rounded; only `ROUND_UP` and
+ * `ROUND_CEIL` make it visible. This check ran green over `toDP` for two days
+ * before the campaign found exactly that, and the mode axis is the reason it
+ * would not survive a second time. See DECISIONS.md D-21.
+ *
  * One child process per method *and operand*, because four of these methods do
  * not return for one of these operands — in either implementation — and a check
  * that hangs is a check nobody runs. Sharding that finely means such a case
@@ -74,9 +82,14 @@ const LIMITS = [
   { minE: -400, maxE: 400 },
 ];
 
+/* The nine rounding modes, for the entries marked `ROUNDED` below. */
+const ROUNDING_MODES = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+const ROUNDED = true;
+
 /* The methods, with an argument shape for those that need one. Every method
  * whose upstream body contains `new Ctor(x)` is here, plus the renderings,
- * which reach it through `finalise`. */
+ * which reach it through `finalise`. An entry marked `ROUNDED` receives a
+ * rounding mode as its last argument and is run once per mode. */
 const CALLS = [
   ['abs', (x) => x.abs()],
   ['neg', (x) => x.neg()],
@@ -93,34 +106,67 @@ const CALLS = [
   ['tanh', (x) => x.tanh()],
   ['asin', (x) => x.asin()],
   ['atan', (x) => x.atan()],
+  ['acos', (x) => x.acos()],
   ['acosh', (x) => x.acosh()],
   ['asinh', (x) => x.asinh()],
   ['atanh', (x) => x.atanh()],
+  ['cosh', (x) => x.cosh()],
+  ['exp', (x) => x.exp()],
+  ['ln', (x) => x.ln()],
+  ['log(2)', (x) => x.log(2)],
   ['plus', (x, D) => x.plus(new D(0))],
   ['minus', (x, D) => x.minus(new D(0))],
   ['times', (x, D) => x.times(new D(1))],
   ['div', (x, D) => x.div(new D(1))],
   ['mod', (x, D) => x.mod(new D(3))],
+  ['divToInt', (x, D) => x.divToInt(new D(3))],
   ['pow', (x) => x.pow(2)],
   ['clamp', (x, D) => x.clamp(new D('-1e400'), new D('1e400'))],
   ['toNearest', (x, D) => x.toNearest(new D(1))],
+  ['toNearest(1,rm)', (x, D, rm) => x.toNearest(new D(1), rm), ROUNDED],
   ['toDP', (x) => x.toDP()],
-  ['toDP(2)', (x) => x.toDP(2)],
-  ['toSD(4)', (x) => x.toSD(4)],
+  ['toDP(0,rm)', (x, D, rm) => x.toDP(0, rm), ROUNDED],
+  ['toDP(2,rm)', (x, D, rm) => x.toDP(2, rm), ROUNDED],
+  ['toSD(4,rm)', (x, D, rm) => x.toSD(4, rm), ROUNDED],
   ['toExponential', (x) => x.toExponential()],
-  ['toExponential(3)', (x) => x.toExponential(3)],
+  ['toExponential(3,rm)', (x, D, rm) => x.toExponential(3, rm), ROUNDED],
   ['toFixed', (x) => x.toFixed()],
-  ['toFixed(2)', (x) => x.toFixed(2)],
+  ['toFixed(2,rm)', (x, D, rm) => x.toFixed(2, rm), ROUNDED],
   ['toPrecision', (x) => x.toPrecision()],
-  ['toPrecision(4)', (x) => x.toPrecision(4)],
+  ['toPrecision(4,rm)', (x, D, rm) => x.toPrecision(4, rm), ROUNDED],
   ['toFraction', (x) => x.toFraction()],
   ['toString', (x) => x.toString()],
   ['valueOf', (x) => x.valueOf()],
   ['toJSON', (x) => x.toJSON()],
   ['toNumber', (x) => x.toNumber()],
+  ['toHex', (x) => x.toHex()],
+  ['toHex(4,rm)', (x, D, rm) => x.toHex(4, rm), ROUNDED],
+  ['toBinary(4,rm)', (x, D, rm) => x.toBinary(4, rm), ROUNDED],
+  ['toOctal(4,rm)', (x, D, rm) => x.toOctal(4, rm), ROUNDED],
   ['sd', (x) => x.sd()],
   ['dp', (x) => x.dp()],
   ['isInteger', (x) => x.isInteger()],
+
+  /* The same operand in the *argument* position.
+   *
+   * `y = new Ctor(y)` is as common upstream as `x = new Ctor(x)` — every binary
+   * method re-judges what it was handed, not only what it was called on — and
+   * the entries above cannot see it, because they build their argument after
+   * the limits have been narrowed. Here the receiver is the ordinary value and
+   * the operand under test is passed in, which is the only arrangement that
+   * puts a wide-built extreme on the right-hand side of an operator. */
+  ['arg → plus', (x, D) => new D(1).plus(x)],
+  ['arg → minus', (x, D) => new D(1).minus(x)],
+  ['arg → times', (x, D) => new D(1).times(x)],
+  ['arg → div', (x, D) => new D(1).div(x)],
+  ['arg → mod', (x, D) => new D(3).mod(x)],
+  ['arg → divToInt', (x, D) => new D(3).divToInt(x)],
+  ['arg → pow', (x, D) => new D(2).pow(x)],
+  ['arg → log base', (x, D) => new D(2).log(x)],
+  ['arg → toNearest', (x, D) => new D(1).toNearest(x)],
+  ['arg → clamp min', (x, D) => new D(0).clamp(x, new D('1e400'))],
+  ['arg → clamp max', (x, D) => new D(0).clamp(new D('-1e400'), x)],
+  ['arg → cmp', (x, D) => new D(1).cmp(x)],
 ];
 
 /*
@@ -149,15 +195,21 @@ function documented(difference) {
   return DOCUMENTED.some((known) => known.matches(difference));
 }
 
-function attempt(D, value, limits, call) {
+function attempt(D, value, limits, call, rm) {
   D.config(WIDE);
   const x = new D(value);
   D.config(Object.assign({}, WIDE, limits));
   try {
-    return String(call(x, D));
+    return String(call(x, D, rm));
   } catch (error) {
     return 'THROW ' + error.message;
   }
+}
+
+/* The modes an entry is to be run under: all nine, or the single `undefined`
+ * that stands for "this method takes no rounding mode". */
+function modesFor(entry) {
+  return entry[2] === ROUNDED ? ROUNDING_MODES : [undefined];
 }
 
 /*
@@ -179,13 +231,15 @@ function one(name, valueIndex) {
 
   for (const value of [VALUES[valueIndex]]) {
     for (const limits of LIMITS) {
-      const started = { value, limits };
-      process.stdout.write(JSON.stringify({ start: started }) + '\n');
-      const expected = attempt(Reference, value, limits, call);
-      const actual = attempt(Port, value, limits, call);
-      process.stdout.write(JSON.stringify(
-        expected === actual ? { ok: true } : { value, limits, expected, actual },
-      ) + '\n');
+      for (const rm of modesFor(entry)) {
+        const started = { value, limits, rm };
+        process.stdout.write(JSON.stringify({ start: started }) + '\n');
+        const expected = attempt(Reference, value, limits, call, rm);
+        const actual = attempt(Port, value, limits, call, rm);
+        process.stdout.write(JSON.stringify(
+          expected === actual ? { ok: true } : { value, limits, rm, expected, actual },
+        ) + '\n');
+      }
     }
   }
 }
@@ -200,6 +254,7 @@ function one(name, valueIndex) {
  * for the other five. A hang now costs four cases instead of twenty-four.
  */
 function collect(name) {
+  const entry = CALLS.find(([n]) => n === name);
   const differences = [];
   const stuck = [];
   let done = 0;
@@ -229,21 +284,25 @@ function collect(name) {
     if (pending) stuck.push(pending);
   }
 
-  return { done, perCase: VALUES.length * LIMITS.length, differences, stuck };
+  const perCase = VALUES.length * LIMITS.length * modesFor(entry).length;
+  return { done, perCase, differences, stuck };
 }
 
 function all() {
   let failing = 0;
   let knownCount = 0;
   let incomplete = 0;
-  const cases = CALLS.length * VALUES.length * LIMITS.length;
+  const rounded = CALLS.filter((entry) => entry[2] === ROUNDED).length;
+  const cases = CALLS.reduce(
+    (total, entry) => total + VALUES.length * LIMITS.length * modesFor(entry).length, 0);
 
   process.stdout.write(
     'exponent-clamp conformance — decimal-rs against decimal.js v10.6.0 @ cd73a7f\n\n' +
     'Operands built with minE/maxE wide, then the limits narrowed, then the\n' +
     'method called — the only arrangement in which the original\'s `new Ctor(x)`\n' +
     'is observable. ' + CALLS.length + ' methods x ' + VALUES.length + ' operands x ' +
-    LIMITS.length + ' limit pairs = ' + cases + ' calls.\n\n');
+    LIMITS.length + ' limit pairs, the ' + rounded + ' methods that take a rounding\n' +
+    'mode across all ' + ROUNDING_MODES.length + ' of them = ' + cases + ' calls.\n\n');
 
   for (const [name] of CALLS) {
     const { done, perCase, differences, stuck: stalled } = collect(name);
@@ -264,16 +323,20 @@ function all() {
     if (done < perCase) {
       incomplete++;
       status += '   [' + done + '/' + perCase + ' — ' +
-        (stuck ? stuck.value + ' at maxE=' + stuck.limits.maxE : 'a case') +
+        (stuck
+          ? stuck.value + ' at maxE=' + stuck.limits.maxE +
+            (stuck.rm === undefined ? '' : ' rm=' + stuck.rm)
+          : 'a case') +
         (stalled.length > 1 ? ' and ' + (stalled.length - 1) + ' more' : '') +
         ' did not return in ' + (TIMEOUT_MS / 1000) + ' s, in either implementation]';
     }
-    process.stdout.write('  ' + name.padEnd(18) + status + '\n');
+    process.stdout.write('  ' + name.padEnd(21) + status + '\n');
 
     for (const d of real.slice(0, 2)) {
       process.stdout.write('      ' + d.value.padEnd(11) +
         ' minE=' + String(d.limits.minE).padEnd(7) +
-        ' maxE=' + String(d.limits.maxE) + '\n');
+        ' maxE=' + String(d.limits.maxE) +
+        (d.rm === undefined ? '' : ' rm=' + d.rm) + '\n');
       process.stdout.write('        oracle  ' + d.expected.slice(0, 58) + '\n');
       process.stdout.write('        port    ' + d.actual.slice(0, 58) + '\n');
     }

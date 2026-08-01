@@ -72,9 +72,11 @@ fuzz: addon
 fuzz-limits: addon
 	$(NODE) fuzz/campaign.js --seconds 70 --bounds off --stall 2000
 
-## Every method whose upstream body re-judges its receiver against minE/maxE,
+## Every method whose upstream body re-judges an operand against minE/maxE —
+## receiver or argument, across all nine rounding modes where one is taken —
 ## checked against the oracle with the limits narrowed after the operand was
-## built. The largest family of defect this port had; see DECISIONS.md D-12.
+## built. The largest family of defect this port had; see DECISIONS.md D-12
+## for the family and D-21 for why the check now varies four axes and not two.
 clamp-conformance: addon
 	$(NODE) scripts/clamp-conformance.js
 

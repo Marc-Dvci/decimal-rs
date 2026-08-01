@@ -99,19 +99,14 @@ unsafe fn state<'a>(data: *mut c_void) -> &'a mut ConstructorState {
 /// nothing exercises. The omission is recorded in DECISIONS.md rather than
 /// hidden.
 fn coerce(env: Env, st: &mut ConstructorState, value: Value) -> Result<Decimal, Error> {
-    // An existing Decimal — of this constructor or any other clone — is copied.
+    // An existing Decimal — of this constructor or any other clone — is
+    // re-judged against the current exponent limits rather than copied. This
+    // is the `new Ctor(y)` that opens every binary method upstream, and it is
+    // why a wide-built operand passed to a narrowly configured one arrives
+    // already clamped; `ops::clamped_copy` is the same rule the core applies
+    // to receivers, and it lives in one place so the two cannot drift.
     if let Some(existing) = decimal_of(env, value) {
-        let mut copy = existing;
-        if st.ctx.external {
-            if copy.d.is_none() || copy.e > st.ctx.cfg.max_e {
-                if !copy.is_nan() {
-                    copy = Decimal::infinity(copy.s);
-                }
-            } else if copy.e < st.ctx.cfg.min_e {
-                copy = Decimal::zero(copy.s);
-            }
-        }
-        return Ok(copy);
+        return Ok(ops::clamped_copy(&st.ctx, &existing));
     }
 
     match env.type_of(value) {
